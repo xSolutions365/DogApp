@@ -1,8 +1,8 @@
 package com.example.dogapp
 
 import androidx.compose.runtime.Composable
-import com.example.dogapp.ui.shell.AppShell
-import com.example.dogapp.ui.theme.DogAppTheme
+import com.example.dogapp.app.shell.AppShell
+import com.example.dogapp.core.presentation.theme.DogAppTheme
 
 @Composable
 fun App() {
