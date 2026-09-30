@@ -3,6 +3,9 @@ package com.example.dogapp.app.navigation
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.example.dogapp.feature.explore.presentation.ExploreRoute
+import com.example.dogapp.feature.home.presentation.HomeRoute
+import com.example.dogapp.feature.profile.presentation.ProfileRoute
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals

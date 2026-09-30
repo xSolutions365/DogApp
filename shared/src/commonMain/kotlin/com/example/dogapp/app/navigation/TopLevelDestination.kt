@@ -1,6 +1,9 @@
 package com.example.dogapp.app.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.example.dogapp.feature.explore.presentation.ExploreRoute
+import com.example.dogapp.feature.home.presentation.HomeRoute
+import com.example.dogapp.feature.profile.presentation.ProfileRoute
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.destination_explore
 import dogapp.shared.generated.resources.destination_home

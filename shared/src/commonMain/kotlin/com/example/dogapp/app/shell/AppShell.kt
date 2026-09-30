@@ -11,21 +11,18 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.example.dogapp.feature.explore.presentation.ExploreScreen
-import com.example.dogapp.feature.home.presentation.HomeScreen
-import com.example.dogapp.feature.profile.presentation.ProfileScreen
-import com.example.dogapp.app.navigation.ExploreRoute
-import com.example.dogapp.app.navigation.HomeRoute
 import com.example.dogapp.app.navigation.NavigationChange
 import com.example.dogapp.app.navigation.NavigationStyle
 import com.example.dogapp.app.navigation.Navigator
-import com.example.dogapp.app.navigation.ProfileRoute
 import com.example.dogapp.app.navigation.TopLevelDestination
 import com.example.dogapp.app.navigation.platformNavigationStyle
 import com.example.dogapp.app.navigation.popTransition
 import com.example.dogapp.app.navigation.pushTransition
 import com.example.dogapp.app.navigation.rememberNavigationState
 import com.example.dogapp.app.navigation.tabSelectionTransition
+import com.example.dogapp.feature.explore.presentation.exploreEntries
+import com.example.dogapp.feature.home.presentation.homeEntries
+import com.example.dogapp.feature.profile.presentation.profileEntries
 
 @Composable
 fun AppShell(
@@ -36,9 +33,9 @@ fun AppShell(
     val navigator = remember(navigationState) { Navigator(navigationState) }
 
     val provideEntry = entryProvider<NavKey> {
-        entry<HomeRoute> { HomeScreen() }
-        entry<ExploreRoute> { ExploreScreen() }
-        entry<ProfileRoute> { ProfileScreen() }
+        homeEntries()
+        exploreEntries()
+        profileEntries()
     }
     val entriesByDestination = TopLevelDestination.entries.associateWith { destination ->
         rememberDecoratedNavEntries(

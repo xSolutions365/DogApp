@@ -11,7 +11,7 @@ class ArchitectureTest {
 
     private val root = "com.example.dogapp"
     private val mainSourceSet = Regex("(^|/)src/[A-Za-z]+Main/kotlin/")
-    private val layeredPackage = Regex("""^${Regex.escape(root)}\.(app|core\.(domain|data|presentation)|feature\.\w+\.(domain|data|presentation))(\..+)?$""")
+    private val layeredPackage = Regex("""^${Regex.escape(root)}\.(app|core\.(domain|data|presentation)|feature\.\w+\.(domain|data|presentation|di))(\..+)?$""")
     private val featurePackage = Regex("""^${Regex.escape(root)}\.feature\.(\w+)(\..+)?$""")
     private val presentationPackage = Regex("""^${Regex.escape(root)}\.(core|feature\.\w+)\.presentation(\..+)?$""")
     private val dataPackage = Regex("""^${Regex.escape(root)}\.(core|feature\.\w+)\.data(\..+)?$""")
@@ -47,7 +47,7 @@ class ArchitectureTest {
     @Test
     fun packagesFollowLayerLayout() {
         assertNoViolations(
-            "Packages must be the root package, app, core.{domain,data,presentation} or feature.<name>.{domain,data,presentation}:",
+            "Packages must be the root package, app, core.{domain,data,presentation} or feature.<name>.{domain,data,presentation,di}:",
             sourceFiles
                 .filter { it.packageName != root && !layeredPackage.matches(it.packageName) }
                 .map { "${it.path}: package ${it.packageName}" },

@@ -11,8 +11,11 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.example.dogapp.feature.explore.presentation.exploreNavigationSerializers
+import com.example.dogapp.feature.home.presentation.homeNavigationSerializers
+import com.example.dogapp.feature.profile.presentation.profileNavigationSerializers
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.plus
 
 class NavigationState(
     val startDestination: TopLevelDestination,
@@ -34,14 +37,11 @@ class NavigationState(
         }
 }
 
+internal val navigationSerializersModule: SerializersModule =
+    homeNavigationSerializers + exploreNavigationSerializers + profileNavigationSerializers
+
 private val navigationSavedStateConfiguration = SavedStateConfiguration {
-    serializersModule = SerializersModule {
-        polymorphic(NavKey::class) {
-            subclass(HomeRoute::class, HomeRoute.serializer())
-            subclass(ExploreRoute::class, ExploreRoute.serializer())
-            subclass(ProfileRoute::class, ProfileRoute.serializer())
-        }
-    }
+    serializersModule = navigationSerializersModule
 }
 
 @Composable
