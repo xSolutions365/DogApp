@@ -13,15 +13,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.compose_multiplatform
 
 @Composable
-@Preview
 fun App() {
+    val greeting = koinInject<Greeting>()
     MaterialTheme {
         var showContent by remember { mutableStateOf(false) }
         Column(
@@ -35,13 +35,13 @@ fun App() {
                 Text("Click me!")
             }
             AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
+                val greetingText = remember { greeting.greet() }
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+                    Text("Compose: $greetingText")
                 }
             }
         }
