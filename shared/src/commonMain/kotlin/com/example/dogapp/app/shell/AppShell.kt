@@ -20,6 +20,7 @@ import com.example.dogapp.app.navigation.popTransition
 import com.example.dogapp.app.navigation.pushTransition
 import com.example.dogapp.app.navigation.rememberNavigationState
 import com.example.dogapp.app.navigation.tabSelectionTransition
+import com.example.dogapp.core.presentation.animation.SharedElementsHost
 import com.example.dogapp.feature.explore.presentation.exploreEntries
 import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.profile.presentation.profileEntries
@@ -67,17 +68,18 @@ fun AppShell(
             }
         },
     ) { innerPadding ->
-        NavDisplay(
-            entries = visibleEntries,
-            modifier = Modifier.padding(innerPadding),
-            onBack = { navigator.goBack() },
-            transitionSpec = {
-                if (navigationState.lastChange == NavigationChange.TabSelection) tabSelectionTransition() else pushTransition()
-            },
-            popTransitionSpec = {
-                if (navigationState.lastChange == NavigationChange.TabSelection) tabSelectionTransition() else popTransition()
-            },
-            predictivePopTransitionSpec = { _ -> popTransition() },
-        )
+        SharedElementsHost(modifier = Modifier.padding(innerPadding)) {
+            NavDisplay(
+                entries = visibleEntries,
+                onBack = { navigator.goBack() },
+                transitionSpec = {
+                    if (navigationState.lastChange == NavigationChange.TabSelection) tabSelectionTransition() else pushTransition()
+                },
+                popTransitionSpec = {
+                    if (navigationState.lastChange == NavigationChange.TabSelection) tabSelectionTransition() else popTransition()
+                },
+                predictivePopTransitionSpec = { _ -> popTransition() },
+            )
+        }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.dogapp.app.shell
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -37,11 +35,6 @@ private val TabIconSize = 26.dp
 private val TabIconLabelSpacing = 2.dp
 private val TabLabelFontSize = 10.sp
 private val TabLabelLetterSpacing = 0.1.sp
-private val LightBarBackground = Color(0xFFF7F7F7)
-private val DarkBarBackground = Color(0xFF161616)
-private val LightSeparator = Color(0x4A3C3C43)
-private val DarkSeparator = Color(0x99545458)
-private val UnselectedTint = Color(0xFF8E8E93)
 
 @Composable
 fun CupertinoTabBar(
@@ -49,13 +42,12 @@ fun CupertinoTabBar(
     onDestinationSelected: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val darkTheme = isSystemInDarkTheme()
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(if (darkTheme) DarkBarBackground else LightBarBackground),
+            .background(MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
-        HorizontalDivider(thickness = Dp.Hairline, color = if (darkTheme) DarkSeparator else LightSeparator)
+        HorizontalDivider(thickness = Dp.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -82,7 +74,7 @@ private fun CupertinoTabItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tint = if (selected) MaterialTheme.colorScheme.primary else UnselectedTint
+    val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
     Column(
         modifier = modifier
             .fillMaxHeight()
@@ -106,9 +98,11 @@ private fun CupertinoTabItem(
         Text(
             text = stringResource(destination.label),
             color = tint,
-            fontSize = TabLabelFontSize,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = TabLabelLetterSpacing,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = TabLabelFontSize,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = TabLabelLetterSpacing,
+            ),
         )
     }
 }
