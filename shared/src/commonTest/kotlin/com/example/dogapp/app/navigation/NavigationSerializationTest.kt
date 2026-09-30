@@ -7,7 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class NavigationSerializationTest {
-
     private val json = Json { serializersModule = navigationSerializersModule }
     private val navKeySerializer = PolymorphicSerializer(NavKey::class)
 

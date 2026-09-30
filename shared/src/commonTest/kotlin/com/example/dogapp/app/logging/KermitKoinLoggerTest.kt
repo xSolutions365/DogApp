@@ -3,20 +3,20 @@ package com.example.dogapp.app.logging
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
 import co.touchlab.kermit.loggerConfigInit
-import org.koin.core.logger.Level
 import com.example.dogapp.testing.RecordingLogWriter
+import org.koin.core.logger.Level
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class KermitKoinLoggerTest {
-
     @Test
     fun koinLevelsMapToKermitSeveritiesUnderKoinTag() {
         val testLogWriter = RecordingLogWriter()
-        val koinLogger = KermitKoinLogger(
-            logger = Logger(config = loggerConfigInit(testLogWriter), tag = KOIN_LOG_TAG),
-            level = Level.DEBUG,
-        )
+        val koinLogger =
+            KermitKoinLogger(
+                logger = Logger(config = loggerConfigInit(testLogWriter), tag = KOIN_LOG_TAG),
+                level = Level.DEBUG,
+            )
 
         koinLogger.display(Level.DEBUG, "debug")
         koinLogger.display(Level.INFO, "info")

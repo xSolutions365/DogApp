@@ -18,25 +18,29 @@ import org.jetbrains.compose.resources.Font
 private val DisplayLetterSpacing = (-0.02).em
 
 @Composable
-fun bricolageGrotesqueFamily(): FontFamily = FontFamily(
-    Font(Res.font.bricolage_grotesque_bold, FontWeight.Bold),
-    Font(Res.font.bricolage_grotesque_extrabold, FontWeight.ExtraBold),
-)
+fun bricolageGrotesqueFamily(): FontFamily =
+    FontFamily(
+        Font(Res.font.bricolage_grotesque_bold, FontWeight.Bold),
+        Font(Res.font.bricolage_grotesque_extrabold, FontWeight.ExtraBold),
+    )
 
 @Composable
-fun figtreeFamily(): FontFamily = FontFamily(
-    Font(Res.font.figtree_regular, FontWeight.Normal),
-    Font(Res.font.figtree_medium, FontWeight.Medium),
-    Font(Res.font.figtree_semibold, FontWeight.SemiBold),
-    Font(Res.font.figtree_bold, FontWeight.Bold),
-)
+fun figtreeFamily(): FontFamily =
+    FontFamily(
+        Font(Res.font.figtree_regular, FontWeight.Normal),
+        Font(Res.font.figtree_medium, FontWeight.Medium),
+        Font(Res.font.figtree_semibold, FontWeight.SemiBold),
+        Font(Res.font.figtree_bold, FontWeight.Bold),
+    )
 
 @Composable
 fun dogAppTypography(): Typography {
     val display = bricolageGrotesqueFamily()
     val body = figtreeFamily()
     val base = Typography()
+
     fun TextStyle.display(weight: FontWeight) = copy(fontFamily = display, fontWeight = weight, letterSpacing = DisplayLetterSpacing)
+
     fun TextStyle.body(weight: FontWeight) = copy(fontFamily = body, fontWeight = weight)
     return Typography(
         displayLarge = base.displayLarge.display(FontWeight.ExtraBold),

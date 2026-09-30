@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class OutcomeTest {
-
     private val success: Outcome<Int, DataError.Remote> = Outcome.Success(2)
     private val failure: Outcome<Int, DataError.Remote> = Outcome.Failure(DataError.Remote.NotFound)
 

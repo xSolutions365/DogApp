@@ -19,12 +19,15 @@ import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
 class SharedElementsTest {
-
     private data object ListKey : NavKey
+
     private data object DetailKey : NavKey
 
     @Composable
-    private fun SharedScreen(title: String, photoSize: Int) {
+    private fun SharedScreen(
+        title: String,
+        photoSize: Int,
+    ) {
         Box {
             Box(Modifier.navSharedElement(key = "dog-photo").size(photoSize.dp))
             Text(title)
@@ -38,10 +41,11 @@ class SharedElementsTest {
                 NavDisplay(
                     backStack = backStack,
                     onBack = { backStack.removeAt(backStack.lastIndex) },
-                    entryProvider = entryProvider {
-                        entry<ListKey> { SharedScreen(title = "List", photoSize = 48) }
-                        entry<DetailKey> { SharedScreen(title = "Detail", photoSize = 240) }
-                    },
+                    entryProvider =
+                        entryProvider {
+                            entry<ListKey> { SharedScreen(title = "List", photoSize = 48) }
+                            entry<DetailKey> { SharedScreen(title = "Detail", photoSize = 240) }
+                        },
                 )
             }
             if (withHost) SharedElementsHost { display() } else display()
@@ -57,16 +61,17 @@ class SharedElementsTest {
         onNodeWithText("List").assertExists()
     }
 
-    private fun ComposeUiTest.onAllNodesWithTextCount(text: String): Int =
-        onAllNodes(hasText(text)).fetchSemanticsNodes().size
+    private fun ComposeUiTest.onAllNodesWithTextCount(text: String): Int = onAllNodes(hasText(text)).fetchSemanticsNodes().size
 
     @Test
-    fun sharedElementAnimatesAcrossPushAndPopInsideHost() = runComposeUiTest {
-        pushAndPopBetweenScreensSharingAnElement(withHost = true)
-    }
+    fun sharedElementAnimatesAcrossPushAndPopInsideHost() =
+        runComposeUiTest {
+            pushAndPopBetweenScreensSharingAnElement(withHost = true)
+        }
 
     @Test
-    fun sharedElementModifierIsInertWithoutHost() = runComposeUiTest {
-        pushAndPopBetweenScreensSharingAnElement(withHost = false)
-    }
+    fun sharedElementModifierIsInertWithoutHost() =
+        runComposeUiTest {
+            pushAndPopBetweenScreensSharingAnElement(withHost = false)
+        }
 }

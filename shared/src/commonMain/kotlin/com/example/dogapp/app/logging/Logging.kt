@@ -7,7 +7,10 @@ import co.touchlab.kermit.platformLogWriter
 
 const val APP_LOG_TAG = "DogApp"
 
-fun configureLogging(debug: Boolean, logWriter: LogWriter = platformLogWriter()) {
+fun configureLogging(
+    debug: Boolean,
+    logWriter: LogWriter = platformLogWriter(),
+) {
     Logger.setTag(APP_LOG_TAG)
     if (debug) {
         Logger.setMinSeverity(Severity.Debug)

@@ -13,7 +13,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MaterialNavigationBar(
     selectedDestination: TopLevelDestination,
-    onDestinationSelected: (TopLevelDestination) -> Unit,
+    onDestinationSelect: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavigationBar(modifier = modifier) {
@@ -21,7 +21,7 @@ fun MaterialNavigationBar(
             val selected = destination == selectedDestination
             NavigationBarItem(
                 selected = selected,
-                onClick = { onDestinationSelected(destination) },
+                onClick = { onDestinationSelect(destination) },
                 icon = {
                     Icon(
                         painter = painterResource(if (selected) destination.selectedIcon else destination.unselectedIcon),

@@ -11,7 +11,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class PreferencesDataStoreTest {
-
     private val filePath = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "test-${Random.nextLong()}-$PREFERENCES_FILE_NAME"
 
     @AfterTest
@@ -20,13 +19,14 @@ class PreferencesDataStoreTest {
     }
 
     @Test
-    fun writtenPreferencesAreReadBack() = runTest {
-        val dataStore = createPreferencesDataStore { filePath.toString() }
-        val key = stringPreferencesKey("key")
+    fun writtenPreferencesAreReadBack() =
+        runTest {
+            val dataStore = createPreferencesDataStore { filePath.toString() }
+            val key = stringPreferencesKey("key")
 
-        dataStore.edit { preferences -> preferences[key] = "value" }
+            dataStore.edit { preferences -> preferences[key] = "value" }
 
-        assertEquals("value", dataStore.data.first()[key])
-        assertEquals(true, FileSystem.SYSTEM.exists(filePath))
-    }
+            assertEquals("value", dataStore.data.first()[key])
+            assertEquals(true, FileSystem.SYSTEM.exists(filePath))
+        }
 }

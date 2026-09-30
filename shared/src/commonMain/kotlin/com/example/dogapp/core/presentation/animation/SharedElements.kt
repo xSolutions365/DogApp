@@ -13,9 +13,10 @@ import com.example.dogapp.core.presentation.theme.DogAppMotion
 
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 
-private val NavSharedBoundsTransform = BoundsTransform { _, _ ->
-    tween(DogAppMotion.DURATION_MEDIUM2_MILLIS, easing = DogAppMotion.EmphasizedEasing)
-}
+private val NavSharedBoundsTransform =
+    BoundsTransform { _, _ ->
+        tween(DogAppMotion.DURATION_MEDIUM2_MILLIS, easing = DogAppMotion.EmphasizedEasing)
+    }
 
 @Composable
 fun SharedElementsHost(

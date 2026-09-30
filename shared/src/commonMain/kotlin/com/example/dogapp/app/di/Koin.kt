@@ -6,7 +6,8 @@ import org.koin.dsl.KoinAppDeclaration
 
 val appModules: List<Module> = listOf(platformModule, networkModule)
 
-fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
-    appDeclaration()
-    modules(appModules)
-}
+fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
+    startKoin {
+        appDeclaration()
+        modules(appModules)
+    }

@@ -21,7 +21,6 @@ import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
 class AppShellTest {
-
     private val isTab = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
 
     private fun tab(label: String) = isTab and hasText(label)

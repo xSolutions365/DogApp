@@ -8,8 +8,9 @@ import kotlinx.serialization.modules.polymorphic
 @Serializable
 data object ExploreRoute : NavKey
 
-val exploreNavigationSerializers = SerializersModule {
-    polymorphic(NavKey::class) {
-        subclass(ExploreRoute::class, ExploreRoute.serializer())
+val exploreNavigationSerializers =
+    SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(ExploreRoute::class, ExploreRoute.serializer())
+        }
     }
-}

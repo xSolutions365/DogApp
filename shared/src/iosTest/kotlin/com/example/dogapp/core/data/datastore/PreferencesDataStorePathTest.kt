@@ -7,7 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PreferencesDataStorePathTest {
-
     @Test
     fun pathPointsToPreferencesFileInsideExistingDocumentsDirectory() {
         val path = preferencesDataStorePath().toPath()

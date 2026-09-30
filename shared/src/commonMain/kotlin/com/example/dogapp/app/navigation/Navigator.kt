@@ -2,8 +2,9 @@ package com.example.dogapp.app.navigation
 
 import androidx.navigation3.runtime.NavKey
 
-class Navigator(private val state: NavigationState) {
-
+class Navigator(
+    private val state: NavigationState,
+) {
     fun selectDestination(destination: TopLevelDestination) {
         if (destination == state.selectedDestination) {
             state.lastChange = NavigationChange.StackChange
@@ -32,11 +33,15 @@ class Navigator(private val state: NavigationState) {
                 backStack.removeAt(backStack.lastIndex)
                 true
             }
+
             state.selectedDestination != state.startDestination -> {
                 state.selectedDestination = state.startDestination
                 true
             }
-            else -> false
+
+            else -> {
+                false
+            }
         }
     }
 

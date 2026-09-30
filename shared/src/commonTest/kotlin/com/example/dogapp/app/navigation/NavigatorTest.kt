@@ -13,15 +13,15 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NavigatorTest {
-
     @Serializable
     private data object DetailRoute : NavKey
 
-    private val state = NavigationState(
-        startDestination = TopLevelDestination.Home,
-        selectedDestination = mutableStateOf(TopLevelDestination.Home),
-        backStacks = TopLevelDestination.entries.associateWith { NavBackStack(it.route) },
-    )
+    private val state =
+        NavigationState(
+            startDestination = TopLevelDestination.Home,
+            selectedDestination = mutableStateOf(TopLevelDestination.Home),
+            backStacks = TopLevelDestination.entries.associateWith { NavBackStack(it.route) },
+        )
     private val navigator = Navigator(state)
 
     @Test

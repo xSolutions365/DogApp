@@ -40,17 +40,17 @@ class NavigationState(
 internal val navigationSerializersModule: SerializersModule =
     homeNavigationSerializers + exploreNavigationSerializers + profileNavigationSerializers
 
-private val navigationSavedStateConfiguration = SavedStateConfiguration {
-    serializersModule = navigationSerializersModule
-}
+private val navigationSavedStateConfiguration =
+    SavedStateConfiguration {
+        serializersModule = navigationSerializersModule
+    }
 
 @Composable
-fun rememberNavigationState(
-    startDestination: TopLevelDestination = TopLevelDestination.Home,
-): NavigationState {
+fun rememberNavigationState(startDestination: TopLevelDestination = TopLevelDestination.Home): NavigationState {
     val selectedDestination = rememberSaveable { mutableStateOf(startDestination) }
-    val backStacks = TopLevelDestination.entries.associateWith { destination ->
-        rememberNavBackStack(navigationSavedStateConfiguration, destination.route)
-    }
+    val backStacks =
+        TopLevelDestination.entries.associateWith { destination ->
+            rememberNavBackStack(navigationSavedStateConfiguration, destination.route)
+        }
     return remember { NavigationState(startDestination, selectedDestination, backStacks) }
 }

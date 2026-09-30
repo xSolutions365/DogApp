@@ -6,35 +6,46 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class ArchitectureTest {
-
-    private data class SourceFile(val path: String, val packageName: String, val imports: List<String>)
+    private data class SourceFile(
+        val path: String,
+        val packageName: String,
+        val imports: List<String>,
+    )
 
     private val root = "com.example.dogapp"
     private val mainSourceSet = Regex("(^|/)src/[A-Za-z]+Main/kotlin/")
-    private val layeredPackage = Regex("""^${Regex.escape(root)}\.(app|core\.(domain|data|presentation)|feature\.\w+\.(domain|data|presentation|di))(\..+)?$""")
+    private val layeredPackage =
+        Regex("""^${Regex.escape(root)}\.(app|core\.(domain|data|presentation)|feature\.\w+\.(domain|data|presentation|di))(\..+)?$""")
     private val featurePackage = Regex("""^${Regex.escape(root)}\.feature\.(\w+)(\..+)?$""")
     private val presentationPackage = Regex("""^${Regex.escape(root)}\.(core|feature\.\w+)\.presentation(\..+)?$""")
     private val dataPackage = Regex("""^${Regex.escape(root)}\.(core|feature\.\w+)\.data(\..+)?$""")
     private val domainPackage = Regex("""^${Regex.escape(root)}\.(core|feature\.\w+)\.domain(\..+)?$""")
     private val domainAllowedImportPrefixes = listOf("kotlin.", "kotlinx.coroutines.", "$root.core.domain.")
 
-    private val sourceFiles: List<SourceFile> = File("src").walkTopDown()
-        .filter { it.isFile && it.extension == "kt" && mainSourceSet.containsMatchIn(it.invariantSeparatorsPath) }
-        .map { file ->
-            val lines = file.readLines()
-            SourceFile(
-                path = file.invariantSeparatorsPath,
-                packageName = lines.first { it.startsWith("package ") }.removePrefix("package ").trim(),
-                imports = lines.filter { it.startsWith("import ") }.map { it.removePrefix("import ").substringBefore(" as ").trim() },
-            )
-        }
-        .toList()
+    private val sourceFiles: List<SourceFile> =
+        File("src")
+            .walkTopDown()
+            .filter { it.isFile && it.extension == "kt" && mainSourceSet.containsMatchIn(it.invariantSeparatorsPath) }
+            .map { file ->
+                val lines = file.readLines()
+                SourceFile(
+                    path = file.invariantSeparatorsPath,
+                    packageName = lines.first { it.startsWith("package ") }.removePrefix("package ").trim(),
+                    imports = lines.filter { it.startsWith("import ") }.map { it.removePrefix("import ").substringBefore(" as ").trim() },
+                )
+            }.toList()
 
-    private fun assertNoViolations(rule: String, violations: List<String>) {
+    private fun assertNoViolations(
+        rule: String,
+        violations: List<String>,
+    ) {
         if (violations.isNotEmpty()) fail("$rule\n" + violations.joinToString("\n"))
     }
 
-    private fun importViolations(appliesTo: (SourceFile) -> Boolean, forbidden: (SourceFile, String) -> Boolean): List<String> =
+    private fun importViolations(
+        appliesTo: (SourceFile) -> Boolean,
+        forbidden: (SourceFile, String) -> Boolean,
+    ): List<String> =
         sourceFiles.filter(appliesTo).flatMap { file ->
             file.imports.filter { forbidden(file, it) }.map { "${file.path}: import $it" }
         }
@@ -75,7 +86,12 @@ class ArchitectureTest {
             "Data must not depend on presentation or app:",
             importViolations(
                 appliesTo = { dataPackage.matches(it.packageName) },
-                forbidden = { _, import -> presentationPackage.matches(import.substringBeforeLast('.')) || import.startsWith("$root.app.") },
+                forbidden = {
+                    _,
+                    import,
+                    ->
+                    presentationPackage.matches(import.substringBeforeLast('.')) || import.startsWith("$root.app.")
+                },
             ),
         )
     }

@@ -1,6 +1,8 @@
 package com.example.dogapp.app.navigation
 
-enum class NavigationStyle(val backFromTabRootReturnsToStartDestination: Boolean) {
+enum class NavigationStyle(
+    val backFromTabRootReturnsToStartDestination: Boolean,
+) {
     Material(backFromTabRootReturnsToStartDestination = true),
     Cupertino(backFromTabRootReturnsToStartDestination = false),
 }

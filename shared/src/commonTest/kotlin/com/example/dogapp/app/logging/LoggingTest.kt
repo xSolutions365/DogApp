@@ -9,7 +9,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class LoggingTest {
-
     private val testLogWriter = RecordingLogWriter()
 
     @AfterTest

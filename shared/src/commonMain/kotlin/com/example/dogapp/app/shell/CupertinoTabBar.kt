@@ -39,27 +39,29 @@ private val TabLabelLetterSpacing = 0.1.sp
 @Composable
 fun CupertinoTabBar(
     selectedDestination: TopLevelDestination,
-    onDestinationSelected: (TopLevelDestination) -> Unit,
+    onDestinationSelect: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLow),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         HorizontalDivider(thickness = Dp.Hairline, color = MaterialTheme.colorScheme.outlineVariant)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .height(TabBarHeight)
-                .selectableGroup(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .height(TabBarHeight)
+                    .selectableGroup(),
         ) {
             TopLevelDestination.entries.forEach { destination ->
                 CupertinoTabItem(
                     destination = destination,
                     selected = destination == selectedDestination,
-                    onClick = { onDestinationSelected(destination) },
+                    onClick = { onDestinationSelect(destination) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -76,15 +78,16 @@ private fun CupertinoTabItem(
 ) {
     val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
     Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.Tab,
-                interactionSource = null,
-                indication = null,
-            ),
+        modifier =
+            modifier
+                .fillMaxHeight()
+                .selectable(
+                    selected = selected,
+                    onClick = onClick,
+                    role = Role.Tab,
+                    interactionSource = null,
+                    indication = null,
+                ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -98,11 +101,12 @@ private fun CupertinoTabItem(
         Text(
             text = stringResource(destination.label),
             color = tint,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = TabLabelFontSize,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = TabLabelLetterSpacing,
-            ),
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = TabLabelFontSize,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = TabLabelLetterSpacing,
+                ),
         )
     }
 }

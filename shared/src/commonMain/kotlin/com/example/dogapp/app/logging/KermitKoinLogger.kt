@@ -11,8 +11,10 @@ class KermitKoinLogger(
     private val logger: Logger = Logger.withTag(KOIN_LOG_TAG),
     level: Level = Level.INFO,
 ) : KoinLogger(level) {
-
-    override fun display(level: Level, msg: MESSAGE) {
+    override fun display(
+        level: Level,
+        msg: MESSAGE,
+    ) {
         when (level) {
             Level.DEBUG -> logger.d { msg }
             Level.INFO -> logger.i { msg }

@@ -10,7 +10,6 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 
 class KoinGraphTest : KoinTest {
-
     @BeforeTest
     fun setUp() {
         initKoin()

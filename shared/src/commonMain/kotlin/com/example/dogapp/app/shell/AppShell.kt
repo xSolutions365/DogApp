@@ -33,23 +33,28 @@ fun AppShell(
     val navigationState = rememberNavigationState()
     val navigator = remember(navigationState) { Navigator(navigationState) }
 
-    val provideEntry = entryProvider<NavKey> {
-        homeEntries()
-        exploreEntries()
-        profileEntries()
-    }
-    val entriesByDestination = TopLevelDestination.entries.associateWith { destination ->
-        rememberDecoratedNavEntries(
-            backStack = navigationState.backStacks.getValue(destination),
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            entryProvider = provideEntry,
-        )
-    }
-    val visibleEntries = navigationState.visibleDestinations(navigationStyle)
-        .flatMap { destination -> entriesByDestination.getValue(destination) }
+    val provideEntry =
+        entryProvider<NavKey> {
+            homeEntries()
+            exploreEntries()
+            profileEntries()
+        }
+    val entriesByDestination =
+        TopLevelDestination.entries.associateWith { destination ->
+            rememberDecoratedNavEntries(
+                backStack = navigationState.backStacks.getValue(destination),
+                entryDecorators =
+                    listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberViewModelStoreNavEntryDecorator(),
+                    ),
+                entryProvider = provideEntry,
+            )
+        }
+    val visibleEntries =
+        navigationState
+            .visibleDestinations(navigationStyle)
+            .flatMap { destination -> entriesByDestination.getValue(destination) }
     val pushTransition = navigationStyle.pushTransition()
     val popTransition = navigationStyle.popTransition()
 
@@ -57,14 +62,19 @@ fun AppShell(
         modifier = modifier,
         bottomBar = {
             when (navigationStyle) {
-                NavigationStyle.Material -> MaterialNavigationBar(
-                    selectedDestination = navigationState.selectedDestination,
-                    onDestinationSelected = navigator::selectDestination,
-                )
-                NavigationStyle.Cupertino -> CupertinoTabBar(
-                    selectedDestination = navigationState.selectedDestination,
-                    onDestinationSelected = navigator::selectDestination,
-                )
+                NavigationStyle.Material -> {
+                    MaterialNavigationBar(
+                        selectedDestination = navigationState.selectedDestination,
+                        onDestinationSelect = navigator::selectDestination,
+                    )
+                }
+
+                NavigationStyle.Cupertino -> {
+                    CupertinoTabBar(
+                        selectedDestination = navigationState.selectedDestination,
+                        onDestinationSelect = navigator::selectDestination,
+                    )
+                }
             }
         },
     ) { innerPadding ->

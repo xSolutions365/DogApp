@@ -6,7 +6,6 @@ import org.koin.test.verify.verify
 import kotlin.test.Test
 
 class KoinModulesVerifyTest {
-
     @OptIn(KoinExperimentalAPI::class)
     @Test
     fun appModulesDeclareEveryDependency() {

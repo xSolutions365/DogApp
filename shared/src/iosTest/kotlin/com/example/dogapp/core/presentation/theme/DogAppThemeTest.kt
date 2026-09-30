@@ -14,7 +14,6 @@ import kotlin.test.assertNotNull
 
 @OptIn(ExperimentalTestApi::class)
 class DogAppThemeTest {
-
     @Test
     fun themeAppliesBrandColorSchemesAndTypePairing() {
         listOf(false to DogAppLightColorScheme, true to DogAppDarkColorScheme).forEach { (darkTheme, expectedScheme) ->
