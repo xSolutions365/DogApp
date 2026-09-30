@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidxRoom)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -98,6 +100,27 @@ kotlin {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+val localProperties =
+    Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) file.inputStream().use(::load)
+    }
+
+fun buildSecret(name: String): String {
+    val propertyName = "dogapp.$name"
+    val environmentVariable = "DOGAPP_" + name.replace(Regex("([a-z])([A-Z])"), "$1_$2").uppercase()
+    return providers.environmentVariable(environmentVariable).orNull
+        ?: localProperties.getProperty(propertyName)
+        ?: error("Missing build secret '$name': set $propertyName in local.properties or the $environmentVariable environment variable.")
+}
+
+buildkonfig {
+    packageName = "com.example.dogapp.core.data.config"
+    objectName = "BuildSecrets"
+    defaultConfigs {
+    }
 }
 
 ktlint {
