@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -122,6 +123,8 @@ buildkonfig {
     packageName = "com.example.dogapp.core.data.config"
     objectName = "BuildSecrets"
     defaultConfigs {
+        buildConfigField(FieldSpec.Type.STRING, "THE_DOG_API_KEY", buildSecret("theDogApiKey"))
+        buildConfigField(FieldSpec.Type.STRING, "API_NINJAS_KEY", buildSecret("apiNinjasKey"))
     }
 }
 
