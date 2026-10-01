@@ -11,4 +11,12 @@
     <string name="error_client">The request couldn't be completed.</string>
     <string name="error_server">Something went wrong on our side. Please try again later.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="search_clear">Clear search</string>
+    <string name="explore_search_placeholder">Search breeds</string>
+    <string name="explore_loading_title">Fetching all the breed data…</string>
+    <string name="explore_loading_body">This only happens the first time. Search unlocks as soon as everything is saved on your device.</string>
+    <string name="explore_error_title">We couldn't load the breeds</string>
+    <string name="explore_retry">Try again</string>
+    <string name="explore_no_matches">No breeds match “%1$s”</string>
+    <string name="explore_empty">No breeds are available yet.</string>
 </resources>

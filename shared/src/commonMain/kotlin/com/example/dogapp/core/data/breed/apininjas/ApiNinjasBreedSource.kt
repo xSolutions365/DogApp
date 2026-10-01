@@ -1,12 +1,12 @@
 package com.example.dogapp.core.data.breed.apininjas
 
-import com.example.dogapp.core.data.breed.BreedNameNormalizer
 import com.example.dogapp.core.data.breed.BreedSource
 import com.example.dogapp.core.data.breed.inchesToCentimetres
 import com.example.dogapp.core.data.breed.poundsToKilograms
 import com.example.dogapp.core.data.network.safeCall
 import com.example.dogapp.core.domain.DataError
 import com.example.dogapp.core.domain.Outcome
+import com.example.dogapp.core.domain.breed.BreedNameNormalizer
 import com.example.dogapp.core.domain.breed.BreedSourceId
 import com.example.dogapp.core.domain.breed.BreedTrait
 import com.example.dogapp.core.domain.breed.MeasureRange

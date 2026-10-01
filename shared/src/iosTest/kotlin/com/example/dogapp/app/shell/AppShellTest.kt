@@ -15,8 +15,17 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.example.dogapp.app.di.breedModule
 import com.example.dogapp.app.navigation.NavigationStyle
+import com.example.dogapp.core.domain.breed.Breed
+import com.example.dogapp.core.domain.breed.BreedRepository
+import com.example.dogapp.core.domain.breed.BreedSyncResult
 import com.example.dogapp.core.presentation.theme.DogAppTheme
+import com.example.dogapp.feature.explore.di.exploreModule
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.koin.compose.KoinApplication
+import org.koin.dsl.koinConfiguration
+import org.koin.dsl.module
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
@@ -27,12 +36,28 @@ class AppShellTest {
 
     private fun screenTitle(label: String) = isHeading() and hasText(label)
 
+    private val exploreSearch = SemanticsMatcher.keyIsDefined(SemanticsProperties.EditableText)
+
+    private val emptyBreedRepository =
+        object : BreedRepository {
+            override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
+
+            override fun observeBreeds() = MutableStateFlow(emptyList<Breed>())
+        }
+
     private fun ComposeUiTest.setShell(style: NavigationStyle): DirectNavigationEventInput {
         val backInput = DirectNavigationEventInput()
         setContent {
             val dispatcher = requireNotNull(LocalNavigationEventDispatcherOwner.current).navigationEventDispatcher
             remember(dispatcher) { dispatcher.addInput(backInput) }
-            DogAppTheme { AppShell(navigationStyle = style) }
+            KoinApplication(
+                configuration =
+                    koinConfiguration {
+                        modules(breedModule, exploreModule, module { single<BreedRepository> { emptyBreedRepository } })
+                    },
+            ) {
+                DogAppTheme { AppShell(navigationStyle = style) }
+            }
         }
         return backInput
     }
@@ -56,7 +81,7 @@ class AppShellTest {
                 onNode(tab("Explore")).performClick()
                 onNode(tab("Explore")).assertIsSelected()
                 onNode(tab("Home")).assertIsNotSelected()
-                onNode(screenTitle("Explore")).assertExists()
+                onNode(exploreSearch).assertExists()
                 onNode(screenTitle("Home")).assertDoesNotExist()
 
                 onNode(tab("Profile")).performClick()
@@ -81,7 +106,7 @@ class AppShellTest {
 
             onNode(tab("Home")).assertIsSelected()
             onNode(screenTitle("Home")).assertExists()
-            onNode(screenTitle("Explore")).assertDoesNotExist()
+            onNode(exploreSearch).assertDoesNotExist()
         }
         runComposeUiTest {
             val backInput = setShell(NavigationStyle.Cupertino)
@@ -90,7 +115,7 @@ class AppShellTest {
             performPredictiveBack(backInput)
 
             onNode(tab("Explore")).assertIsSelected()
-            onNode(screenTitle("Explore")).assertExists()
+            onNode(exploreSearch).assertExists()
         }
     }
 }

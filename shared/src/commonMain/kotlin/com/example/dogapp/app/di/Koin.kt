@@ -1,10 +1,11 @@
 package com.example.dogapp.app.di
 
+import com.example.dogapp.feature.explore.di.exploreModule
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 
-val appModules: List<Module> = listOf(platformModule, networkModule, databaseModule, breedModule)
+val appModules: List<Module> = listOf(platformModule, networkModule, databaseModule, breedModule, exploreModule)
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
     startKoin {

@@ -1,10 +1,10 @@
 package com.example.dogapp.core.data.breed.dogceo
 
-import com.example.dogapp.core.data.breed.BreedNameNormalizer
 import com.example.dogapp.core.data.breed.BreedSource
 import com.example.dogapp.core.data.network.safeCall
 import com.example.dogapp.core.domain.DataError
 import com.example.dogapp.core.domain.Outcome
+import com.example.dogapp.core.domain.breed.BreedNameNormalizer
 import com.example.dogapp.core.domain.breed.BreedSourceId
 import com.example.dogapp.core.domain.breed.SourcedBreed
 import com.example.dogapp.core.domain.map

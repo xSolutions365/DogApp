@@ -1,4 +1,4 @@
-package com.example.dogapp.core.data.breed
+package com.example.dogapp.core.domain.breed
 
 object BreedNameNormalizer {
     private val diacritics =
