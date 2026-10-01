@@ -1,31 +1,183 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# DogApp
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+A Kotlin Multiplatform + Compose Multiplatform app for Android and iOS that brings together dog breed data from three public APIs. You can search breeds, read everything known about each one, keep favourites, and reveal a breed of the day.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+UI, logic and storage are shared in one `shared` module. The platform apps are thin entry points.
 
-### Running the apps
+## Features
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+- **Home: breed of the day**
+  - Once a day, tap **Reveal today's breed** and the breed card drops in. Tapping the card opens the breed detail.
+  - Draws are random with no repeats and prefer breeds that have photos. Once every breed has been drawn, a new cycle starts.
+  - Each draw is stored per local calendar day.
+- **Explore: breed search**
+  - Search matches the start of any word in a breed name across all merged breeds.
+  - Each row shows a small favourite mark.
+  - On first launch, a loading screen is shown and search stays disabled until the breed database is filled.
+- **Breed detail**
+  - A photo gallery (Dog CEO and TheDogAPI) with a shared-element transition from the list.
+  - Sections appear only when there is data for them: weight, height, life span, temperament, about, history, 1–5 trait meters (API Ninjas) and sources.
+  - A heart toggles the breed as a favourite.
+- **Profile**
+  - **Favourite breeds.** If a favourite later disappears from the APIs, it's kept, shown by its saved name as "No longer available", and can be removed.
+  - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
+- **Images**
+  - A dog placeholder sits under every photo while it loads.
+  - If a photo fails, it's retried once without the cache (this repairs broken cache entries) before moving on to the breed's next photo.
+  - Breeds without a stored photo get one fetched during sync.
+- **Platform-native navigation**
+  - Each tab keeps its own back stack, and tapping the current tab again returns it to its root.
+  - **Android:** Material 3 navigation bar, predictive back (from another tab's root, back returns to Home), and shared-axis transitions.
+  - **iOS:** a Cupertino-style tab bar, an edge-swipe pop within a tab, and push/pop transitions with parallax.
+- **Light and dark themes** from the custom "Park Day" design system:
+  - colours: Leash Blue, Fur Tan and Tennis Ball
+  - fonts: Bricolage Grotesque and Figtree (the OFL licences ship in `composeResources/files/licenses/`)
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## Data sources
 
-### Running tests
+| API | Used for | Auth |
+|---|---|---|
+| [TheDogAPI](https://www.thedogapi.com/en) (`https://api.thedogapi.com/v1`) | Breed facts (size, life span, temperament, origin, description, history, group), photos and galleries | API key, `x-api-key` header |
+| [API Ninjas Dogs](https://api-ninjas.com/api/dogs) (`https://api.api-ninjas.com/v1`) | 1–5 trait ratings, size, life expectancy, a photo (paged 20 at a time) | API key, `X-Api-Key` header |
+| [Dog CEO](https://dog.ceo/dog-api) (`https://dog.ceo/api`) | Breed and sub-breed names, photo galleries | None |
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+**How the sources are merged:**
+- Breeds are matched by normalised name: lowercase, without diacritics or punctuation, and with sub-breeds written as `"<sub-breed> <breed>"`.
+- Dog CEO and API Ninjas also have explicit alias tables.
+- Each source's rows are stored separately and merged when read. For each field, the first source with a value wins, in the order TheDogAPI → API Ninjas → Dog CEO. Photos are the union of all sources.
+- Measurements are always shown in kg and cm.
+- If a source fails during sync, it keeps the data from its last successful sync.
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+**Limits:** the keys are free-tier client keys, and they end up inside the built apps. Before any release, check TheDogAPI's free-plan limits and API Ninjas' commercial-use terms; commercial use of API Ninjas needs a premium plan.
 
----
+## Setup
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+### Requirements
+
+- **JDK 17 or newer.** AGP 9 and Gradle 9 need it; the code targets JVM 11 bytecode.
+- **Android Studio** with the Android SDK (compile and target SDK 37, min SDK 24).
+- **Xcode** with the iOS simulator (the app needs iOS 18.2 or newer), on a Mac with Apple silicon. The iOS targets are `iosArm64` and `iosSimulatorArm64`.
+- Gradle comes with the wrapper (Gradle 9.8.0), so there's nothing to install.
+
+### API keys (required)
+
+The build reads two secrets and **fails with a clear error if either is missing**. Get free keys from [TheDogAPI](https://www.thedogapi.com/en) and [API Ninjas](https://api-ninjas.com/api/dogs), then add them to `local.properties` in the project root. That file is gitignored.
+
+```properties
+dogapp.theDogApiKey=YOUR_THE_DOG_API_KEY
+dogapp.apiNinjasKey=YOUR_API_NINJAS_KEY
+```
+
+For CI, use environment variables instead; they take precedence over `local.properties`:
+
+```bash
+export DOGAPP_THE_DOG_API_KEY=...
+export DOGAPP_API_NINJAS_KEY=...
+```
+
+At build time, BuildKonfig generates them into `com.example.dogapp.core.data.config.BuildSecrets`. Never commit the keys.
+
+### iOS signing
+
+`iosApp/Configuration/Config.xcconfig` has an empty `TEAM_ID`. The simulator doesn't need one. To run on a real device, set your Apple team ID there.
+
+## Running
+
+- **Android:** use the `androidApp` run configuration, or `./gradlew :androidApp:assembleDebug` and install the APK.
+- **iOS:** open `iosApp/iosApp.xcodeproj` in Xcode and run the `iosApp` scheme. The `Shared` framework is built automatically.
+
+On first launch the app syncs all three APIs; that takes a few seconds. After that, breeds come from the local database.
+
+## Checks
+
+| Command | What it runs |
+|---|---|
+| `./gradlew staticAnalysis` | ktlint 1.8.0 with Compose rules on all modules, plus Android lint (warnings are errors) |
+| `./gradlew :shared:testAndroidHostTest` | Shared tests on the JVM, Koin `verify()`, and the architecture rules test |
+| `./gradlew :shared:iosSimulatorArm64Test` | Shared tests on iOS, plus Compose UI tests, Room integration tests and the full Koin graph |
+| `./gradlew ktlintFormat` | Auto-fixes formatting |
+
+Compose UI tests and Room tests run in `iosTest`. Android host tests can't create a `Context`, and the iOS simulator runs Compose UI tests without a device.
+
+## Architecture
+
+Clean Architecture laid out as packages in the single `shared` module, under `com.example.dogapp`:
+
+```
+app/                 composition root: may depend on everything
+  di/                Koin modules, initKoin, platform modules
+  navigation/        destinations, per-tab back stacks, Navigator, platform transitions
+  shell/             AppShell, Material navigation bar, Cupertino tab bar
+  logging/           Kermit setup
+  image/             Coil ImageLoader
+core/
+  domain/            pure Kotlin: models, repository interfaces, use cases, Outcome, errors
+    breed/  favourite/  draw/
+  data/              Ktor client, DataStore, Room database
+    breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/
+  presentation/      theme, shared components, shared-element helpers, error text
+feature/<name>/      home, explore, breeddetail, profile
+  presentation/      Route, Entries, UiState, Action, ViewModel, Root + Screen
+  di/                the feature's Koin module
+```
+
+**Layer rules** are enforced by `ArchitectureTest`, which checks the imports of every main source file:
+- domain imports only `kotlin.*`, `kotlinx.coroutines.*` and other domain code
+- data doesn't import presentation or `app`
+- presentation doesn't import data or `app`
+- core doesn't import features or `app`
+- no feature imports another feature
+
+**Conventions:**
+- **Use cases** are plain classes with `operator fun invoke`. Results are `Outcome<Data, DomainError>`.
+- **Screens** follow one pattern:
+  - an immutable `UiState`
+  - a sealed `Action` interface
+  - a ViewModel exposing `state: StateFlow` and `onAction`
+  - `XRoot` (gets the ViewModel from Koin) plus a stateless `XScreen` (previewable and tested)
+- **Navigation**
+  - Features expose `EntryProviderScope<NavKey>.xEntries(...)`.
+  - Navigation is passed in as lambdas from `app`.
+  - Every route is `@Serializable` and registered in that feature's serializers module.
+- **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows.
+- **The first breed sync** is owned by the app-wide `BreedSyncCoordinator`. It starts at launch, Home and Explore share it, and it syncs only when the database is empty.
+
+**Storage:**
+- **Room** (`DogAppDatabase`, version 4, with auto-migrations; schemas in `shared/schemas/`). Tables:
+  - `sourced_breed`: each source's breed data, which the sync replaces
+  - `favourite_breed`: owned by the user, never touched by sync
+  - `daily_draw`: one row per day; the first draw of a day is the one kept
+- **DataStore Preferences** is set up for small key-value settings.
+
+## Tools and libraries
+
+| Area | Library | Version |
+|---|---|---|
+| Language | Kotlin Multiplatform | 2.4.20 |
+| UI | Compose Multiplatform / Material 3 | 1.12.1 / 1.12.0-alpha03 |
+| Navigation | JetBrains Navigation 3 (+ lifecycle-viewmodel-navigation3) | 1.1.2 (lifecycle 2.11.0) |
+| DI | Koin (classic DSL, compose, compose-viewmodel) | 4.2.2 |
+| Networking | Ktor (OkHttp on Android, Darwin on iOS) + kotlinx-serialization | 3.6.0 |
+| Database | Room KMP + bundled SQLite (KSP) | 2.8.5 / 2.7.1 (KSP 2.3.12) |
+| Key-value | DataStore Preferences | 1.2.1 |
+| Images | Coil 3 (compose, network-ktor3) | 3.6.3 |
+| Logging | Kermit (also routes Koin and Ktor logs) | 2.2.0 |
+| Dates | kotlinx-datetime | 0.8.0 |
+| Coroutines | kotlinx-coroutines (+ test) | 1.11.0 |
+| Build secrets | BuildKonfig | 0.23.0 |
+| Static analysis | ktlint Gradle plugin + compose-rules | 14.2.0 (ktlint 1.8.0) / 0.6.7 |
+| Build | AGP / Gradle | 9.4.1 / 9.8.0 |
+
+All versions are in `gradle/libs.versions.toml`.
+
+## Useful notes
+
+- **Logging:** debug builds log to Logcat or OSLog under the `DogApp` tag (Koin under `Koin`, HTTP under `HttpClient`). Release builds log nothing.
+- **Known warnings:**
+  - Kotlin's "expect/actual classes are in Beta" warning on the Room-generated `DogAppDatabaseConstructor`
+  - AGP's `Configuration.setVisible` deprecation
+  - Both are left visible on purpose; neither is suppressed.
+- **Live network in iOS tests:** the iOS simulator *test* process gets `NoConnection` for real requests, while the simulator *app* doesn't. Check live API behaviour in the running app; the tests use Ktor's `MockEngine` and fakes.
+- **Koin in Compose UI tests:** in Koin 4.2.2, the `KoinApplication` composable starts a global Koin context and doesn't stop it when disposed. Tests that use it must call `stopKoin()` between runs (see `AppShellTest`). Otherwise later runs silently reuse the first run's modules.
+- **Koin `verify()`** doesn't see `get()` calls inside definition lambdas. That's why `KoinGraphTest` on iOS also resolves the whole graph against the real platform module.
+- **Day boundary:** "today" is the device's local calendar date. Changing the device clock can reveal an extra breed, which is acceptable for this feature.
