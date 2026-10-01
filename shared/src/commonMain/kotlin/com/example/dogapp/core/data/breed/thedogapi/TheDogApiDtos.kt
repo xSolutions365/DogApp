@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TheDogApiBreedDto(
+    val id: String,
     val name: String,
     @SerialName("life_span") val lifeSpan: String? = null,
     val temperament: String? = null,
@@ -24,5 +25,10 @@ data class TheDogApiMeasurementDto(
 
 @Serializable
 data class TheDogApiImageDto(
+    val url: String,
+)
+
+@Serializable
+data class TheDogApiSearchImageDto(
     val url: String,
 )

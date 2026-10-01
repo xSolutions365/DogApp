@@ -8,6 +8,7 @@ data class SourcedBreedEntity(
     val source: String,
     @ColumnInfo(name = "normalized_name") val normalizedName: String,
     @ColumnInfo(name = "display_name") val displayName: String,
+    @ColumnInfo(name = "source_reference") val sourceReference: String?,
     @ColumnInfo(name = "weight_kg_min") val weightKgMin: Double?,
     @ColumnInfo(name = "weight_kg_max") val weightKgMax: Double?,
     @ColumnInfo(name = "height_cm_min") val heightCmMin: Double?,

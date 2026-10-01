@@ -31,6 +31,7 @@ data class SourcedBreed(
     val source: BreedSourceId,
     val normalizedName: String,
     val displayName: String,
+    val sourceReference: String? = null,
     val weightKg: MeasureRange? = null,
     val heightCm: MeasureRange? = null,
     val lifeSpanYears: MeasureRange? = null,

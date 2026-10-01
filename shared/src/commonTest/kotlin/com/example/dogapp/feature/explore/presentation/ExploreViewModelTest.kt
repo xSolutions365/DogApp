@@ -1,6 +1,7 @@
 package com.example.dogapp.feature.explore.presentation
 
 import com.example.dogapp.core.domain.DataError
+import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSourceId
@@ -40,6 +41,8 @@ class ExploreViewModelTest {
         }
 
         override fun observeBreeds() = breeds
+
+        override suspend fun fetchGallery(breed: Breed) = Outcome.Success(emptyList<String>())
     }
 
     private val repository = FakeRepository()
@@ -64,6 +67,8 @@ class ExploreViewModelTest {
         traits = emptyMap(),
         imageUrls = images,
         sources = listOf(source),
+        sourceNames = listOf("Test"),
+        sourceReferences = emptyMap(),
     )
 
     private fun viewModel() =

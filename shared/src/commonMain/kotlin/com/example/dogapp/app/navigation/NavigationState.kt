@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.example.dogapp.feature.breeddetail.presentation.breedDetailNavigationSerializers
 import com.example.dogapp.feature.explore.presentation.exploreNavigationSerializers
 import com.example.dogapp.feature.home.presentation.homeNavigationSerializers
 import com.example.dogapp.feature.profile.presentation.profileNavigationSerializers
@@ -38,7 +39,7 @@ class NavigationState(
 }
 
 internal val navigationSerializersModule: SerializersModule =
-    homeNavigationSerializers + exploreNavigationSerializers + profileNavigationSerializers
+    homeNavigationSerializers + exploreNavigationSerializers + profileNavigationSerializers + breedDetailNavigationSerializers
 
 private val navigationSavedStateConfiguration =
     SavedStateConfiguration {

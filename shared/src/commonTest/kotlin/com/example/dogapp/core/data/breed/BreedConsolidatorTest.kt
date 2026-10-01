@@ -12,7 +12,11 @@ class BreedConsolidatorTest {
     private val secondary = BreedSourceId("secondary")
     private val tertiary = BreedSourceId("tertiary")
     private val unranked = BreedSourceId("unranked")
-    private val consolidator = BreedConsolidator(precedence = listOf(primary, secondary, tertiary))
+    private val consolidator =
+        BreedConsolidator(
+            precedence = listOf(primary, secondary, tertiary),
+            sourceNames = mapOf(primary to "Primary API", secondary to "Secondary API", tertiary to "Tertiary API"),
+        )
 
     @Test
     fun recordsWithTheSameNormalizedNameMergeFieldByFieldInPrecedenceOrder() {
@@ -22,6 +26,7 @@ class BreedConsolidatorTest {
                     source = tertiary,
                     normalizedName = "border collie",
                     displayName = "Border Collie (tertiary)",
+                    sourceReference = "collie/border",
                     breedGroup = "Tertiary group",
                     imageUrls = listOf("https://c/1.jpg", "https://shared.jpg"),
                 ),
@@ -40,6 +45,7 @@ class BreedConsolidatorTest {
                     source = primary,
                     normalizedName = "border collie",
                     displayName = "Border Collie",
+                    sourceReference = "50",
                     weightKg = MeasureRange(14.0, 25.0),
                     lifeSpanYears = MeasureRange(12.0, 15.0),
                     origin = "Anglo-Scottish border region",
@@ -64,6 +70,8 @@ class BreedConsolidatorTest {
         assertEquals(mapOf(BreedTrait.Energy to 5, BreedTrait.Trainability to 5), breed.traits)
         assertEquals(listOf("https://a/1.jpg", "https://b/1.jpg", "https://shared.jpg", "https://c/1.jpg"), breed.imageUrls)
         assertEquals(listOf(primary, secondary, tertiary), breed.sources)
+        assertEquals(listOf("Primary API", "Secondary API", "Tertiary API"), breed.sourceNames)
+        assertEquals(mapOf(primary to "50", tertiary to "collie/border"), breed.sourceReferences)
     }
 
     @Test
@@ -80,5 +88,6 @@ class BreedConsolidatorTest {
         assertEquals(listOf("Akita", "Beagle"), breeds.map { it.name })
         assertEquals("England", breeds.single { it.id == "beagle" }.origin)
         assertEquals(listOf(tertiary, unranked), breeds.single { it.id == "beagle" }.sources)
+        assertEquals(listOf("Tertiary API", "unranked"), breeds.single { it.id == "beagle" }.sourceNames)
     }
 }

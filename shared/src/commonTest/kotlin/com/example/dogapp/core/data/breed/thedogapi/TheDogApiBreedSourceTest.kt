@@ -1,5 +1,6 @@
 package com.example.dogapp.core.data.breed.thedogapi
 
+import com.example.dogapp.core.data.breed.GALLERY_IMAGE_LIMIT
 import com.example.dogapp.core.data.network.HttpClientFactory
 import com.example.dogapp.core.domain.DataError
 import com.example.dogapp.core.domain.Outcome
@@ -62,6 +63,7 @@ class TheDogApiBreedSourceTest {
                             source = TheDogApiBreedSource.ID,
                             normalizedName = "border collie",
                             displayName = "Border Collie",
+                            sourceReference = "50",
                             weightKg = MeasureRange(14.0, 25.0),
                             heightCm = MeasureRange(46.0, 56.0),
                             lifeSpanYears = MeasureRange(12.0, 15.0),
@@ -76,6 +78,7 @@ class TheDogApiBreedSourceTest {
                             source = TheDogApiBreedSource.ID,
                             normalizedName = "lowchen",
                             displayName = "Löwchen",
+                            sourceReference = "60",
                             temperament = listOf("Playful"),
                             breedGroup = "Toy",
                             origin = "France",
@@ -104,6 +107,33 @@ class TheDogApiBreedSourceTest {
             assertEquals(
                 Outcome.Failure(DataError.Remote.Client(403)),
                 TheDogApiBreedSource(HttpClientFactory.create(forbidden), apiKey = "bad").fetchBreeds(),
+            )
+        }
+
+    @Test
+    fun galleryRequestsBreedImagesWithTheKeyAndLimit() =
+        runTest {
+            val requests = mutableListOf<HttpRequestData>()
+            val engine =
+                MockEngine { request ->
+                    requests += request
+                    respond(
+                        """[{"id":"a","url":"https://cdn2.thedogapi.com/images/a.jpg","width":1,"height":1},{"id":"b","url":"https://cdn2.thedogapi.com/images/b.jpg","width":1,"height":1}]""",
+                        HttpStatusCode.OK,
+                        jsonHeaders,
+                    )
+                }
+
+            val result = TheDogApiBreedSource(HttpClientFactory.create(engine), apiKey = "test-key").fetchImages("50")
+
+            val request = requests.single()
+            assertEquals("https://api.thedogapi.com/v1/images/search", request.url.toString().substringBefore('?'))
+            assertEquals("50", request.url.parameters["breed_ids"])
+            assertEquals(GALLERY_IMAGE_LIMIT.toString(), request.url.parameters["limit"])
+            assertEquals("test-key", request.headers[TheDogApiBreedSource.API_KEY_HEADER])
+            assertEquals(
+                Outcome.Success(listOf("https://cdn2.thedogapi.com/images/a.jpg", "https://cdn2.thedogapi.com/images/b.jpg")),
+                result,
             )
         }
 }

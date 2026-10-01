@@ -17,10 +17,12 @@ import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.example.dogapp.app.di.breedModule
 import com.example.dogapp.app.navigation.NavigationStyle
+import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSyncResult
 import com.example.dogapp.core.presentation.theme.DogAppTheme
+import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.explore.di.exploreModule
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.compose.KoinApplication
@@ -38,11 +40,32 @@ class AppShellTest {
 
     private val exploreSearch = SemanticsMatcher.keyIsDefined(SemanticsProperties.EditableText)
 
+    private val borderCollie =
+        Breed(
+            id = "border collie",
+            name = "Border Collie",
+            weightKg = null,
+            heightCm = null,
+            lifeSpanYears = null,
+            temperament = emptyList(),
+            breedGroup = "Herding",
+            origin = null,
+            description = null,
+            history = null,
+            traits = emptyMap(),
+            imageUrls = emptyList(),
+            sources = emptyList(),
+            sourceNames = emptyList(),
+            sourceReferences = emptyMap(),
+        )
+
     private val emptyBreedRepository =
         object : BreedRepository {
             override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
 
-            override fun observeBreeds() = MutableStateFlow(emptyList<Breed>())
+            override fun observeBreeds() = MutableStateFlow(listOf(borderCollie))
+
+            override suspend fun fetchGallery(breed: Breed) = Outcome.Success(emptyList<String>())
         }
 
     private fun ComposeUiTest.setShell(style: NavigationStyle): DirectNavigationEventInput {
@@ -53,7 +76,7 @@ class AppShellTest {
             KoinApplication(
                 configuration =
                     koinConfiguration {
-                        modules(breedModule, exploreModule, module { single<BreedRepository> { emptyBreedRepository } })
+                        modules(breedModule, exploreModule, breedDetailModule, module { single<BreedRepository> { emptyBreedRepository } })
                     },
             ) {
                 DogAppTheme { AppShell(navigationStyle = style) }
@@ -116,6 +139,27 @@ class AppShellTest {
 
             onNode(tab("Explore")).assertIsSelected()
             onNode(exploreSearch).assertExists()
+        }
+    }
+
+    @Test
+    fun tappingABreedInExploreOpensItsDetailOnTheExploreTabAndBackReturns() {
+        NavigationStyle.entries.forEach { style ->
+            runComposeUiTest {
+                val backInput = setShell(style)
+                onNode(tab("Explore")).performClick()
+
+                onNode(hasText("Border Collie")).performClick()
+                waitForIdle()
+
+                onNode(screenTitle("Border Collie")).assertExists()
+                onNode(tab("Explore")).assertIsSelected()
+
+                performPredictiveBack(backInput)
+
+                onNode(screenTitle("Border Collie")).assertDoesNotExist()
+                onNode(exploreSearch).assertExists()
+            }
         }
     }
 }

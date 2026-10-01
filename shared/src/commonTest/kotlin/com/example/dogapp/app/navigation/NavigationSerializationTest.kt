@@ -1,6 +1,7 @@
 package com.example.dogapp.app.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
 import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -17,5 +18,12 @@ class NavigationSerializationTest {
 
             assertEquals(destination.route, json.decodeFromString(navKeySerializer, encoded), "Round trip failed for $destination")
         }
+    }
+
+    @Test
+    fun featureRoutesWithArgumentsRoundTripThroughFeatureProvidedSerializers() {
+        val route: NavKey = BreedDetailRoute(breedId = "border collie")
+
+        assertEquals(route, json.decodeFromString(navKeySerializer, json.encodeToString(navKeySerializer, route)))
     }
 }

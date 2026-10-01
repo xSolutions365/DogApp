@@ -22,7 +22,15 @@ class ExploreScreenTest {
     @Test
     fun loadingInformsTheUserAndDisablesSearch() =
         runComposeUiTest {
-            setContent { DogAppTheme { ExploreScreen(state = ExploreUiState(content = ExploreContent.Loading), onAction = {}) } }
+            setContent {
+                DogAppTheme {
+                    ExploreScreen(
+                        state = ExploreUiState(content = ExploreContent.Loading),
+                        onAction = {},
+                        onBreedClick = {},
+                    )
+                }
+            }
 
             onNodeWithText("Fetching all the breed data…").assertExists()
             onNode(searchField).assertIsNotEnabled()
@@ -37,6 +45,7 @@ class ExploreScreenTest {
                     ExploreScreen(
                         state = ExploreUiState(content = ExploreContent.Error(DataError.Remote.NoConnection.toStringResource())),
                         onAction = { actions += it },
+                        onBreedClick = {},
                     )
                 }
             }
@@ -67,6 +76,7 @@ class ExploreScreenTest {
                                     ),
                             ),
                         onAction = { actions += it },
+                        onBreedClick = {},
                     )
                 }
             }
@@ -84,7 +94,11 @@ class ExploreScreenTest {
         runComposeUiTest {
             setContent {
                 DogAppTheme {
-                    ExploreScreen(state = ExploreUiState(query = "poodle", content = ExploreContent.NoMatches("poodle")), onAction = {})
+                    ExploreScreen(
+                        state = ExploreUiState(query = "poodle", content = ExploreContent.NoMatches("poodle")),
+                        onAction = {},
+                        onBreedClick = {},
+                    )
                 }
             }
 

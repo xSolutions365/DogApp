@@ -15,6 +15,7 @@ class SourcedBreedEntityMappingTest {
                 source = BreedSourceId("the-dog-api"),
                 normalizedName = "border collie",
                 displayName = "Border Collie",
+                sourceReference = "50",
                 weightKg = MeasureRange(14.0, 25.0),
                 heightCm = MeasureRange(46.0, 56.0),
                 lifeSpanYears = MeasureRange(12.0, 15.0),

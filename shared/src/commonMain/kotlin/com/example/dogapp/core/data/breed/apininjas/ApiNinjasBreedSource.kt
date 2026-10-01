@@ -21,6 +21,7 @@ class ApiNinjasBreedSource(
     private val apiKey: String,
 ) : BreedSource {
     override val id: BreedSourceId = ID
+    override val displayName: String = DISPLAY_NAME
     override val precedence: Int = 1
 
     override suspend fun fetchBreeds(): Outcome<List<SourcedBreed>, DataError.Remote> {
@@ -88,6 +89,7 @@ class ApiNinjasBreedSource(
 
     companion object {
         val ID = BreedSourceId("api-ninjas")
+        const val DISPLAY_NAME = "API Ninjas"
         const val BASE_URL = "https://api.api-ninjas.com/v1"
         const val API_KEY_HEADER = "X-Api-Key"
         const val PAGE_SIZE = 20

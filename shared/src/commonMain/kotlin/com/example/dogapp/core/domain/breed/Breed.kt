@@ -14,4 +14,6 @@ data class Breed(
     val traits: Map<BreedTrait, Int>,
     val imageUrls: List<String>,
     val sources: List<BreedSourceId>,
+    val sourceNames: List<String>,
+    val sourceReferences: Map<BreedSourceId, String>,
 )

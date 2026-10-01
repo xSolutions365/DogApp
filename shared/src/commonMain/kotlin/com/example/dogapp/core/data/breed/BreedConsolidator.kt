@@ -7,6 +7,7 @@ import com.example.dogapp.core.domain.breed.SourcedBreed
 
 class BreedConsolidator(
     private val precedence: List<BreedSourceId>,
+    private val sourceNames: Map<BreedSourceId, String>,
 ) {
     fun consolidate(records: List<SourcedBreed>): List<Breed> =
         records
@@ -34,5 +35,7 @@ class BreedConsolidator(
             traits = ordered.asReversed().fold(emptyMap<BreedTrait, Int>()) { traits, record -> traits + record.traits },
             imageUrls = ordered.flatMap { it.imageUrls }.distinct(),
             sources = ordered.map { it.source },
+            sourceNames = ordered.map { sourceNames[it.source] ?: it.source.value },
+            sourceReferences = ordered.mapNotNull { record -> record.sourceReference?.let { record.source to it } }.toMap(),
         )
 }

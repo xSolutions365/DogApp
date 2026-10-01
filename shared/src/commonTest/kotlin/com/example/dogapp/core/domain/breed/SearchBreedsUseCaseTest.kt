@@ -19,6 +19,8 @@ class SearchBreedsUseCaseTest {
             traits = emptyMap(),
             imageUrls = emptyList(),
             sources = emptyList(),
+            sourceNames = emptyList(),
+            sourceReferences = emptyMap(),
         )
 
     private val breeds = listOf(breed("Border Collie"), breed("Rough Collie"), breed("Löwchen"), breed("German Shepherd"))

@@ -21,6 +21,8 @@ import com.example.dogapp.app.navigation.pushTransition
 import com.example.dogapp.app.navigation.rememberNavigationState
 import com.example.dogapp.app.navigation.tabSelectionTransition
 import com.example.dogapp.core.presentation.animation.SharedElementsHost
+import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
+import com.example.dogapp.feature.breeddetail.presentation.breedDetailEntries
 import com.example.dogapp.feature.explore.presentation.exploreEntries
 import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.profile.presentation.profileEntries
@@ -36,8 +38,9 @@ fun AppShell(
     val provideEntry =
         entryProvider<NavKey> {
             homeEntries()
-            exploreEntries()
+            exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             profileEntries()
+            breedDetailEntries(onBack = { navigator.goBack() })
         }
     val entriesByDestination =
         TopLevelDestination.entries.associateWith { destination ->

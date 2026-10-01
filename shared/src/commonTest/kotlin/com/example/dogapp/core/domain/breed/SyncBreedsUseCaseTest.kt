@@ -15,6 +15,8 @@ class SyncBreedsUseCaseTest {
         override suspend fun syncBreeds() = result
 
         override fun observeBreeds(): Flow<List<Breed>> = emptyFlow()
+
+        override suspend fun fetchGallery(breed: Breed) = Outcome.Success(emptyList<String>())
     }
 
     @Test

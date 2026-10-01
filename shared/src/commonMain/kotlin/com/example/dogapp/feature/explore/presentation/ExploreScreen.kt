@@ -1,6 +1,7 @@
 package com.example.dogapp.feature.explore.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.dogapp.core.presentation.animation.breedImageSharedKey
+import com.example.dogapp.core.presentation.animation.navSharedElement
 import com.example.dogapp.core.presentation.components.SearchField
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.explore_empty
@@ -41,15 +44,19 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ExploreRoot(viewModel: ExploreViewModel = koinViewModel()) {
+fun ExploreRoot(
+    onBreedClick: (String) -> Unit,
+    viewModel: ExploreViewModel = koinViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ExploreScreen(state = state, onAction = viewModel::onAction)
+    ExploreScreen(state = state, onAction = viewModel::onAction, onBreedClick = onBreedClick)
 }
 
 @Composable
 fun ExploreScreen(
     state: ExploreUiState,
     onAction: (ExploreAction) -> Unit,
+    onBreedClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -81,7 +88,7 @@ fun ExploreScreen(
                 if (content.breeds.isEmpty()) {
                     MessageContent(stringResource(Res.string.explore_empty))
                 } else {
-                    BreedList(content.breeds)
+                    BreedList(breeds = content.breeds, onBreedClick = onBreedClick)
                 }
             }
         }
@@ -162,20 +169,22 @@ private fun CenteredColumn(
 @Composable
 private fun BreedList(
     breeds: List<BreedListItem>,
+    onBreedClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        items(breeds, key = { it.id }) { breed -> BreedRow(breed) }
+        items(breeds, key = { it.id }) { breed -> BreedRow(breed = breed, onClick = { onBreedClick(breed.id) }) }
     }
 }
 
 @Composable
 private fun BreedRow(
     breed: BreedListItem,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -185,6 +194,7 @@ private fun BreedRow(
             contentScale = ContentScale.Crop,
             modifier =
                 Modifier
+                    .navSharedElement(breedImageSharedKey(breed.id))
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),

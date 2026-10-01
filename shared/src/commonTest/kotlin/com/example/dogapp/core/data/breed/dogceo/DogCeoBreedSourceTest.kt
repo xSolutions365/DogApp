@@ -1,5 +1,6 @@
 package com.example.dogapp.core.data.breed.dogceo
 
+import com.example.dogapp.core.data.breed.GALLERY_IMAGE_LIMIT
 import com.example.dogapp.core.data.network.HttpClientFactory
 import com.example.dogapp.core.domain.DataError
 import com.example.dogapp.core.domain.Outcome
@@ -37,12 +38,37 @@ class DogCeoBreedSourceTest {
             assertEquals(
                 Outcome.Success(
                     listOf(
-                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "beagle", displayName = "Beagle"),
-                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "chow chow", displayName = "Chow Chow"),
-                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "border collie", displayName = "Border Collie"),
-                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "afghan hound", displayName = "Afghan Hound"),
-                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "basset hound", displayName = "Basset Hound"),
-                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "australian kelpie", displayName = "Australian Kelpie"),
+                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "beagle", displayName = "Beagle", sourceReference = "beagle"),
+                        SourcedBreed(
+                            DogCeoBreedSource.ID,
+                            normalizedName = "chow chow",
+                            displayName = "Chow Chow",
+                            sourceReference = "chow",
+                        ),
+                        SourcedBreed(
+                            DogCeoBreedSource.ID,
+                            normalizedName = "border collie",
+                            displayName = "Border Collie",
+                            sourceReference = "collie/border",
+                        ),
+                        SourcedBreed(
+                            DogCeoBreedSource.ID,
+                            normalizedName = "afghan hound",
+                            displayName = "Afghan Hound",
+                            sourceReference = "hound/afghan",
+                        ),
+                        SourcedBreed(
+                            DogCeoBreedSource.ID,
+                            normalizedName = "basset hound",
+                            displayName = "Basset Hound",
+                            sourceReference = "hound/basset",
+                        ),
+                        SourcedBreed(
+                            DogCeoBreedSource.ID,
+                            normalizedName = "australian kelpie",
+                            displayName = "Australian Kelpie",
+                            sourceReference = "kelpie",
+                        ),
                     ),
                 ),
                 result,
@@ -62,5 +88,24 @@ class DogCeoBreedSourceTest {
                 }
 
             assertEquals(Outcome.Failure(DataError.Remote.NotFound), DogCeoBreedSource(HttpClientFactory.create(engine)).fetchBreeds())
+        }
+
+    @Test
+    fun galleryFetchesTheBreedPathImagesUpToTheLimit() =
+        runTest {
+            val requestedUrls = mutableListOf<String>()
+            val images = (1..30).joinToString(prefix = "[", postfix = "]") { "\"https://images.dog.ceo/breeds/collie-border/$it.jpg\"" }
+            val engine =
+                MockEngine { request ->
+                    requestedUrls += request.url.toString()
+                    respond("""{"message":$images,"status":"success"}""", HttpStatusCode.OK, jsonHeaders)
+                }
+
+            val result = DogCeoBreedSource(HttpClientFactory.create(engine)).fetchImages("collie/border")
+
+            assertEquals(listOf("https://dog.ceo/api/breed/collie/border/images"), requestedUrls)
+            val urls = (result as Outcome.Success).data
+            assertEquals(GALLERY_IMAGE_LIMIT, urls.size)
+            assertEquals("https://images.dog.ceo/breeds/collie-border/1.jpg", urls.first())
         }
 }
