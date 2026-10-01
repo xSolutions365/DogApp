@@ -100,7 +100,7 @@ class ExploreViewModel(
             id = id,
             name = name,
             subtitle = breedGroup ?: temperament.take(SUBTITLE_TEMPERAMENT_COUNT).joinToString(", ").ifEmpty { null },
-            imageUrl = imageUrls.firstOrNull(),
+            imageUrls = imageUrls,
             isFavourite = isFavourite,
         )
 

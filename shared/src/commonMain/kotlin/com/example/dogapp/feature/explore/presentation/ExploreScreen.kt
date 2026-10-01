@@ -195,7 +195,7 @@ private fun BreedRow(
     ) {
         Box {
             DogImage(
-                url = breed.imageUrl,
+                urls = breed.imageUrls,
                 modifier =
                     Modifier
                         .navSharedElement(breedImageSharedKey(breed.id))

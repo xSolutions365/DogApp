@@ -32,7 +32,7 @@ class ProfileScreenTest {
                             ProfileUiState(
                                 favourites =
                                     listOf(
-                                        FavouriteListItem.Available("akita", "Akita", subtitle = "Working", imageUrl = null),
+                                        FavouriteListItem.Available("akita", "Akita", subtitle = "Working", imageUrls = emptyList()),
                                         FavouriteListItem.Unavailable("blenheim spaniel", "Blenheim Spaniel"),
                                     ),
                             ),

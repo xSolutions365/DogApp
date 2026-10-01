@@ -110,7 +110,15 @@ class ExploreViewModelTest {
 
             assertEquals(
                 ExploreContent.Results(
-                    listOf(BreedListItem("beagle", "Beagle", subtitle = "Hound", imageUrl = "https://a/1.jpg", isFavourite = false)),
+                    listOf(
+                        BreedListItem(
+                            "beagle",
+                            "Beagle",
+                            subtitle = "Hound",
+                            imageUrls = listOf("https://a/1.jpg", "https://b/1.jpg"),
+                            isFavourite = false,
+                        ),
+                    ),
                 ),
                 viewModel.state.value.content,
             )
@@ -166,10 +174,10 @@ class ExploreViewModelTest {
                         "border collie",
                         "Border Collie",
                         subtitle = "Intelligent, energetic",
-                        imageUrl = null,
+                        imageUrls = emptyList(),
                         isFavourite = false,
                     ),
-                    BreedListItem("rough collie", "Rough Collie", subtitle = "Herding", imageUrl = null, isFavourite = false),
+                    BreedListItem("rough collie", "Rough Collie", subtitle = "Herding", imageUrls = emptyList(), isFavourite = false),
                 ),
                 results.breeds,
             )

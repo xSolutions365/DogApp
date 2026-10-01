@@ -12,7 +12,7 @@ sealed interface FavouriteListItem {
         override val breedId: String,
         override val name: String,
         val subtitle: String?,
-        val imageUrl: String?,
+        val imageUrls: List<String>,
     ) : FavouriteListItem
 
     data class Unavailable(

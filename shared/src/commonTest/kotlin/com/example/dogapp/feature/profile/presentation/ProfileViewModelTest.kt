@@ -68,7 +68,7 @@ class ProfileViewModelTest {
             assertEquals(
                 listOf(
                     FavouriteListItem.Unavailable("blenheim spaniel", "Blenheim Spaniel"),
-                    FavouriteListItem.Available("akita", "Akita", subtitle = "Working", imageUrl = "https://akita.jpg"),
+                    FavouriteListItem.Available("akita", "Akita", subtitle = "Working", imageUrls = listOf("https://akita.jpg")),
                 ),
                 viewModel.state.value.favourites,
             )

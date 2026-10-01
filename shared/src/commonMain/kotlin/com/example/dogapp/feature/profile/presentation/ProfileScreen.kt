@@ -104,7 +104,7 @@ private fun AvailableFavouriteRow(
         subtitle = favourite.subtitle,
         image = {
             DogImage(
-                url = favourite.imageUrl,
+                urls = favourite.imageUrls,
                 modifier = Modifier.navSharedElement(breedImageSharedKey(favourite.breedId)).size(56.dp).clip(RoundedCornerShape(12.dp)),
             )
         },
@@ -122,7 +122,7 @@ private fun UnavailableFavouriteRow(
     FavouriteRow(
         name = favourite.name,
         subtitle = stringResource(Res.string.profile_favourite_unavailable),
-        image = { DogImage(url = null, modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))) },
+        image = { DogImage(urls = emptyList(), modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))) },
         trailing = {
             TextButton(onClick = onRemove, modifier = Modifier.semantics { contentDescription = removeDescription }) {
                 Text(stringResource(Res.string.profile_favourite_remove))

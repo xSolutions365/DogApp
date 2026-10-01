@@ -24,6 +24,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -189,10 +191,12 @@ private fun Hero(
     onToggleFavourite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val failedImages = remember(breedId) { mutableStateListOf<String>() }
+    val visibleImages = images.filterNot { it in failedImages }
     Box(modifier = modifier.fillMaxWidth()) {
-        if (images.isEmpty()) {
+        if (visibleImages.isEmpty()) {
             DogImage(
-                url = null,
+                urls = emptyList(),
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -200,7 +204,7 @@ private fun Hero(
                         .navSharedElement(breedImageSharedKey(breedId)),
             )
         } else {
-            val pagerState = rememberPagerState { images.size }
+            val pagerState = rememberPagerState { visibleImages.size }
             HorizontalPager(
                 state = pagerState,
                 modifier =
@@ -209,22 +213,24 @@ private fun Hero(
                         .aspectRatio(4f / 3f)
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) { page ->
+                val url = visibleImages[page]
                 DogImage(
-                    url = images[page],
+                    urls = listOf(url),
+                    onLoadFailure = { failedImages += url },
                     modifier =
                         Modifier
                             .fillMaxSize()
                             .then(if (page == 0) Modifier.navSharedElement(breedImageSharedKey(breedId)) else Modifier),
                 )
             }
-            if (images.size > 1) {
+            if (visibleImages.size > 1) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                     modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
                 ) {
                     Text(
-                        text = stringResource(Res.string.detail_photo_position, pagerState.currentPage + 1, images.size),
+                        text = stringResource(Res.string.detail_photo_position, pagerState.currentPage + 1, visibleImages.size),
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     )

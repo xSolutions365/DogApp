@@ -33,7 +33,7 @@ class ProfileViewModel(
                     breedId = breed.id,
                     name = breed.name,
                     subtitle = breed.breedGroup,
-                    imageUrl = breed.imageUrls.firstOrNull(),
+                    imageUrls = breed.imageUrls,
                 )
             }
 
