@@ -4,8 +4,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.example.dogapp.core.data.breed.local.SourcedBreedDao
 import com.example.dogapp.core.data.database.DogAppDatabase
+import com.example.dogapp.core.data.favourite.local.FavouriteBreedDao
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.SyncBreedsUseCase
+import com.example.dogapp.core.domain.favourite.FavouritesRepository
+import com.example.dogapp.core.domain.favourite.ObserveFavouriteBreedsUseCase
+import com.example.dogapp.core.domain.favourite.ToggleFavouriteUseCase
 import io.ktor.client.HttpClient
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
@@ -35,5 +39,9 @@ class KoinGraphTest : KoinTest {
         assertNotNull(get<SourcedBreedDao>())
         assertNotNull(get<BreedRepository>())
         assertNotNull(get<SyncBreedsUseCase>())
+        assertNotNull(get<FavouriteBreedDao>())
+        assertNotNull(get<FavouritesRepository>())
+        assertNotNull(get<ObserveFavouriteBreedsUseCase>())
+        assertNotNull(get<ToggleFavouriteUseCase>())
     }
 }

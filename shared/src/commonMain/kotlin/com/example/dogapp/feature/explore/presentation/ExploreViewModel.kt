@@ -8,6 +8,7 @@ import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.ObserveBreedsUseCase
 import com.example.dogapp.core.domain.breed.SearchBreedsUseCase
 import com.example.dogapp.core.domain.breed.SyncBreedsUseCase
+import com.example.dogapp.core.domain.favourite.ObserveFavouriteIdsUseCase
 import com.example.dogapp.core.presentation.error.toStringResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +22,7 @@ class ExploreViewModel(
     private val observeBreeds: ObserveBreedsUseCase,
     private val searchBreeds: SearchBreedsUseCase,
     private val syncBreeds: SyncBreedsUseCase,
+    observeFavouriteIds: ObserveFavouriteIdsUseCase,
 ) : ViewModel() {
     private sealed interface SyncStatus {
         data object NotStarted : SyncStatus
@@ -38,8 +40,8 @@ class ExploreViewModel(
     private val syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.NotStarted)
 
     val state: StateFlow<ExploreUiState> =
-        combine(observeBreeds(), query, syncStatus) { breeds, query, syncStatus ->
-            ExploreUiState(query = query, content = content(breeds, query, syncStatus))
+        combine(observeBreeds(), query, syncStatus, observeFavouriteIds()) { breeds, query, syncStatus, favouriteIds ->
+            ExploreUiState(query = query, content = content(breeds, query, syncStatus, favouriteIds))
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ExploreUiState())
 
     init {
@@ -69,6 +71,7 @@ class ExploreViewModel(
         breeds: List<Breed>,
         query: String,
         syncStatus: SyncStatus,
+        favouriteIds: Set<String>,
     ): ExploreContent {
         if (breeds.isEmpty()) {
             return when (syncStatus) {
@@ -78,15 +81,27 @@ class ExploreViewModel(
             }
         }
         val matches = searchBreeds(breeds, query)
-        return if (matches.isEmpty()) ExploreContent.NoMatches(query) else ExploreContent.Results(matches.map { it.toListItem() })
+        return if (matches.isEmpty()) {
+            ExploreContent.NoMatches(query)
+        } else {
+            ExploreContent.Results(
+                matches.map {
+                    it.toListItem(
+                        isFavourite =
+                            it.id in favouriteIds,
+                    )
+                },
+            )
+        }
     }
 
-    private fun Breed.toListItem() =
+    private fun Breed.toListItem(isFavourite: Boolean) =
         BreedListItem(
             id = id,
             name = name,
             subtitle = breedGroup ?: temperament.take(SUBTITLE_TEMPERAMENT_COUNT).joinToString(", ").ifEmpty { null },
             imageUrl = imageUrls.firstOrNull(),
+            isFavourite = isFavourite,
         )
 
     private companion object {

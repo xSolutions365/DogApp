@@ -1,0 +1,147 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "8f98cc236685bfe726e48b635c9d702c",
+    "entities": [
+      {
+        "tableName": "sourced_breed",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`source` TEXT NOT NULL, `normalized_name` TEXT NOT NULL, `display_name` TEXT NOT NULL, `source_reference` TEXT, `weight_kg_min` REAL, `weight_kg_max` REAL, `height_cm_min` REAL, `height_cm_max` REAL, `life_span_years_min` REAL, `life_span_years_max` REAL, `temperament` TEXT NOT NULL, `breed_group` TEXT, `origin` TEXT, `description` TEXT, `history` TEXT, `traits` TEXT NOT NULL, `image_urls` TEXT NOT NULL, PRIMARY KEY(`source`, `normalized_name`))",
+        "fields": [
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "normalizedName",
+            "columnName": "normalized_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceReference",
+            "columnName": "source_reference",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "weightKgMin",
+            "columnName": "weight_kg_min",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "weightKgMax",
+            "columnName": "weight_kg_max",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "heightCmMin",
+            "columnName": "height_cm_min",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "heightCmMax",
+            "columnName": "height_cm_max",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lifeSpanYearsMin",
+            "columnName": "life_span_years_min",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lifeSpanYearsMax",
+            "columnName": "life_span_years_max",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "temperament",
+            "columnName": "temperament",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "breedGroup",
+            "columnName": "breed_group",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "origin",
+            "columnName": "origin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "history",
+            "columnName": "history",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "traits",
+            "columnName": "traits",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imageUrls",
+            "columnName": "image_urls",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "source",
+            "normalized_name"
+          ]
+        }
+      },
+      {
+        "tableName": "favourite_breed",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`breed_id` TEXT NOT NULL, `name` TEXT NOT NULL, `added_at` INTEGER NOT NULL, PRIMARY KEY(`breed_id`))",
+        "fields": [
+          {
+            "fieldPath": "breedId",
+            "columnName": "breed_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedAtEpochMillis",
+            "columnName": "added_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "breed_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8f98cc236685bfe726e48b635c9d702c')"
+    ]
+  }
+}

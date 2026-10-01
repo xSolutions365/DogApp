@@ -106,7 +106,10 @@ class BreedDetailScreenTest {
                 }
             }
 
+            val list = onNode(hasScrollToNodeAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange))
+            list.performScrollToNode(heading("Collie"))
             onNode(heading("Collie")).assertExists()
+            list.performScrollToNode(hasText("Data from API Ninjas"))
             onNodeWithText("Data from API Ninjas").assertExists()
             listOf("Temperament", "About", "History", "Family & social", "Care & grooming", "Personality").forEach { title ->
                 onNode(heading(title)).assertDoesNotExist()

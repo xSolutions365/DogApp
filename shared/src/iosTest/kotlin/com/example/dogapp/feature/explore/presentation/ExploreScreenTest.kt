@@ -3,8 +3,11 @@ package com.example.dogapp.feature.explore.presentation
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -59,7 +62,7 @@ class ExploreScreenTest {
         }
 
     @Test
-    fun resultsListBreedsAndTypingSendsQueryChanges() =
+    fun resultsListBreedsWithAPassiveFavouriteMarkAndTypingSendsQueryChanges() =
         runComposeUiTest {
             val actions = mutableListOf<ExploreAction>()
             setContent {
@@ -70,8 +73,14 @@ class ExploreScreenTest {
                                 content =
                                     ExploreContent.Results(
                                         listOf(
-                                            BreedListItem("border collie", "Border Collie", subtitle = "Herding", imageUrl = null),
-                                            BreedListItem("beagle", "Beagle", subtitle = null, imageUrl = null),
+                                            BreedListItem(
+                                                "border collie",
+                                                "Border Collie",
+                                                subtitle = "Herding",
+                                                imageUrl = null,
+                                                isFavourite = true,
+                                            ),
+                                            BreedListItem("beagle", "Beagle", subtitle = null, imageUrl = null, isFavourite = false),
                                         ),
                                     ),
                             ),
@@ -84,6 +93,8 @@ class ExploreScreenTest {
             onNodeWithText("Border Collie").assertExists()
             onNodeWithText("Herding").assertExists()
             onNodeWithText("Beagle").assertExists()
+            onAllNodes(hasContentDescription("Favourite"), useUnmergedTree = true).assertCountEquals(1)
+            onNode(hasContentDescription("Favourite"), useUnmergedTree = true).assertHasNoClickAction()
             onNode(searchField).assertIsEnabled().performTextInput("col")
 
             assertEquals(listOf<ExploreAction>(ExploreAction.QueryChange("col")), actions)

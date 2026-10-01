@@ -27,18 +27,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedTrait
 import com.example.dogapp.core.presentation.animation.breedImageSharedKey
 import com.example.dogapp.core.presentation.animation.navSharedElement
+import com.example.dogapp.core.presentation.components.DogImage
 import com.example.dogapp.core.presentation.components.platformBackIcon
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.detail_about
@@ -191,7 +190,16 @@ private fun Hero(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        if (images.isNotEmpty()) {
+        if (images.isEmpty()) {
+            DogImage(
+                url = null,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(4f / 3f)
+                        .navSharedElement(breedImageSharedKey(breedId)),
+            )
+        } else {
             val pagerState = rememberPagerState { images.size }
             HorizontalPager(
                 state = pagerState,
@@ -201,10 +209,8 @@ private fun Hero(
                         .aspectRatio(4f / 3f)
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) { page ->
-                AsyncImage(
-                    model = images[page],
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                DogImage(
+                    url = images[page],
                     modifier =
                         Modifier
                             .fillMaxSize()

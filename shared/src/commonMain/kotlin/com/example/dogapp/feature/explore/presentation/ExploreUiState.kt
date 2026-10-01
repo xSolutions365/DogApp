@@ -33,4 +33,5 @@ data class BreedListItem(
     val name: String,
     val subtitle: String?,
     val imageUrl: String?,
+    val isFavourite: Boolean,
 )

@@ -8,22 +8,29 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.example.dogapp.app.di.breedModule
+import com.example.dogapp.app.di.favouriteModule
 import com.example.dogapp.app.navigation.NavigationStyle
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSyncResult
+import com.example.dogapp.core.domain.favourite.FavouriteRecord
+import com.example.dogapp.core.domain.favourite.FavouritesRepository
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.explore.di.exploreModule
+import com.example.dogapp.feature.profile.di.profileModule
+import com.example.dogapp.testing.FakeFavouritesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
@@ -37,6 +44,13 @@ class AppShellTest {
     private fun tab(label: String) = isTab and hasText(label)
 
     private fun screenTitle(label: String) = isHeading() and hasText(label)
+
+    private val verticalList = hasScrollToNodeAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
+
+    private fun ComposeUiTest.assertDetailTitle(name: String) {
+        onNode(verticalList).performScrollToNode(screenTitle(name))
+        onNode(screenTitle(name)).assertExists()
+    }
 
     private val exploreSearch = SemanticsMatcher.keyIsDefined(SemanticsProperties.EditableText)
 
@@ -59,6 +73,8 @@ class AppShellTest {
             sourceReferences = emptyMap(),
         )
 
+    private val favourites = FakeFavouritesRepository(listOf(FavouriteRecord("border collie", "Border Collie", addedAtEpochMillis = 1)))
+
     private val emptyBreedRepository =
         object : BreedRepository {
             override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
@@ -76,7 +92,17 @@ class AppShellTest {
             KoinApplication(
                 configuration =
                     koinConfiguration {
-                        modules(breedModule, exploreModule, breedDetailModule, module { single<BreedRepository> { emptyBreedRepository } })
+                        modules(
+                            breedModule,
+                            favouriteModule,
+                            exploreModule,
+                            breedDetailModule,
+                            profileModule,
+                            module {
+                                single<BreedRepository> { emptyBreedRepository }
+                                single<FavouritesRepository> { favourites }
+                            },
+                        )
                     },
             ) {
                 DogAppTheme { AppShell(navigationStyle = style) }
@@ -152,7 +178,7 @@ class AppShellTest {
                 onNode(hasText("Border Collie")).performClick()
                 waitForIdle()
 
-                onNode(screenTitle("Border Collie")).assertExists()
+                assertDetailTitle("Border Collie")
                 onNode(tab("Explore")).assertIsSelected()
 
                 performPredictiveBack(backInput)
@@ -160,6 +186,20 @@ class AppShellTest {
                 onNode(screenTitle("Border Collie")).assertDoesNotExist()
                 onNode(exploreSearch).assertExists()
             }
+        }
+    }
+
+    @Test
+    fun tappingAFavouriteInProfileOpensItsDetailOnTheProfileTab() {
+        runComposeUiTest {
+            setShell(NavigationStyle.Material)
+            onNode(tab("Profile")).performClick()
+
+            onNode(hasText("Border Collie")).performClick()
+            waitForIdle()
+
+            assertDetailTitle("Border Collie")
+            onNode(tab("Profile")).assertIsSelected()
         }
     }
 }

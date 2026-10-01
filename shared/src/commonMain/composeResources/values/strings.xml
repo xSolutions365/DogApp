@@ -19,6 +19,7 @@
     <string name="explore_retry">Try again</string>
     <string name="explore_no_matches">No breeds match “%1$s”</string>
     <string name="explore_empty">No breeds are available yet.</string>
+    <string name="explore_favourite_indicator">Favourite</string>
     <string name="detail_back">Back</string>
     <string name="detail_favourite_add">Add to favourites</string>
     <string name="detail_favourite_remove">Remove from favourites</string>
@@ -50,4 +51,9 @@
     <string name="trait_trainability">Trainability</string>
     <string name="trait_energy">Energy</string>
     <string name="trait_barking">Barking</string>
+    <string name="profile_favourites">Favourite breeds</string>
+    <string name="profile_favourites_empty">No favourites yet. Tap the heart on a breed to save it here.</string>
+    <string name="profile_favourite_unavailable">No longer available</string>
+    <string name="profile_favourite_remove">Remove</string>
+    <string name="profile_favourite_remove_description">Remove %1$s from favourites</string>
 </resources>

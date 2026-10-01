@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.example.dogapp.core.domain.breed.GetBreedGalleryUseCase
 import com.example.dogapp.core.domain.breed.ObserveBreedUseCase
+import com.example.dogapp.core.domain.favourite.ObserveIsFavouriteUseCase
+import com.example.dogapp.core.domain.favourite.ToggleFavouriteUseCase
 import com.example.dogapp.core.domain.onFailure
 import com.example.dogapp.core.domain.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,17 +16,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BreedDetailViewModel(
     private val breedId: String,
     observeBreed: ObserveBreedUseCase,
     private val getBreedGallery: GetBreedGalleryUseCase,
+    observeIsFavourite: ObserveIsFavouriteUseCase,
+    private val toggleFavourite: ToggleFavouriteUseCase,
 ) : ViewModel() {
     private val logger = Logger.withTag("BreedDetail")
     private val breed = observeBreed(breedId)
-    private val isFavourite = MutableStateFlow(false)
+    private val isFavourite = observeIsFavourite(breedId)
     private val gallery = MutableStateFlow<List<String>>(emptyList())
 
     val state: StateFlow<BreedDetailUiState> =
@@ -46,7 +49,12 @@ class BreedDetailViewModel(
 
     fun onAction(action: BreedDetailAction) {
         when (action) {
-            BreedDetailAction.ToggleFavourite -> isFavourite.update { !it }
+            BreedDetailAction.ToggleFavourite -> {
+                viewModelScope.launch {
+                    val breed = breed.filterNotNull().first()
+                    toggleFavourite(breedId = breed.id, name = breed.name)
+                }
+            }
         }
     }
 

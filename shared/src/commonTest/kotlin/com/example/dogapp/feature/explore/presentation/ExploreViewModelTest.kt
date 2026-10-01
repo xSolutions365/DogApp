@@ -9,7 +9,9 @@ import com.example.dogapp.core.domain.breed.BreedSyncResult
 import com.example.dogapp.core.domain.breed.ObserveBreedsUseCase
 import com.example.dogapp.core.domain.breed.SearchBreedsUseCase
 import com.example.dogapp.core.domain.breed.SyncBreedsUseCase
+import com.example.dogapp.core.domain.favourite.ObserveFavouriteIdsUseCase
 import com.example.dogapp.core.presentation.error.toStringResource
+import com.example.dogapp.testing.FakeFavouritesRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,11 +73,14 @@ class ExploreViewModelTest {
         sourceReferences = emptyMap(),
     )
 
+    private val favourites = FakeFavouritesRepository()
+
     private fun viewModel() =
         ExploreViewModel(
             observeBreeds = ObserveBreedsUseCase(repository),
             searchBreeds = SearchBreedsUseCase(),
             syncBreeds = SyncBreedsUseCase(repository),
+            observeFavouriteIds = ObserveFavouriteIdsUseCase(favourites),
         )
 
     @BeforeTest
@@ -104,7 +109,9 @@ class ExploreViewModelTest {
             sync.complete(BreedSyncResult(succeededSources = setOf(source), failures = emptyMap()))
 
             assertEquals(
-                ExploreContent.Results(listOf(BreedListItem("beagle", "Beagle", subtitle = "Hound", imageUrl = "https://a/1.jpg"))),
+                ExploreContent.Results(
+                    listOf(BreedListItem("beagle", "Beagle", subtitle = "Hound", imageUrl = "https://a/1.jpg", isFavourite = false)),
+                ),
                 viewModel.state.value.content,
             )
             assertTrue(viewModel.state.value.isSearchEnabled)
@@ -155,8 +162,14 @@ class ExploreViewModelTest {
             assertEquals("collie", viewModel.state.value.query)
             assertEquals(
                 listOf(
-                    BreedListItem("border collie", "Border Collie", subtitle = "Intelligent, energetic", imageUrl = null),
-                    BreedListItem("rough collie", "Rough Collie", subtitle = "Herding", imageUrl = null),
+                    BreedListItem(
+                        "border collie",
+                        "Border Collie",
+                        subtitle = "Intelligent, energetic",
+                        imageUrl = null,
+                        isFavourite = false,
+                    ),
+                    BreedListItem("rough collie", "Rough Collie", subtitle = "Herding", imageUrl = null, isFavourite = false),
                 ),
                 results.breeds,
             )
@@ -164,5 +177,23 @@ class ExploreViewModelTest {
             viewModel.onAction(ExploreAction.QueryChange("poodle"))
             assertEquals(ExploreContent.NoMatches("poodle"), viewModel.state.value.content)
             assertTrue(viewModel.state.value.isSearchEnabled)
+        }
+
+    @Test
+    fun favouriteBreedsAreMarkedAndTheMarkFollowsFavouriteChanges() =
+        runTest {
+            repository.breeds.value = listOf(breed("akita", "Akita"), breed("beagle", "Beagle"))
+            favourites.toggle("beagle", "Beagle")
+            val viewModel = viewModel()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
+
+            fun marks() = (viewModel.state.value.content as ExploreContent.Results).breeds.associate { it.id to it.isFavourite }
+
+            assertEquals(mapOf("akita" to false, "beagle" to true), marks())
+
+            favourites.toggle("akita", "Akita")
+            favourites.toggle("beagle", "Beagle")
+
+            assertEquals(mapOf("akita" to true, "beagle" to false), marks())
         }
 }

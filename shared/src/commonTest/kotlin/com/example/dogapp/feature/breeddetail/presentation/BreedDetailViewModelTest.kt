@@ -8,6 +8,9 @@ import com.example.dogapp.core.domain.breed.BreedSourceId
 import com.example.dogapp.core.domain.breed.BreedSyncResult
 import com.example.dogapp.core.domain.breed.GetBreedGalleryUseCase
 import com.example.dogapp.core.domain.breed.ObserveBreedUseCase
+import com.example.dogapp.core.domain.favourite.ObserveIsFavouriteUseCase
+import com.example.dogapp.core.domain.favourite.ToggleFavouriteUseCase
+import com.example.dogapp.testing.FakeFavouritesRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,11 +65,15 @@ class BreedDetailViewModelTest {
         sourceReferences = mapOf(BreedSourceId("test") to id),
     )
 
+    private val favourites = FakeFavouritesRepository()
+
     private fun viewModel(breedId: String) =
         BreedDetailViewModel(
             breedId = breedId,
             observeBreed = ObserveBreedUseCase(repository),
             getBreedGallery = GetBreedGalleryUseCase(repository),
+            observeIsFavourite = ObserveIsFavouriteUseCase(favourites),
+            toggleFavourite = ToggleFavouriteUseCase(favourites),
         )
 
     @BeforeTest
@@ -99,7 +106,7 @@ class BreedDetailViewModelTest {
         }
 
     @Test
-    fun favouriteToggleFlipsTheHeartAndGalleryFailureKeepsStoredImages() =
+    fun favouriteTogglePersistsThroughTheRepositoryAndGalleryFailureKeepsStoredImages() =
         runTest {
             repository.breeds.value = listOf(breed("akita", images = listOf("https://stored.jpg")))
             val viewModel = viewModel("akita")
@@ -108,11 +115,13 @@ class BreedDetailViewModelTest {
 
             viewModel.onAction(BreedDetailAction.ToggleFavourite)
             val favourite = viewModel.state.value as BreedDetailUiState.Loaded
+            assertEquals(listOf("akita" to "Akita"), favourites.records.value.map { it.breedId to it.name })
             viewModel.onAction(BreedDetailAction.ToggleFavourite)
             val notFavourite = viewModel.state.value as BreedDetailUiState.Loaded
 
             assertEquals(true, favourite.isFavourite)
             assertEquals(false, notFavourite.isFavourite)
+            assertEquals(emptyList(), favourites.records.value)
             assertEquals(listOf("https://stored.jpg"), notFavourite.images)
         }
 
