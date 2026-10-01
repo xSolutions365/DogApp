@@ -15,19 +15,23 @@ class DogCeoBreedSource(
     private val httpClient: HttpClient,
 ) : BreedSource {
     override val id: BreedSourceId = ID
+    override val precedence: Int = 2
 
     override suspend fun fetchBreeds(): Outcome<List<SourcedBreed>, DataError.Remote> =
         safeCall<DogCeoBreedListDto> { httpClient.get("$BASE_URL/breeds/list/all") }
             .map { dto -> dto.toSourcedBreeds() }
 
     private fun DogCeoBreedListDto.toSourcedBreeds(): List<SourcedBreed> =
-        message.flatMap { (breed, subBreeds) ->
-            if (subBreeds.isEmpty()) {
-                listOf(sourcedBreed(BreedNameNormalizer.normalize(breed)))
-            } else {
-                subBreeds.map { subBreed -> sourcedBreed(BreedNameNormalizer.normalize(breed, subBreed)) }
-            }
-        }
+        message
+            .flatMap { (breed, subBreeds) ->
+                if (subBreeds.isEmpty()) {
+                    listOf(sourcedBreed(resolve(BreedNameNormalizer.normalize(breed))))
+                } else {
+                    subBreeds.map { subBreed -> sourcedBreed(resolve(BreedNameNormalizer.normalize(breed, subBreed))) }
+                }
+            }.distinctBy { it.normalizedName }
+
+    private fun resolve(normalizedName: String): String = dogCeoBreedAliases[normalizedName] ?: normalizedName
 
     private fun sourcedBreed(normalizedName: String) =
         SourcedBreed(

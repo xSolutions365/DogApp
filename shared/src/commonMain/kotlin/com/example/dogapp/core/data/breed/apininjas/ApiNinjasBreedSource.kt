@@ -21,6 +21,7 @@ class ApiNinjasBreedSource(
     private val apiKey: String,
 ) : BreedSource {
     override val id: BreedSourceId = ID
+    override val precedence: Int = 1
 
     override suspend fun fetchBreeds(): Outcome<List<SourcedBreed>, DataError.Remote> {
         val dogs = mutableListOf<ApiNinjasDogDto>()
@@ -53,7 +54,7 @@ class ApiNinjasBreedSource(
     private fun ApiNinjasDogDto.toSourcedBreed() =
         SourcedBreed(
             source = id,
-            normalizedName = BreedNameNormalizer.normalize(name),
+            normalizedName = BreedNameNormalizer.normalize(name).let { apiNinjasBreedAliases[it] ?: it },
             displayName = name,
             weightKg = range(minWeightMale, minWeightFemale, maxWeightMale, maxWeightFemale)?.convert(::poundsToKilograms),
             heightCm = range(minHeightMale, minHeightFemale, maxHeightMale, maxHeightFemale)?.convert(::inchesToCentimetres),

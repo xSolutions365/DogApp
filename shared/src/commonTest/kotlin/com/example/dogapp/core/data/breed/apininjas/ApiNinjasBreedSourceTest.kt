@@ -32,14 +32,21 @@ class ApiNinjasBreedSourceTest {
     private fun page(names: List<String>) = names.joinToString(prefix = "[", postfix = "]") { dogJson(it) }
 
     @Test
-    fun pagesUntilAShortPageAndMapsToMetricSourcedBreeds() =
+    fun pagesUntilAShortPageAndMapsToMetricAliasResolvedSourcedBreeds() =
         runTest {
             val requests = mutableListOf<HttpRequestData>()
             val fullPage = (1..ApiNinjasBreedSource.PAGE_SIZE).map { "Breed $it" }
             val engine =
                 MockEngine { request ->
                     requests += request
-                    val body = if (request.url.parameters["offset"] == "0") page(fullPage) else page(listOf("Border Collie"))
+                    val body =
+                        if (request.url.parameters["offset"] ==
+                            "0"
+                        ) {
+                            page(fullPage)
+                        } else {
+                            page(listOf("Border Collie", "German Shepherd Dog"))
+                        }
                     respond(body, HttpStatusCode.OK, jsonHeaders)
                 }
 
@@ -52,7 +59,8 @@ class ApiNinjasBreedSourceTest {
                 assertEquals("1", request.url.parameters["min_life_expectancy"])
             }
             val breeds = assertIs<Outcome.Success<List<SourcedBreed>>>(result).data
-            assertEquals(ApiNinjasBreedSource.PAGE_SIZE + 1, breeds.size)
+            assertEquals(ApiNinjasBreedSource.PAGE_SIZE + 2, breeds.size)
+            assertEquals("German Shepherd Dog", breeds.single { it.normalizedName == "german shepherd" }.displayName)
             val borderCollie = breeds.single { it.normalizedName == "border collie" }
             assertEquals("Border Collie", borderCollie.displayName)
             val weightKg = assertNotNull(borderCollie.weightKg)

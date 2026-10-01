@@ -17,14 +17,14 @@ class DogCeoBreedSourceTest {
     private val jsonHeaders = headersOf(HttpHeaders.ContentType, "application/json")
 
     @Test
-    fun breedListMapsBreedsAndSubBreedsToNormalizedSourcedBreeds() =
+    fun breedListMapsBreedsAndSubBreedsToNormalizedAliasResolvedSourcedBreeds() =
         runTest {
             val requestedUrls = mutableListOf<String>()
             val engine =
                 MockEngine { request ->
                     requestedUrls += request.url.toString()
                     respond(
-                        """{"message":{"beagle":[],"collie":["border"],"hound":["afghan","basset"]},"status":"success"}""",
+                        """{"message":{"beagle":[],"chow":[],"collie":["border"],"hound":["afghan","basset"],"kelpie":[],"australian":["kelpie"]},"status":"success"}""",
                         HttpStatusCode.OK,
                         jsonHeaders,
                     )
@@ -38,9 +38,11 @@ class DogCeoBreedSourceTest {
                 Outcome.Success(
                     listOf(
                         SourcedBreed(DogCeoBreedSource.ID, normalizedName = "beagle", displayName = "Beagle"),
+                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "chow chow", displayName = "Chow Chow"),
                         SourcedBreed(DogCeoBreedSource.ID, normalizedName = "border collie", displayName = "Border Collie"),
                         SourcedBreed(DogCeoBreedSource.ID, normalizedName = "afghan hound", displayName = "Afghan Hound"),
                         SourcedBreed(DogCeoBreedSource.ID, normalizedName = "basset hound", displayName = "Basset Hound"),
+                        SourcedBreed(DogCeoBreedSource.ID, normalizedName = "australian kelpie", displayName = "Australian Kelpie"),
                     ),
                 ),
                 result,

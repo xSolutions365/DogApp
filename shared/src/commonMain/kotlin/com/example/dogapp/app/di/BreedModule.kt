@@ -17,6 +17,6 @@ val breedModule =
         single { TheDogApiBreedSource(get(), BuildSecrets.THE_DOG_API_KEY) } bind BreedSource::class
         single { DogCeoBreedSource(get()) } bind BreedSource::class
         single { ApiNinjasBreedSource(get(), BuildSecrets.API_NINJAS_KEY) } bind BreedSource::class
-        single<BreedRepository> { DefaultBreedRepository(getAll()) }
+        single<BreedRepository> { DefaultBreedRepository(sources = getAll(), dao = get()) }
         factoryOf(::SyncBreedsUseCase)
     }

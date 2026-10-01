@@ -17,6 +17,7 @@ class TheDogApiBreedSource(
     private val apiKey: String,
 ) : BreedSource {
     override val id: BreedSourceId = ID
+    override val precedence: Int = 0
 
     override suspend fun fetchBreeds(): Outcome<List<SourcedBreed>, DataError.Remote> =
         safeCall<List<TheDogApiBreedDto>> {

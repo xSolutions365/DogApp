@@ -7,6 +7,7 @@ import com.example.dogapp.core.domain.breed.SourcedBreed
 
 interface BreedSource {
     val id: BreedSourceId
+    val precedence: Int
 
     suspend fun fetchBreeds(): Outcome<List<SourcedBreed>, DataError.Remote>
 }

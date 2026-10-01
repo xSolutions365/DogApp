@@ -4,7 +4,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 
-val appModules: List<Module> = listOf(platformModule, networkModule, breedModule)
+val appModules: List<Module> = listOf(platformModule, networkModule, databaseModule, breedModule)
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
     startKoin {
