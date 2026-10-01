@@ -50,4 +50,65 @@ class ProfileScreenTest {
             assertEquals(listOf("akita"), opened)
             assertEquals(listOf<ProfileAction>(ProfileAction.RemoveFavourite("blenheim spaniel")), actions)
         }
+
+    @Test
+    fun drawHistoryShowsEachDayAndOpensOnlyBreedsStillInTheCatalogue() =
+        runComposeUiTest {
+            val opened = mutableListOf<String>()
+            setContent {
+                DogAppTheme {
+                    ProfileScreen(
+                        state =
+                            ProfileUiState(
+                                favourites = emptyList(),
+                                draws =
+                                    listOf(
+                                        DrawHistoryItem(
+                                            "2026-09-30",
+                                            "30 Sep 2026",
+                                            "akita",
+                                            "Akita",
+                                            emptyList(),
+                                            isAvailable = true,
+                                        ),
+                                        DrawHistoryItem(
+                                            "2026-09-28",
+                                            "28 Sep 2026",
+                                            "blenheim spaniel",
+                                            "Blenheim Spaniel",
+                                            emptyList(),
+                                            isAvailable = false,
+                                        ),
+                                    ),
+                            ),
+                        onAction = {},
+                        onBreedClick = { opened += it },
+                    )
+                }
+            }
+
+            onNodeWithText("Previous breeds of the day").assertExists()
+            onNodeWithText("30 Sep 2026").assertExists()
+            onNodeWithText("28 Sep 2026 · No longer available").assertExists()
+            onNodeWithText("Blenheim Spaniel").performClick()
+            onNodeWithText("Akita").performClick()
+
+            assertEquals(listOf("akita"), opened)
+        }
+
+    @Test
+    fun emptyDrawHistoryExplainsWhereDrawsComeFrom() =
+        runComposeUiTest {
+            setContent {
+                DogAppTheme {
+                    ProfileScreen(
+                        state = ProfileUiState(favourites = emptyList(), draws = emptyList()),
+                        onAction = {},
+                        onBreedClick = {},
+                    )
+                }
+            }
+
+            onNodeWithText("Each breed of the day you reveal will appear here the following day.").assertExists()
+        }
 }

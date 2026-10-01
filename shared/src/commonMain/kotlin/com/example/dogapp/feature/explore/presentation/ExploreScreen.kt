@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,23 +23,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dogapp.core.presentation.animation.breedImageSharedKey
 import com.example.dogapp.core.presentation.animation.navSharedElement
 import com.example.dogapp.core.presentation.components.DogImage
+import com.example.dogapp.core.presentation.components.ErrorState
+import com.example.dogapp.core.presentation.components.LoadingState
 import com.example.dogapp.core.presentation.components.SearchField
 import dogapp.shared.generated.resources.Res
-import dogapp.shared.generated.resources.explore_empty
-import dogapp.shared.generated.resources.explore_error_title
+import dogapp.shared.generated.resources.breeds_empty
+import dogapp.shared.generated.resources.breeds_error_title
+import dogapp.shared.generated.resources.breeds_loading_body
+import dogapp.shared.generated.resources.breeds_loading_title
+import dogapp.shared.generated.resources.breeds_retry
 import dogapp.shared.generated.resources.explore_favourite_indicator
-import dogapp.shared.generated.resources.explore_loading_body
-import dogapp.shared.generated.resources.explore_loading_title
 import dogapp.shared.generated.resources.explore_no_matches
-import dogapp.shared.generated.resources.explore_retry
 import dogapp.shared.generated.resources.explore_search_placeholder
 import dogapp.shared.generated.resources.ic_favorite_filled
 import org.jetbrains.compose.resources.painterResource
@@ -78,11 +76,19 @@ fun ExploreScreen(
             }
 
             ExploreContent.Loading -> {
-                LoadingContent()
+                LoadingState(
+                    title = stringResource(Res.string.breeds_loading_title),
+                    body = stringResource(Res.string.breeds_loading_body),
+                )
             }
 
             is ExploreContent.Error -> {
-                ErrorContent(message = stringResource(content.message), onRetry = { onAction(ExploreAction.Retry) })
+                ErrorState(
+                    title = stringResource(Res.string.breeds_error_title),
+                    message = stringResource(content.message),
+                    retryLabel = stringResource(Res.string.breeds_retry),
+                    onRetry = { onAction(ExploreAction.Retry) },
+                )
             }
 
             is ExploreContent.NoMatches -> {
@@ -91,54 +97,12 @@ fun ExploreScreen(
 
             is ExploreContent.Results -> {
                 if (content.breeds.isEmpty()) {
-                    MessageContent(stringResource(Res.string.explore_empty))
+                    MessageContent(stringResource(Res.string.breeds_empty))
                 } else {
                     BreedList(breeds = content.breeds, onBreedClick = onBreedClick)
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    CenteredColumn(modifier) {
-        CircularProgressIndicator()
-        Text(
-            text = stringResource(Res.string.explore_loading_title),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.semantics { heading() },
-        )
-        Text(
-            text = stringResource(Res.string.explore_loading_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    CenteredColumn(modifier) {
-        Text(
-            text = stringResource(Res.string.explore_error_title),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.semantics { heading() },
-        )
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Button(onClick = onRetry) { Text(stringResource(Res.string.explore_retry)) }
     }
 }
 

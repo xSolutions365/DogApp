@@ -5,6 +5,7 @@ import com.example.dogapp.app.di.initKoin
 import com.example.dogapp.app.image.createImageLoader
 import com.example.dogapp.app.logging.KermitKoinLogger
 import com.example.dogapp.app.logging.configureLogging
+import com.example.dogapp.core.domain.breed.BreedSyncCoordinator
 import org.koin.dsl.KoinAppDeclaration
 
 fun initApp(
@@ -18,4 +19,5 @@ fun initApp(
             appDeclaration()
         }
     SingletonImageLoader.setSafe { context -> createImageLoader(context, koinApplication.koin.get()) }
+    koinApplication.koin.get<BreedSyncCoordinator>().ensureLoaded()
 }

@@ -20,6 +20,7 @@ ktlintGradle = "14.2.0"
 composeRules = "0.6.7"
 buildkonfig = "0.23.0"
 coil = "3.6.3"
+kotlinx-datetime = "0.8.0"
 kotlin = "2.4.20"
 material3 = "1.12.0-alpha03"
 
@@ -60,6 +61,7 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 compose-rules-ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "composeRules" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
 [plugins]

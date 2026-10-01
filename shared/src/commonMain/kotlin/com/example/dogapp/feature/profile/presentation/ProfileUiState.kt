@@ -2,6 +2,7 @@ package com.example.dogapp.feature.profile.presentation
 
 data class ProfileUiState(
     val favourites: List<FavouriteListItem>? = null,
+    val draws: List<DrawHistoryItem>? = null,
 )
 
 sealed interface FavouriteListItem {
@@ -20,3 +21,12 @@ sealed interface FavouriteListItem {
         override val name: String,
     ) : FavouriteListItem
 }
+
+data class DrawHistoryItem(
+    val day: String,
+    val date: String,
+    val breedId: String,
+    val name: String,
+    val imageUrls: List<String>,
+    val isAvailable: Boolean,
+)

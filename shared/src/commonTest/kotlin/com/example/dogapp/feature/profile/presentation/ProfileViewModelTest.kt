@@ -5,10 +5,15 @@ import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSyncResult
+import com.example.dogapp.core.domain.draw.DailyDraw
+import com.example.dogapp.core.domain.draw.DrawDay
+import com.example.dogapp.core.domain.draw.ObserveDrawHistoryUseCase
 import com.example.dogapp.core.domain.favourite.FavouriteRecord
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteBreedsUseCase
 import com.example.dogapp.core.domain.favourite.RemoveFavouriteUseCase
+import com.example.dogapp.testing.FakeDailyDrawRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
+import com.example.dogapp.testing.FakeTodayProvider
 import com.example.dogapp.testing.testBreed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,9 +51,15 @@ class ProfileViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(favourites: FakeFavouritesRepository) =
+    private val draws = FakeDailyDrawRepository()
+
+    private val today = FakeTodayProvider("2026-10-01")
+
+    private fun viewModel(favourites: FakeFavouritesRepository = FakeFavouritesRepository()) =
         ProfileViewModel(
             observeFavouriteBreeds = ObserveFavouriteBreedsUseCase(favourites, breedRepository),
+            observeDrawHistory = ObserveDrawHistoryUseCase(draws, breedRepository),
+            today = today,
             removeFavourite = RemoveFavouriteUseCase(favourites),
         )
 
@@ -89,5 +100,49 @@ class ProfileViewModelTest {
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
             assertEquals(emptyList(), viewModel.state.value.favourites)
+            assertEquals(emptyList(), viewModel.state.value.draws)
+        }
+
+    @Test
+    fun drawHistoryListsOnlyPastDaysNewestFirstAndTodaysDrawJoinsOnceTheDayIsOver() =
+        runTest {
+            draws.draws.value =
+                listOf(
+                    DailyDraw(DrawDay("2026-09-28"), "blenheim spaniel", "Blenheim Spaniel", drawnAtEpochMillis = 1),
+                    DailyDraw(DrawDay("2026-09-30"), "akita", "Akita", drawnAtEpochMillis = 2),
+                    DailyDraw(DrawDay("2026-10-01"), "akita", "Akita", drawnAtEpochMillis = 3),
+                ).associateBy { it.day }
+            val viewModel = viewModel()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
+
+            assertEquals(
+                listOf(
+                    DrawHistoryItem(
+                        day = "2026-09-30",
+                        date = "30 Sep 2026",
+                        breedId = "akita",
+                        name = "Akita",
+                        imageUrls = listOf("https://akita.jpg"),
+                        isAvailable = true,
+                    ),
+                    DrawHistoryItem(
+                        day = "2026-09-28",
+                        date = "28 Sep 2026",
+                        breedId = "blenheim spaniel",
+                        name = "Blenheim Spaniel",
+                        imageUrls = emptyList(),
+                        isAvailable = false,
+                    ),
+                ),
+                viewModel.state.value.draws,
+            )
+
+            today.day.value = DrawDay("2026-10-02")
+
+            assertEquals(
+                listOf("2026-10-01" to "1 Oct 2026", "2026-09-30" to "30 Sep 2026", "2026-09-28" to "28 Sep 2026"),
+                viewModel.state.value.draws
+                    ?.map { it.day to it.date },
+            )
         }
 }

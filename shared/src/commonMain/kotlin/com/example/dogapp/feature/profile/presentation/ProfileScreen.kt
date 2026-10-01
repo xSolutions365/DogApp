@@ -28,10 +28,12 @@ import com.example.dogapp.core.presentation.animation.breedImageSharedKey
 import com.example.dogapp.core.presentation.animation.navSharedElement
 import com.example.dogapp.core.presentation.components.DogImage
 import dogapp.shared.generated.resources.Res
+import dogapp.shared.generated.resources.breed_unavailable
 import dogapp.shared.generated.resources.destination_profile
+import dogapp.shared.generated.resources.profile_draws
+import dogapp.shared.generated.resources.profile_draws_empty
 import dogapp.shared.generated.resources.profile_favourite_remove
 import dogapp.shared.generated.resources.profile_favourite_remove_description
-import dogapp.shared.generated.resources.profile_favourite_unavailable
 import dogapp.shared.generated.resources.profile_favourites
 import dogapp.shared.generated.resources.profile_favourites_empty
 import org.jetbrains.compose.resources.stringResource
@@ -79,7 +81,7 @@ fun ProfileScreen(
                 )
             }
         }
-        items(favourites.orEmpty(), key = { it.breedId }) { favourite ->
+        items(favourites.orEmpty(), key = { "favourite-${it.breedId}" }) { favourite ->
             when (favourite) {
                 is FavouriteListItem.Available -> {
                     AvailableFavouriteRow(favourite, onClick = { onBreedClick(favourite.breedId) })
@@ -90,7 +92,42 @@ fun ProfileScreen(
                 }
             }
         }
+        item(key = "draws-title") {
+            Text(
+                text = stringResource(Res.string.profile_draws),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp).semantics { heading() },
+            )
+        }
+        val draws = state.draws
+        if (draws != null && draws.isEmpty()) {
+            item(key = "draws-empty") {
+                Text(
+                    text = stringResource(Res.string.profile_draws_empty),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        }
+        items(draws.orEmpty(), key = { "draw-${it.day}" }) { draw ->
+            DrawHistoryRow(draw = draw, onClick = { onBreedClick(draw.breedId) })
+        }
     }
+}
+
+@Composable
+private fun DrawHistoryRow(
+    draw: DrawHistoryItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FavouriteRow(
+        name = draw.name,
+        subtitle = if (draw.isAvailable) draw.date else "${draw.date} · ${stringResource(Res.string.breed_unavailable)}",
+        image = { DogImage(urls = draw.imageUrls, modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))) },
+        modifier = if (draw.isAvailable) modifier.clickable(onClick = onClick) else modifier,
+    )
 }
 
 @Composable
@@ -121,7 +158,7 @@ private fun UnavailableFavouriteRow(
     val removeDescription = stringResource(Res.string.profile_favourite_remove_description, favourite.name)
     FavouriteRow(
         name = favourite.name,
-        subtitle = stringResource(Res.string.profile_favourite_unavailable),
+        subtitle = stringResource(Res.string.breed_unavailable),
         image = { DogImage(urls = emptyList(), modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))) },
         trailing = {
             TextButton(onClick = onRemove, modifier = Modifier.semantics { contentDescription = removeDescription }) {

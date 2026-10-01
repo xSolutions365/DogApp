@@ -37,7 +37,7 @@ fun AppShell(
 
     val provideEntry =
         entryProvider<NavKey> {
-            homeEntries()
+            homeEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             profileEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             breedDetailEntries(onBack = { navigator.goBack() })

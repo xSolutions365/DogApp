@@ -8,6 +8,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -17,24 +18,34 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.example.dogapp.app.di.applicationScopeModule
 import com.example.dogapp.app.di.breedModule
+import com.example.dogapp.app.di.drawModule
 import com.example.dogapp.app.di.favouriteModule
 import com.example.dogapp.app.navigation.NavigationStyle
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSyncResult
+import com.example.dogapp.core.domain.draw.DailyDrawRepository
+import com.example.dogapp.core.domain.draw.DrawDay
+import com.example.dogapp.core.domain.draw.TodayProvider
 import com.example.dogapp.core.domain.favourite.FavouriteRecord
 import com.example.dogapp.core.domain.favourite.FavouritesRepository
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.explore.di.exploreModule
+import com.example.dogapp.feature.home.di.homeModule
 import com.example.dogapp.feature.profile.di.profileModule
+import com.example.dogapp.testing.FakeDailyDrawRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
+import com.example.dogapp.testing.FakeTodayProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.compose.KoinApplication
+import org.koin.core.context.stopKoin
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
@@ -44,6 +55,8 @@ class AppShellTest {
     private fun tab(label: String) = isTab and hasText(label)
 
     private fun screenTitle(label: String) = isHeading() and hasText(label)
+
+    private val homeScreen = screenTitle("Your breed of the day")
 
     private val verticalList = hasScrollToNodeAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
 
@@ -73,6 +86,10 @@ class AppShellTest {
             sourceReferences = emptyMap(),
         )
 
+    private val draws = FakeDailyDrawRepository()
+
+    private val today = FakeTodayProvider("2026-10-01")
+
     private val favourites = FakeFavouritesRepository(listOf(FavouriteRecord("border collie", "Border Collie", addedAtEpochMillis = 1)))
 
     private val emptyBreedRepository =
@@ -84,7 +101,13 @@ class AppShellTest {
             override suspend fun fetchGallery(breed: Breed) = Outcome.Success(emptyList<String>())
         }
 
+    @AfterTest
+    fun tearDown() {
+        stopKoin()
+    }
+
     private fun ComposeUiTest.setShell(style: NavigationStyle): DirectNavigationEventInput {
+        stopKoin()
         val backInput = DirectNavigationEventInput()
         setContent {
             val dispatcher = requireNotNull(LocalNavigationEventDispatcherOwner.current).navigationEventDispatcher
@@ -93,14 +116,19 @@ class AppShellTest {
                 configuration =
                     koinConfiguration {
                         modules(
+                            applicationScopeModule,
                             breedModule,
                             favouriteModule,
+                            drawModule,
+                            homeModule,
                             exploreModule,
                             breedDetailModule,
                             profileModule,
                             module {
                                 single<BreedRepository> { emptyBreedRepository }
                                 single<FavouritesRepository> { favourites }
+                                single<DailyDrawRepository> { draws }
+                                single<TodayProvider> { today }
                             },
                         )
                     },
@@ -125,13 +153,13 @@ class AppShellTest {
                 setShell(style)
 
                 onNode(tab("Home")).assertIsSelected()
-                onNode(screenTitle("Home")).assertExists()
+                onNode(homeScreen).assertExists()
 
                 onNode(tab("Explore")).performClick()
                 onNode(tab("Explore")).assertIsSelected()
                 onNode(tab("Home")).assertIsNotSelected()
                 onNode(exploreSearch).assertExists()
-                onNode(screenTitle("Home")).assertDoesNotExist()
+                onNode(homeScreen).assertDoesNotExist()
 
                 onNode(tab("Profile")).performClick()
                 onNode(tab("Profile")).assertIsSelected()
@@ -139,7 +167,7 @@ class AppShellTest {
 
                 onNode(tab("Home")).performClick()
                 onNode(tab("Home")).assertIsSelected()
-                onNode(screenTitle("Home")).assertExists()
+                onNode(homeScreen).assertExists()
                 onNode(screenTitle("Profile")).assertDoesNotExist()
             }
         }
@@ -154,7 +182,7 @@ class AppShellTest {
             performPredictiveBack(backInput)
 
             onNode(tab("Home")).assertIsSelected()
-            onNode(screenTitle("Home")).assertExists()
+            onNode(homeScreen).assertExists()
             onNode(exploreSearch).assertDoesNotExist()
         }
         runComposeUiTest {
@@ -186,6 +214,32 @@ class AppShellTest {
                 onNode(screenTitle("Border Collie")).assertDoesNotExist()
                 onNode(exploreSearch).assertExists()
             }
+        }
+    }
+
+    @Test
+    fun revealingTheBreedOfTheDayOnHomeOpensItsDetailAndListsItInProfileOnlyOnceTheDayIsOver() {
+        runComposeUiTest {
+            setShell(NavigationStyle.Material)
+
+            onNode(hasClickAction() and hasText("Reveal today's breed")).performClick()
+            waitForIdle()
+            onNode(hasText("Today's breed") and isHeading()).assertExists()
+            onNode(hasClickAction() and hasText("Border Collie", substring = true)).performClick()
+            waitForIdle()
+
+            assertDetailTitle("Border Collie")
+            onNode(tab("Home")).assertIsSelected()
+
+            onNode(tab("Profile")).performClick()
+            onNode(verticalList).performScrollToNode(hasText("Each breed of the day you reveal will appear here the following day."))
+            onNode(hasText("1 Oct 2026")).assertDoesNotExist()
+
+            today.day.value = DrawDay("2026-10-02")
+            waitForIdle()
+
+            onNode(verticalList).performScrollToNode(hasText("1 Oct 2026"))
+            onNode(hasText("Border Collie") and hasText("1 Oct 2026")).assertExists()
         }
     }
 

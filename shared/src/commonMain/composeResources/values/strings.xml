@@ -13,12 +13,12 @@
     <string name="error_unknown">Something went wrong. Please try again.</string>
     <string name="search_clear">Clear search</string>
     <string name="explore_search_placeholder">Search breeds</string>
-    <string name="explore_loading_title">Fetching all the breed data…</string>
-    <string name="explore_loading_body">This only happens the first time. Search unlocks as soon as everything is saved on your device.</string>
-    <string name="explore_error_title">We couldn't load the breeds</string>
-    <string name="explore_retry">Try again</string>
+    <string name="breeds_loading_title">Fetching all the breed data…</string>
+    <string name="breeds_loading_body">This only happens the first time. Search unlocks as soon as everything is saved on your device.</string>
+    <string name="breeds_error_title">We couldn't load the breeds</string>
+    <string name="breeds_retry">Try again</string>
     <string name="explore_no_matches">No breeds match “%1$s”</string>
-    <string name="explore_empty">No breeds are available yet.</string>
+    <string name="breeds_empty">No breeds are available yet.</string>
     <string name="explore_favourite_indicator">Favourite</string>
     <string name="detail_back">Back</string>
     <string name="detail_favourite_add">Add to favourites</string>
@@ -53,7 +53,14 @@
     <string name="trait_barking">Barking</string>
     <string name="profile_favourites">Favourite breeds</string>
     <string name="profile_favourites_empty">No favourites yet. Tap the heart on a breed to save it here.</string>
-    <string name="profile_favourite_unavailable">No longer available</string>
+    <string name="breed_unavailable">No longer available</string>
     <string name="profile_favourite_remove">Remove</string>
     <string name="profile_favourite_remove_description">Remove %1$s from favourites</string>
+    <string name="home_draw_title">Your breed of the day</string>
+    <string name="home_draw_reveal">Reveal today's breed</string>
+    <string name="home_revealed_title">Today's breed</string>
+    <string name="home_learn_more">Tap to learn more</string>
+    <string name="home_draw_hint">One draw per day. Come back tomorrow for another breed.</string>
+    <string name="profile_draws">Previous breeds of the day</string>
+    <string name="profile_draws_empty">Each breed of the day you reveal will appear here the following day.</string>
 </resources>

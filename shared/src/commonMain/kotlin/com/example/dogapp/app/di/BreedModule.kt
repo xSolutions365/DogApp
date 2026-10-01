@@ -8,12 +8,14 @@ import com.example.dogapp.core.data.breed.dogceo.DogCeoBreedSource
 import com.example.dogapp.core.data.breed.thedogapi.TheDogApiBreedSource
 import com.example.dogapp.core.data.config.BuildSecrets
 import com.example.dogapp.core.domain.breed.BreedRepository
+import com.example.dogapp.core.domain.breed.BreedSyncCoordinator
 import com.example.dogapp.core.domain.breed.GetBreedGalleryUseCase
 import com.example.dogapp.core.domain.breed.ObserveBreedUseCase
 import com.example.dogapp.core.domain.breed.ObserveBreedsUseCase
 import com.example.dogapp.core.domain.breed.SearchBreedsUseCase
 import com.example.dogapp.core.domain.breed.SyncBreedsUseCase
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
@@ -25,6 +27,7 @@ val breedModule =
         single { ApiNinjasBreedSource(get(), BuildSecrets.API_NINJAS_KEY) } bind BreedSource::class
         single<BreedRepository> { DefaultBreedRepository(sources = getAll(), imageSources = getAll(), dao = get()) }
         factoryOf(::SyncBreedsUseCase)
+        singleOf(::BreedSyncCoordinator)
         factoryOf(::ObserveBreedsUseCase)
         factoryOf(::SearchBreedsUseCase)
         factoryOf(::ObserveBreedUseCase)

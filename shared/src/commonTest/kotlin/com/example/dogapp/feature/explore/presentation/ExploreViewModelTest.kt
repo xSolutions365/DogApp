@@ -1,21 +1,22 @@
 package com.example.dogapp.feature.explore.presentation
 
 import com.example.dogapp.core.domain.DataError
-import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
-import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSourceId
+import com.example.dogapp.core.domain.breed.BreedSyncCoordinator
 import com.example.dogapp.core.domain.breed.BreedSyncResult
 import com.example.dogapp.core.domain.breed.ObserveBreedsUseCase
 import com.example.dogapp.core.domain.breed.SearchBreedsUseCase
 import com.example.dogapp.core.domain.breed.SyncBreedsUseCase
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteIdsUseCase
 import com.example.dogapp.core.presentation.error.toStringResource
+import com.example.dogapp.testing.FakeBreedRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -32,22 +33,7 @@ import kotlin.test.assertTrue
 class ExploreViewModelTest {
     private val source = BreedSourceId("test")
 
-    private class FakeRepository : BreedRepository {
-        val breeds = MutableStateFlow<List<Breed>>(emptyList())
-        val syncResults = ArrayDeque<CompletableDeferred<BreedSyncResult>>()
-        var syncCalls = 0
-
-        override suspend fun syncBreeds(): BreedSyncResult {
-            syncCalls++
-            return syncResults.removeFirst().await()
-        }
-
-        override fun observeBreeds() = breeds
-
-        override suspend fun fetchGallery(breed: Breed) = Outcome.Success(emptyList<String>())
-    }
-
-    private val repository = FakeRepository()
+    private val repository = FakeBreedRepository()
 
     private fun breed(
         id: String,
@@ -75,11 +61,13 @@ class ExploreViewModelTest {
 
     private val favourites = FakeFavouritesRepository()
 
+    private val syncScope = CoroutineScope(UnconfinedTestDispatcher())
+
     private fun viewModel() =
         ExploreViewModel(
             observeBreeds = ObserveBreedsUseCase(repository),
             searchBreeds = SearchBreedsUseCase(),
-            syncBreeds = SyncBreedsUseCase(repository),
+            breedSync = BreedSyncCoordinator(repository, SyncBreedsUseCase(repository), syncScope),
             observeFavouriteIds = ObserveFavouriteIdsUseCase(favourites),
         )
 
@@ -90,6 +78,7 @@ class ExploreViewModelTest {
 
     @AfterTest
     fun tearDown() {
+        syncScope.cancel()
         Dispatchers.resetMain()
     }
 
