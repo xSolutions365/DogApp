@@ -5,12 +5,25 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SourcedBreedDao {
     @Query("SELECT * FROM sourced_breed")
     fun observeAll(): Flow<List<SourcedBreedEntity>>
+
+    @Query("SELECT * FROM sourced_breed")
+    suspend fun getAll(): List<SourcedBreedEntity>
+
+    @Query("SELECT * FROM sourced_breed WHERE source = :source AND normalized_name = :normalizedName")
+    suspend fun get(
+        source: String,
+        normalizedName: String,
+    ): SourcedBreedEntity?
+
+    @Update
+    suspend fun update(entity: SourcedBreedEntity)
 
     @Query("DELETE FROM sourced_breed WHERE source = :source")
     suspend fun deleteBySource(source: String)

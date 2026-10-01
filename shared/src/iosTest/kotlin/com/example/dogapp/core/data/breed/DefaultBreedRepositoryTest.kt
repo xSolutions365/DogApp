@@ -223,4 +223,74 @@ class DefaultBreedRepositoryTest {
             assertEquals(Outcome.Failure(DataError.Remote.Server(503)), repository.fetchGallery(breeds.single { it.id == "akita" }))
             assertEquals(Outcome.Success(emptyList()), repository.fetchGallery(breeds.single { it.id == "boxer" }))
         }
+
+    @Test
+    fun syncBackfillsAThumbnailOnlyForBreedsWithoutStoredImagesTryingTheirGallerySourcesInPrecedence() =
+        runBlocking {
+            val primaryImages =
+                FakeImageSource(primary) { reference ->
+                    if (reference ==
+                        "unreachable"
+                    ) {
+                        Outcome.Failure(DataError.Remote.NoConnection)
+                    } else {
+                        Outcome.Success(listOf("https://p/$reference.jpg"))
+                    }
+                }
+            val secondaryImages =
+                FakeImageSource(secondary) { reference ->
+                    if (reference ==
+                        "terrier/american"
+                    ) {
+                        Outcome.Success(listOf("https://s/$reference/1.jpg", "https://s/$reference/2.jpg"))
+                    } else {
+                        Outcome.Failure(DataError.Remote.NotFound)
+                    }
+                }
+            val repository =
+                DefaultBreedRepository(
+                    sources =
+                        listOf(
+                            FakeSource(primary, precedence = 0) {
+                                Outcome.Success(
+                                    listOf(
+                                        SourcedBreed(
+                                            primary,
+                                            "akita",
+                                            "Akita",
+                                            sourceReference = "1",
+                                            imageUrls = listOf("https://stored/akita.jpg"),
+                                        ),
+                                        SourcedBreed(primary, "american terrier", "American Terrier", sourceReference = "unreachable"),
+                                    ),
+                                )
+                            },
+                            FakeSource(secondary, precedence = 1) {
+                                Outcome.Success(
+                                    listOf(
+                                        SourcedBreed(
+                                            secondary,
+                                            "american terrier",
+                                            "American Terrier",
+                                            sourceReference = "terrier/american",
+                                        ),
+                                        SourcedBreed(secondary, "dhole", "Dhole", sourceReference = "dhole"),
+                                    ),
+                                )
+                            },
+                        ),
+                    imageSources = listOf(primaryImages, secondaryImages),
+                    dao = database.sourcedBreedDao(),
+                )
+
+            val result = repository.syncBreeds()
+            val breeds = repository.observeBreeds().first().associateBy { it.id }
+
+            assertEquals(setOf(primary, secondary), result.succeededSources)
+            assertEquals(listOf("https://stored/akita.jpg"), breeds.getValue("akita").imageUrls)
+            assertEquals(listOf("https://s/terrier/american/1.jpg"), breeds.getValue("american terrier").imageUrls)
+            assertEquals(emptyList(), breeds.getValue("dhole").imageUrls)
+            assertEquals(listOf("unreachable"), primaryImages.requestedReferences)
+            assertEquals(setOf("terrier/american", "dhole"), secondaryImages.requestedReferences.toSet())
+        }
 }
