@@ -10,12 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
@@ -25,6 +28,8 @@ import dogapp.shared.generated.resources.ic_dog_placeholder
 import org.jetbrains.compose.resources.painterResource
 
 private const val PLACEHOLDER_SIZE_FRACTION = 0.4f
+private const val BACKDROP_SCRIM_ALPHA = 0.25f
+private val BACKDROP_BLUR_RADIUS = 16.dp
 
 @Composable
 fun DogImage(
@@ -40,22 +45,41 @@ fun DogImage(
         modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_dog_placeholder),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.fillMaxWidth(PLACEHOLDER_SIZE_FRACTION),
-        )
         val url = attempt.url
+        var isLoaded by remember(url, attempt.bypassCache) { mutableStateOf(false) }
+        if (!isLoaded) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_dog_placeholder),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.fillMaxWidth(PLACEHOLDER_SIZE_FRACTION),
+            )
+        }
         if (url != null) {
             val context = LocalPlatformContext.current
             key(url, attempt.bypassCache) {
+                if (isLoaded) {
+                    AsyncImage(
+                        model = remember { dogImageBackdropRequest(context, url) },
+                        imageLoader = imageLoader,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().blur(BACKDROP_BLUR_RADIUS),
+                    )
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.scrim.copy(alpha = BACKDROP_SCRIM_ALPHA)),
+                    )
+                }
                 AsyncImage(
                     model = remember { dogImageRequest(context, url, attempt.bypassCache) },
                     imageLoader = imageLoader,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize(),
+                    onSuccess = { isLoaded = true },
                     onError = {
                         failures++
                         if (dogImageAttempt(urls, failures).isExhausted) currentOnLoadFailure()

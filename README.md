@@ -23,6 +23,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
   - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
 - **Images**
   - A dog placeholder sits under every photo while it loads.
+  - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
   - If a photo fails, it's retried once without the cache (this repairs broken cache entries) before moving on to the breed's next photo.
   - Breeds without a stored photo get one fetched during sync.
 - **Platform-native navigation**

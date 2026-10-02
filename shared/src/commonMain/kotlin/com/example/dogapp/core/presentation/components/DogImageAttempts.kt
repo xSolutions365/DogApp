@@ -5,6 +5,8 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 
 private const val ATTEMPTS_PER_URL = 2
+private const val BACKDROP_SIZE_PX = 24
+private const val BACKDROP_CACHE_KEY_EXTRA = "dogImageBackdrop"
 
 data class DogImageAttempt(
     val url: String?,
@@ -36,3 +38,14 @@ fun dogImageRequest(
                 memoryCachePolicy(CachePolicy.WRITE_ONLY)
             }
         }.build()
+
+fun dogImageBackdropRequest(
+    context: PlatformContext,
+    url: String,
+): ImageRequest =
+    ImageRequest
+        .Builder(context)
+        .data(url)
+        .size(BACKDROP_SIZE_PX)
+        .memoryCacheKeyExtra(BACKDROP_CACHE_KEY_EXTRA, BACKDROP_SIZE_PX.toString())
+        .build()

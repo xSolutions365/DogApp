@@ -1,5 +1,10 @@
 package com.example.dogapp.core.presentation.components
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.disk.DiskCache
@@ -20,9 +25,14 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
+@OptIn(ExperimentalTestApi::class)
 class DogImageTest {
-    private val png = Base64.decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
+    private val png =
+        Base64.decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAZUlEQVR42u3QQREAAAQAMHFEFFErcjh7rMCiK+ezECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAu5b9l1yOyG8Se8AAAAASUVORK5CYII=",
+        )
     private val requestedUrls = mutableListOf<String>()
     private val diskCache =
         DiskCache
@@ -30,7 +40,9 @@ class DogImageTest {
             .directory(FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "dog-image-test-${Random.nextLong()}")
             .maxSizeBytes(10_000_000)
             .build()
-    private val imageLoader =
+    private val imageLoader = imageLoader(memoryCachePolicy = CachePolicy.DISABLED)
+
+    private fun imageLoader(memoryCachePolicy: CachePolicy) =
         ImageLoader
             .Builder(PlatformContext.INSTANCE)
             .components {
@@ -47,7 +59,7 @@ class DogImageTest {
                     ),
                 )
             }.diskCache { diskCache }
-            .memoryCachePolicy(CachePolicy.DISABLED)
+            .memoryCachePolicy(memoryCachePolicy)
             .build()
 
     private fun load(
@@ -77,4 +89,20 @@ class DogImageTest {
         assertIs<SuccessResult>(load(url, failures = 0))
         assertEquals(emptyList(), requestedUrls)
     }
+
+    @Test
+    fun aShownPhotoIsDownloadedOnceAndItsBackdropIsKeptAsASeparateSmallImage() =
+        runComposeUiTest {
+            val url = "https://images.example.test/beagle.jpg"
+            val loader = imageLoader(memoryCachePolicy = CachePolicy.ENABLED)
+            val memoryCache = requireNotNull(loader.memoryCache)
+
+            setContent { DogImage(urls = listOf(url), imageLoader = loader, modifier = Modifier.size(48.dp)) }
+            waitUntil(timeoutMillis = 5_000) { memoryCache.keys.size == 2 }
+
+            assertEquals(listOf(url), requestedUrls)
+            val (backdrop, photo) = memoryCache.keys.map { requireNotNull(memoryCache[it]).image }.sortedBy { it.width }
+            assertTrue(backdrop.width < photo.width)
+            assertTrue(backdrop.height < photo.height)
+        }
 }
