@@ -1,5 +1,6 @@
 package com.example.dogapp.app.di
 
+import com.example.dogapp.core.data.config.BuildSecrets
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.explore.di.exploreModule
 import com.example.dogapp.feature.home.di.homeModule
@@ -14,7 +15,7 @@ val appModules: List<Module> =
         platformModule,
         networkModule,
         databaseModule,
-        breedModule,
+        breedModule(theDogApiKey = BuildSecrets.THE_DOG_API_KEY, apiNinjasKey = BuildSecrets.API_NINJAS_KEY),
         favouriteModule,
         drawModule,
         homeModule,

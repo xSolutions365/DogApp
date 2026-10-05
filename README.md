@@ -1,6 +1,6 @@
 # DogApp
 
-A Kotlin Multiplatform + Compose Multiplatform app for Android and iOS that brings together dog breed data from three public APIs. You can search breeds, read everything known about each one, keep favourites, and reveal a breed of the day.
+A Kotlin Multiplatform + Compose Multiplatform app for Android and iOS that brings together dog breed data from up to three public APIs. Dog CEO needs no key and is enough to run the app; TheDogAPI and API Ninjas add richer data when their keys are set. You can search breeds, read everything known about each one, keep favourites, and reveal a breed of the day.
 
 UI, logic and storage are shared in one `shared` module. The platform apps are thin entry points.
 
@@ -42,12 +42,18 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 | [API Ninjas Dogs](https://api-ninjas.com/api/dogs) (`https://api.api-ninjas.com/v1`) | 1–5 trait ratings, size, life expectancy, a photo (paged 20 at a time) | API key, `X-Api-Key` header |
 | [Dog CEO](https://dog.ceo/dog-api) (`https://dog.ceo/api`) | Breed and sub-breed names, photo galleries | None |
 
+**Dog CEO is enough to run the app.** It's always used. TheDogAPI and API Ninjas are each used only when their key is set, and each one adds its data on top:
+- **Dog CEO only:** breed names, photos and galleries. Detail screens show the photos and sources, and Explore's search works.
+- **With TheDogAPI:** sizes, life spans, temperament, about, history, groups, and more photos.
+- **With API Ninjas:** 1–5 trait ratings, plus sizes and life spans for the breeds it covers.
+
 **How the sources are merged:**
 - Breeds are matched by normalised name: lowercase, without diacritics or punctuation, and with sub-breeds written as `"<sub-breed> <breed>"`.
 - Dog CEO and API Ninjas also have explicit alias tables.
 - Each source's rows are stored separately and merged when read. For each field, the first source with a value wins, in the order TheDogAPI → API Ninjas → Dog CEO. Photos are the union of all sources.
 - Measurements are always shown in kg and cm.
 - If a source fails during sync, it keeps the data from its last successful sync.
+- If a source's key is removed, the next sync deletes that source's stored rows.
 
 **Limits:** the keys are free-tier client keys, and they end up inside the built apps. Before any release, check TheDogAPI's free-plan limits and API Ninjas' commercial-use terms; commercial use of API Ninjas needs a premium plan.
 
@@ -60,23 +66,23 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Xcode** with the iOS simulator (the app needs iOS 18.2 or newer), on a Mac with Apple silicon. The iOS targets are `iosArm64` and `iosSimulatorArm64`.
 - Gradle comes with the wrapper (Gradle 9.8.0), so there's nothing to install.
 
-### API keys (required)
+### API keys (optional)
 
-The build reads two secrets and **fails with a clear error if either is missing**. Get free keys from [TheDogAPI](https://www.thedogapi.com/en) and [API Ninjas](https://api-ninjas.com/api/dogs), then add them to `local.properties` in the project root. That file is gitignored.
+The app builds and runs without any keys, using Dog CEO alone. Each key you add turns on one more source (see [Data sources](#data-sources)); you can add either one or both. Get free keys from [TheDogAPI](https://www.thedogapi.com/en) and [API Ninjas](https://api-ninjas.com/api/dogs), then add them to `local.properties` in the project root. That file is gitignored.
 
 ```properties
 dogapp.theDogApiKey=YOUR_THE_DOG_API_KEY
 dogapp.apiNinjasKey=YOUR_API_NINJAS_KEY
 ```
 
-For CI, use environment variables instead; they take precedence over `local.properties`:
+For CI, use environment variables instead; they take precedence over `local.properties`. A missing or blank value means that source is off (so an empty environment variable also turns off a key set in `local.properties`):
 
 ```bash
 export DOGAPP_THE_DOG_API_KEY=...
 export DOGAPP_API_NINJAS_KEY=...
 ```
 
-At build time, BuildKonfig generates them into `com.example.dogapp.core.data.config.BuildSecrets`. Never commit the keys.
+At build time, BuildKonfig generates them into `com.example.dogapp.core.data.config.BuildSecrets` as nullable values, and `app/di/BreedModule.kt` registers a keyed source only when its key is set. Never commit the keys.
 
 ### iOS signing
 
@@ -87,7 +93,7 @@ At build time, BuildKonfig generates them into `com.example.dogapp.core.data.con
 - **Android:** use the `androidApp` run configuration, or `./gradlew :androidApp:assembleDebug` and install the APK.
 - **iOS:** open `iosApp/iosApp.xcodeproj` in Xcode and run the `iosApp` scheme. The `Shared` framework is built automatically.
 
-On first launch the app syncs all three APIs; that takes a few seconds. After that, breeds come from the local database.
+On first launch the app syncs every source that's turned on; that takes a few seconds. After that, breeds come from the local database.
 
 ## Checks
 
@@ -140,7 +146,7 @@ feature/<name>/      home, explore, breeddetail, profile
   - Features expose `EntryProviderScope<NavKey>.xEntries(...)`.
   - Navigation is passed in as lambdas from `app`.
   - Every route is `@Serializable` and registered in that feature's serializers module.
-- **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows.
+- **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows. Sources that need a key are bound only when their key is set.
 - **The first breed sync** is owned by the app-wide `BreedSyncCoordinator`. It starts at launch, Home and Explore share it, and it syncs only when the database is empty.
 
 **Storage:**

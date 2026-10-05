@@ -6,7 +6,6 @@ import com.example.dogapp.core.data.breed.DefaultBreedRepository
 import com.example.dogapp.core.data.breed.apininjas.ApiNinjasBreedSource
 import com.example.dogapp.core.data.breed.dogceo.DogCeoBreedSource
 import com.example.dogapp.core.data.breed.thedogapi.TheDogApiBreedSource
-import com.example.dogapp.core.data.config.BuildSecrets
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSyncCoordinator
 import com.example.dogapp.core.domain.breed.GetBreedGalleryUseCase
@@ -20,16 +19,22 @@ import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
-val breedModule =
-    module {
-        single { TheDogApiBreedSource(get(), BuildSecrets.THE_DOG_API_KEY) } binds arrayOf(BreedSource::class, BreedImageSource::class)
-        single { DogCeoBreedSource(get()) } binds arrayOf(BreedSource::class, BreedImageSource::class)
-        single { ApiNinjasBreedSource(get(), BuildSecrets.API_NINJAS_KEY) } bind BreedSource::class
-        single<BreedRepository> { DefaultBreedRepository(sources = getAll(), imageSources = getAll(), dao = get()) }
-        factoryOf(::SyncBreedsUseCase)
-        singleOf(::BreedSyncCoordinator)
-        factoryOf(::ObserveBreedsUseCase)
-        factoryOf(::SearchBreedsUseCase)
-        factoryOf(::ObserveBreedUseCase)
-        factoryOf(::GetBreedGalleryUseCase)
+fun breedModule(
+    theDogApiKey: String?,
+    apiNinjasKey: String?,
+) = module {
+    single { DogCeoBreedSource(get()) } binds arrayOf(BreedSource::class, BreedImageSource::class)
+    if (theDogApiKey != null) {
+        single { TheDogApiBreedSource(get(), theDogApiKey) } binds arrayOf(BreedSource::class, BreedImageSource::class)
     }
+    if (apiNinjasKey != null) {
+        single { ApiNinjasBreedSource(get(), apiNinjasKey) } bind BreedSource::class
+    }
+    single<BreedRepository> { DefaultBreedRepository(sources = getAll(), imageSources = getAll(), dao = get()) }
+    factoryOf(::SyncBreedsUseCase)
+    singleOf(::BreedSyncCoordinator)
+    factoryOf(::ObserveBreedsUseCase)
+    factoryOf(::SearchBreedsUseCase)
+    factoryOf(::ObserveBreedUseCase)
+    factoryOf(::GetBreedGalleryUseCase)
+}

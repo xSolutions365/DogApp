@@ -117,7 +117,7 @@ class AppShellTest {
                     koinConfiguration {
                         modules(
                             applicationScopeModule,
-                            breedModule,
+                            breedModule(theDogApiKey = null, apiNinjasKey = null),
                             favouriteModule,
                             drawModule,
                             homeModule,

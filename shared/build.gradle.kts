@@ -112,20 +112,18 @@ val localProperties =
         if (file.exists()) file.inputStream().use(::load)
     }
 
-fun buildSecret(name: String): String {
-    val propertyName = "dogapp.$name"
+fun buildSecret(name: String): String? {
     val environmentVariable = "DOGAPP_" + name.replace(Regex("([a-z])([A-Z])"), "$1_$2").uppercase()
-    return providers.environmentVariable(environmentVariable).orNull
-        ?: localProperties.getProperty(propertyName)
-        ?: error("Missing build secret '$name': set $propertyName in local.properties or the $environmentVariable environment variable.")
+    return (providers.environmentVariable(environmentVariable).orNull ?: localProperties.getProperty("dogapp.$name"))
+        ?.takeIf { it.isNotBlank() }
 }
 
 buildkonfig {
     packageName = "com.example.dogapp.core.data.config"
     objectName = "BuildSecrets"
     defaultConfigs {
-        buildConfigField(FieldSpec.Type.STRING, "THE_DOG_API_KEY", buildSecret("theDogApiKey"))
-        buildConfigField(FieldSpec.Type.STRING, "API_NINJAS_KEY", buildSecret("apiNinjasKey"))
+        buildConfigField(FieldSpec.Type.STRING, "THE_DOG_API_KEY", buildSecret("theDogApiKey"), nullable = true)
+        buildConfigField(FieldSpec.Type.STRING, "API_NINJAS_KEY", buildSecret("apiNinjasKey"), nullable = true)
     }
 }
 
