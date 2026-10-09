@@ -68,7 +68,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **JDK 17 or newer.** AGP 9 and Gradle 9 need it; the code targets JVM 11 bytecode.
 - **Android Studio** with the Android SDK (compile and target SDK 37, min SDK 24).
 - **Xcode** with the iOS simulator (the app needs iOS 18.2 or newer), on a Mac with Apple silicon. The iOS targets are `iosArm64` and `iosSimulatorArm64`.
-- Gradle comes with the wrapper (Gradle 9.8.0), so there's nothing to install.
+- Gradle comes with the wrapper (Gradle 9.8.1), so there's nothing to install.
 
 ### API keys (optional)
 
@@ -164,7 +164,7 @@ feature/<name>/      home, explore, breeddetail, profile
 
 | Area | Library | Version |
 |---|---|---|
-| Language | Kotlin Multiplatform | 2.4.20 |
+| Language | Kotlin Multiplatform | 2.4.21 |
 | UI | Compose Multiplatform / Material 3 | 1.12.1 / 1.12.0-alpha03 |
 | Navigation | JetBrains Navigation 3 (+ lifecycle-viewmodel-navigation3) | 1.1.2 (lifecycle 2.11.0) |
 | DI | Koin (classic DSL, compose, compose-viewmodel) | 4.2.2 |
@@ -176,8 +176,8 @@ feature/<name>/      home, explore, breeddetail, profile
 | Dates | kotlinx-datetime | 0.8.0 |
 | Coroutines | kotlinx-coroutines (+ test) | 1.11.0 |
 | Build secrets | BuildKonfig | 0.23.0 |
-| Static analysis | ktlint Gradle plugin + compose-rules | 14.2.0 (ktlint 1.8.0) / 0.6.7 |
-| Build | AGP / Gradle | 9.4.1 / 9.8.0 |
+| Static analysis | ktlint Gradle plugin + compose-rules | 14.2.0 (ktlint 1.8.0) / 0.6.8 |
+| Build | AGP / Gradle | 9.4.1 / 9.8.1 |
 
 All versions are in `gradle/libs.versions.toml`.
 
