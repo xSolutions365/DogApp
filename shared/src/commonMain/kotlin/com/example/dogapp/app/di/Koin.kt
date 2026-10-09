@@ -4,6 +4,7 @@ import com.example.dogapp.core.data.config.BuildSecrets
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.explore.di.exploreModule
 import com.example.dogapp.feature.home.di.homeModule
+import com.example.dogapp.feature.identify.di.identifyModule
 import com.example.dogapp.feature.profile.di.profileModule
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -22,6 +23,7 @@ val appModules: List<Module> =
         exploreModule,
         breedDetailModule,
         profileModule,
+        identifyModule,
     )
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) =

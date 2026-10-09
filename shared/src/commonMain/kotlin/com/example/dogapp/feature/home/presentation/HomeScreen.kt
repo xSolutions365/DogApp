@@ -29,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ import dogapp.shared.generated.resources.breeds_retry
 import dogapp.shared.generated.resources.home_draw_hint
 import dogapp.shared.generated.resources.home_draw_reveal
 import dogapp.shared.generated.resources.home_draw_title
+import dogapp.shared.generated.resources.home_identify
 import dogapp.shared.generated.resources.home_learn_more
 import dogapp.shared.generated.resources.home_revealed_title
 import org.jetbrains.compose.resources.stringResource
@@ -67,10 +69,11 @@ private const val CARD_ASPECT_RATIO = 0.8f
 @Composable
 fun HomeRoot(
     onBreedClick: (String) -> Unit,
+    onIdentifyClick: () -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    HomeScreen(state = state, onAction = viewModel::onAction, onBreedClick = onBreedClick)
+    HomeScreen(state = state, onAction = viewModel::onAction, onBreedClick = onBreedClick, onIdentifyClick = onIdentifyClick)
 }
 
 @Composable
@@ -78,6 +81,7 @@ fun HomeScreen(
     state: HomeUiState,
     onAction: (HomeAction) -> Unit,
     onBreedClick: (String) -> Unit,
+    onIdentifyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (val content = state.content) {
@@ -118,6 +122,7 @@ fun HomeScreen(
                 isDrawing = (content as? HomeContent.NotRevealed)?.isDrawing == true,
                 onAction = onAction,
                 onBreedClick = onBreedClick,
+                onIdentifyClick = onIdentifyClick,
                 modifier = modifier,
             )
         }
@@ -130,6 +135,7 @@ private fun DrawSection(
     isDrawing: Boolean,
     onAction: (HomeAction) -> Unit,
     onBreedClick: (String) -> Unit,
+    onIdentifyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -173,6 +179,9 @@ private fun DrawSection(
                     )
                 }
             }
+        }
+        OutlinedButton(onClick = onIdentifyClick, modifier = Modifier.padding(top = 32.dp)) {
+            Text(stringResource(Res.string.home_identify))
         }
     }
 }

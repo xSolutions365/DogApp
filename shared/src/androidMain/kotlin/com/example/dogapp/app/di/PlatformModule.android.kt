@@ -8,6 +8,8 @@ import com.example.dogapp.core.data.database.DATABASE_FILE_NAME
 import com.example.dogapp.core.data.database.DogAppDatabase
 import com.example.dogapp.core.data.datastore.PREFERENCES_FILE_NAME
 import com.example.dogapp.core.data.datastore.createPreferencesDataStore
+import com.example.dogapp.feature.identify.data.ImageLabeler
+import com.example.dogapp.feature.identify.data.LiteRtImageLabeler
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.android.ext.koin.androidContext
@@ -28,4 +30,5 @@ actual val platformModule: Module =
                 name = androidContext().getDatabasePath(DATABASE_FILE_NAME).absolutePath,
             )
         }
+        single<ImageLabeler> { LiteRtImageLabeler(androidContext()) }
     }

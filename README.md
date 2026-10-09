@@ -10,6 +10,12 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
   - Once a day, tap **Reveal today's breed** and the breed card drops in. Tapping the card opens the breed detail.
   - Draws are random with no repeats and prefer breeds that have photos. Once every breed has been drawn, a new cycle starts.
   - Each draw is stored per local calendar day.
+- **Home: identify a breed from a photo**
+  - **Identify a breed from a photo** on Home opens a screen where you choose a photo with the system photo picker (Android Photo Picker, iOS `PHPickerViewController`; neither needs a permission).
+  - The photo is classified on the device: LiteRT on Android, Core ML + Vision on iOS. Nothing is uploaded.
+  - A clear winner (60% or more) is shown on its own; otherwise the top 3 candidates are listed with their match percentages. A photo with little dog in it shows "No dog found".
+  - Tapping a match opens its breed detail. A recognised breed that isn't in the merged breed list (for example "Eskimo dog", or most breeds when only Dog CEO is used) is shown by name only, with no photo or details.
+  - The model knows 118 dog breeds (the ImageNet dog classes), so other breeds can't be recognised.
 - **Explore: breed search and filters**
   - Search matches the start of any word in a breed name across all merged breeds.
   - Filter chips under the search field: **Size** (Toy under 5 kg, Small 5–11, Medium 11–25, Large 25–45, Giant over 45, from the middle of the weight range), **Life span** (under 10, 10–12, 13+ years, from the middle of the range), **Group**, **Energy** (low, medium, high), **Traits** (good with children, low shedding, easy to train) and **Favourites**. Options within a filter can be combined; search and every active filter must all match. **Clear all** resets them.
@@ -127,7 +133,8 @@ core/
   data/              Ktor client, DataStore, Room database
     breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/
   presentation/      theme, shared components, shared-element helpers, error text
-feature/<name>/      home, explore, breeddetail, profile
+feature/<name>/      home, explore, breeddetail, profile, identify
+  domain/  data/     a feature's own use cases and data, when it has any (explore, identify)
   presentation/      Route, Entries, UiState, Action, ViewModel, Root + Screen
   di/                the feature's Koin module
 ```
@@ -174,6 +181,7 @@ feature/<name>/      home, explore, breeddetail, profile
 | Images | Coil 3 (compose, network-ktor3) | 3.6.3 |
 | Logging | Kermit (also routes Koin and Ktor logs) | 2.2.0 |
 | Dates | kotlinx-datetime | 0.8.0 |
+| On-device ML | LiteRT `CompiledModel` (Android) / Core ML + Vision (iOS) | 2.3.0 / system |
 | Coroutines | kotlinx-coroutines (+ test) | 1.11.0 |
 | Build secrets | BuildKonfig | 0.23.0 |
 | Static analysis | ktlint Gradle plugin + compose-rules | 14.2.0 (ktlint 1.8.0) / 0.6.8 |
@@ -191,4 +199,6 @@ All versions are in `gradle/libs.versions.toml`.
 - **Live network in iOS tests:** the iOS simulator *test* process gets `NoConnection` for real requests, while the simulator *app* doesn't. Check live API behaviour in the running app; the tests use Ktor's `MockEngine` and fakes.
 - **Koin in Compose UI tests:** in Koin 4.2.2, the `KoinApplication` composable starts a global Koin context and doesn't stop it when disposed. Tests that use it must call `stopKoin()` between runs (see `AppShellTest`). Otherwise later runs silently reuse the first run's modules.
 - **Koin `verify()`** doesn't see `get()` calls inside definition lambdas. That's why `KoinGraphTest` on iOS also resolves the whole graph against the real platform module.
+- **Breed recognition model:** MobileNetV2 trained on ImageNet (Apache 2.0, from the TensorFlow models). Android ships the float TFLite model and its 1,001 labels in `androidApp/src/main/assets/` (stored uncompressed); iOS ships Apple's FP16 Core ML conversion as `iosApp/iosApp/MobileNetV2.mlmodel`, which Xcode compiles into the app. The two builds of the model give slightly different scores for the same photo. Core ML labels list synonyms after a comma (`"Maltese dog, Maltese terrier, Maltese"`), so only the first name is used. The 118 dog labels are matched to breeds by normalised name, plus an alias table (`imageNetBreedAliases`).
+- **LiteRT manifest entries:** LiteRT 2.3.0 brings Play services and WorkManager (with their `WAKE_LOCK`, `ACCESS_NETWORK_STATE` and `RECEIVE_BOOT_COMPLETED` permissions), and declares two foreground-service permissions for downloading models. The app bundles its model, so `AndroidManifest.xml` removes the two foreground-service permissions.
 - **Day boundary:** "today" is the device's local calendar date. Changing the device clock can reveal an extra breed, which is acceptable for this feature.

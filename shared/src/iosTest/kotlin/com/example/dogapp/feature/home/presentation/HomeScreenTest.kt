@@ -20,15 +20,17 @@ import kotlin.test.assertEquals
 @OptIn(ExperimentalTestApi::class)
 class HomeScreenTest {
     private val revealButton = hasClickAction() and hasText("Reveal today's breed")
+    private val identifyButton = hasClickAction() and hasText("Identify a breed from a photo")
 
     @Test
     fun loadingAndErrorStatesExplainTheFirstSyncAndRetry() =
         runComposeUiTest {
             val actions = mutableListOf<HomeAction>()
             var state by mutableStateOf(HomeUiState(content = HomeContent.Loading))
-            setContent { DogAppTheme { HomeScreen(state = state, onAction = { actions += it }, onBreedClick = {}) } }
+            setContent { DogAppTheme { HomeScreen(state = state, onAction = { actions += it }, onBreedClick = {}, onIdentifyClick = {}) } }
 
             onNodeWithText("Fetching all the breed data…").assertExists()
+            onNode(identifyButton).assertDoesNotExist()
 
             state = HomeUiState(content = HomeContent.Error(DataError.Remote.NoConnection.toStringResource()))
             onNodeWithText("We couldn't load the breeds").assertExists()
@@ -41,12 +43,24 @@ class HomeScreenTest {
     fun revealButtonDrawsAndIsDisabledWhileDrawing() =
         runComposeUiTest {
             val actions = mutableListOf<HomeAction>()
+            var identifyClicks = 0
             var state by mutableStateOf(HomeUiState(content = HomeContent.NotRevealed(isDrawing = false)))
-            setContent { DogAppTheme { HomeScreen(state = state, onAction = { actions += it }, onBreedClick = {}) } }
+            setContent {
+                DogAppTheme {
+                    HomeScreen(
+                        state = state,
+                        onAction = { actions += it },
+                        onBreedClick = {},
+                        onIdentifyClick = { identifyClicks++ },
+                    )
+                }
+            }
 
             onNodeWithText("Your breed of the day").assertExists()
             onNode(revealButton).performClick()
             assertEquals(listOf<HomeAction>(HomeAction.Reveal), actions)
+            onNode(identifyButton).performClick()
+            assertEquals(1, identifyClicks)
 
             state = HomeUiState(content = HomeContent.NotRevealed(isDrawing = true))
             onNode(revealButton).assertIsNotEnabled()
@@ -68,6 +82,7 @@ class HomeScreenTest {
                             ),
                         onAction = {},
                         onBreedClick = { opened += it },
+                        onIdentifyClick = {},
                     )
                 }
             }
@@ -90,6 +105,7 @@ class HomeScreenTest {
                         state = HomeUiState(content = HomeContent.Revealed(DrawnBreed.Unavailable("blenheim spaniel", "Blenheim Spaniel"))),
                         onAction = {},
                         onBreedClick = {},
+                        onIdentifyClick = {},
                     )
                 }
             }

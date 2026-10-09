@@ -105,6 +105,19 @@
     <string name="home_revealed_title">Today's breed</string>
     <string name="home_learn_more">Tap to learn more</string>
     <string name="home_draw_hint">One draw per day. Come back tomorrow for another breed.</string>
+    <string name="home_identify">Identify a breed from a photo</string>
+    <string name="identify_title">Identify a breed</string>
+    <string name="identify_intro">Choose a photo of a dog to find out its breed.</string>
+    <string name="identify_choose_photo">Choose a photo</string>
+    <string name="identify_choose_another">Choose another photo</string>
+    <string name="identify_photo">Chosen photo</string>
+    <string name="identify_working">Looking closely…</string>
+    <string name="identify_confident">Looks like a</string>
+    <string name="identify_uncertain">Not quite sure. It could be one of these:</string>
+    <string name="identify_no_dog">No dog found in this photo. Try one where the dog is clearly visible.</string>
+    <string name="identify_match">%1$d% match</string>
+    <string name="identify_error_unreadable">This photo couldn't be read. Try another one.</string>
+    <string name="identify_error_model">Breed recognition isn't available right now.</string>
     <string name="profile_draws">Previous breeds of the day</string>
     <string name="profile_draws_empty">Each breed of the day you reveal will appear here the following day.</string>
 </resources>

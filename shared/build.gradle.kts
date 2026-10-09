@@ -58,6 +58,8 @@ kotlin {
             implementation(libs.compose.uiTooling)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.litert)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

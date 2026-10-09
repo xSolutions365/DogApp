@@ -25,6 +25,8 @@ import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
 import com.example.dogapp.feature.breeddetail.presentation.breedDetailEntries
 import com.example.dogapp.feature.explore.presentation.exploreEntries
 import com.example.dogapp.feature.home.presentation.homeEntries
+import com.example.dogapp.feature.identify.presentation.IdentifyRoute
+import com.example.dogapp.feature.identify.presentation.identifyEntries
 import com.example.dogapp.feature.profile.presentation.profileEntries
 
 @Composable
@@ -37,10 +39,14 @@ fun AppShell(
 
     val provideEntry =
         entryProvider<NavKey> {
-            homeEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
+            homeEntries(
+                onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
+                onIdentifyClick = { navigator.navigate(IdentifyRoute) },
+            )
             exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             profileEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             breedDetailEntries(onBack = { navigator.goBack() })
+            identifyEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) }, onBack = { navigator.goBack() })
         }
     val entriesByDestination =
         TopLevelDestination.entries.associateWith { destination ->
