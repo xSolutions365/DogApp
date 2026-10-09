@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,6 +50,7 @@ import dogapp.shared.generated.resources.ic_dog_placeholder
 import dogapp.shared.generated.resources.identify_choose_another
 import dogapp.shared.generated.resources.identify_choose_photo
 import dogapp.shared.generated.resources.identify_confident
+import dogapp.shared.generated.resources.identify_done
 import dogapp.shared.generated.resources.identify_intro
 import dogapp.shared.generated.resources.identify_match
 import dogapp.shared.generated.resources.identify_no_dog
@@ -64,38 +67,44 @@ private const val PLACEHOLDER_SIZE_FRACTION = 0.3f
 
 @Composable
 fun IdentifyRoot(
+    presentation: IdentifyPresentation,
     onBreedClick: (String) -> Unit,
-    onBack: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: IdentifyViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val pickPhoto = rememberPhotoPicker { photo -> viewModel.onAction(IdentifyAction.PhotoPick(photo)) }
-    IdentifyScreen(state = state, onChoosePhoto = pickPhoto, onBreedClick = onBreedClick, onBack = onBack)
+    IdentifyScreen(
+        state = state,
+        presentation = presentation,
+        onChoosePhoto = pickPhoto,
+        onBreedClick = onBreedClick,
+        onDismiss = onDismiss,
+        modifier = modifier,
+    )
 }
 
 @Composable
 fun IdentifyScreen(
     state: IdentifyUiState,
+    presentation: IdentifyPresentation,
     onChoosePhoto: () -> Unit,
     onBreedClick: (String) -> Unit,
-    onBack: () -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(painterResource(platformBackIcon), contentDescription = stringResource(Res.string.detail_back))
-            }
-            Text(
-                text = stringResource(Res.string.identify_title),
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.semantics { heading() },
-            )
-        }
+        TopBar(presentation = presentation, onDismiss = onDismiss)
         PhotoFrame(photo = state.photo, modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth().aspectRatio(PHOTO_ASPECT_RATIO))
         Button(onClick = onChoosePhoto, enabled = state.content != IdentifyContent.Identifying) {
             Text(stringResource(if (state.photo == null) Res.string.identify_choose_photo else Res.string.identify_choose_another))
@@ -109,6 +118,31 @@ fun IdentifyScreen(
             modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth(),
         ) { content ->
             IdentifyResult(content = content, onBreedClick = onBreedClick)
+        }
+    }
+}
+
+@Composable
+private fun TopBar(
+    presentation: IdentifyPresentation,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        if (presentation == IdentifyPresentation.Screen) {
+            IconButton(onClick = onDismiss) {
+                Icon(painterResource(platformBackIcon), contentDescription = stringResource(Res.string.detail_back))
+            }
+        }
+        Text(
+            text = stringResource(Res.string.identify_title),
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
+        if (presentation == IdentifyPresentation.Sheet) {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.identify_done), style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }

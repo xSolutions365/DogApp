@@ -1,5 +1,6 @@
 package com.example.dogapp.app.shell
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -9,12 +10,14 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.uikit.LocalUIViewController
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
@@ -36,6 +39,8 @@ import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.explore.di.exploreModule
 import com.example.dogapp.feature.home.di.homeModule
+import com.example.dogapp.feature.identify.data.ImageLabeler
+import com.example.dogapp.feature.identify.di.identifyModule
 import com.example.dogapp.feature.profile.di.profileModule
 import com.example.dogapp.testing.FakeDailyDrawRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
@@ -45,6 +50,7 @@ import org.koin.compose.KoinApplication
 import org.koin.core.context.stopKoin
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
+import platform.UIKit.UIViewController
 import kotlin.test.AfterTest
 import kotlin.test.Test
 
@@ -124,16 +130,24 @@ class AppShellTest {
                             exploreModule,
                             breedDetailModule,
                             profileModule,
+                            identifyModule,
                             module {
                                 single<BreedRepository> { emptyBreedRepository }
                                 single<FavouritesRepository> { favourites }
                                 single<DailyDrawRepository> { draws }
                                 single<TodayProvider> { today }
+                                single<ImageLabeler> {
+                                    object : ImageLabeler {
+                                        override suspend fun label(photo: ByteArray) = Outcome.Success(emptyMap<String, Float>())
+                                    }
+                                }
                             },
                         )
                     },
             ) {
-                DogAppTheme { AppShell(navigationStyle = style) }
+                CompositionLocalProvider(LocalUIViewController provides UIViewController()) {
+                    DogAppTheme { AppShell(navigationStyle = style) }
+                }
             }
         }
         return backInput
@@ -240,6 +254,24 @@ class AppShellTest {
 
             onNode(verticalList).performScrollToNode(hasText("1 Oct 2026"))
             onNode(hasText("Border Collie") and hasText("1 Oct 2026")).assertExists()
+        }
+    }
+
+    @Test
+    fun theIdentifyFabOnMaterialHomeOpensIdentifyOnTheHomeTabAndBackReturns() {
+        runComposeUiTest {
+            val backInput = setShell(NavigationStyle.Material)
+
+            onNode(hasClickAction() and hasContentDescription("Identify a breed from a photo")).performClick()
+            waitForIdle()
+
+            onNode(screenTitle("Identify a breed")).assertExists()
+            onNode(tab("Home")).assertIsSelected()
+
+            performPredictiveBack(backInput)
+
+            onNode(screenTitle("Identify a breed")).assertDoesNotExist()
+            onNode(homeScreen).assertExists()
         }
     }
 

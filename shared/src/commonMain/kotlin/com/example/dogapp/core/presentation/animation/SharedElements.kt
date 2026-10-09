@@ -3,11 +3,13 @@ package com.example.dogapp.core.presentation.animation
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.SharedTransitionScope.OverlayClip
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.example.dogapp.core.presentation.theme.DogAppMotion
 
@@ -39,6 +41,23 @@ fun Modifier.navSharedElement(key: Any): Modifier {
             sharedContentState = rememberSharedContentState(key),
             animatedVisibilityScope = animatedContentScope,
             boundsTransform = NavSharedBoundsTransform,
+        )
+    }
+}
+
+@Composable
+fun Modifier.navSharedBounds(
+    key: Any,
+    shape: Shape,
+): Modifier {
+    val sharedTransitionScope = LocalSharedTransitionScope.current ?: return this
+    val animatedContentScope = LocalNavAnimatedContentScope.current
+    return with(sharedTransitionScope) {
+        this@navSharedBounds.sharedBounds(
+            sharedContentState = rememberSharedContentState(key),
+            animatedVisibilityScope = animatedContentScope,
+            boundsTransform = NavSharedBoundsTransform,
+            clipInOverlayDuringTransition = OverlayClip(shape),
         )
     }
 }

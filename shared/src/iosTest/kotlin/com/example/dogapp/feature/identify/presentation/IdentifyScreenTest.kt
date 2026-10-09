@@ -30,12 +30,19 @@ class IdentifyScreenTest {
             var state by mutableStateOf(IdentifyUiState())
             setContent {
                 DogAppTheme {
-                    IdentifyScreen(state = state, onChoosePhoto = { chooseClicks++ }, onBreedClick = {}, onBack = { backClicks++ })
+                    IdentifyScreen(
+                        state = state,
+                        presentation = IdentifyPresentation.Screen,
+                        onChoosePhoto = { chooseClicks++ },
+                        onBreedClick = {},
+                        onDismiss = { backClicks++ },
+                    )
                 }
             }
 
             onNodeWithText("Choose a photo of a dog to find out its breed.").assertExists()
             onNode(hasClickAction() and hasText("Choose a photo")).performClick()
+            onNodeWithText("Done").assertDoesNotExist()
             onNodeWithContentDescription("Back").performClick()
             assertEquals(1, chooseClicks)
             assertEquals(1, backClicks)
@@ -58,6 +65,7 @@ class IdentifyScreenTest {
             setContent {
                 DogAppTheme {
                     IdentifyScreen(
+                        presentation = IdentifyPresentation.Screen,
                         state =
                             IdentifyUiState(
                                 photo = photo,
@@ -69,7 +77,7 @@ class IdentifyScreenTest {
                             ),
                         onChoosePhoto = {},
                         onBreedClick = { opened += it },
-                        onBack = {},
+                        onDismiss = {},
                     )
                 }
             }
@@ -88,6 +96,7 @@ class IdentifyScreenTest {
             setContent {
                 DogAppTheme {
                     IdentifyScreen(
+                        presentation = IdentifyPresentation.Screen,
                         state =
                             IdentifyUiState(
                                 photo = photo,
@@ -104,7 +113,7 @@ class IdentifyScreenTest {
                             ),
                         onChoosePhoto = {},
                         onBreedClick = { opened += it },
-                        onBack = {},
+                        onDismiss = {},
                     )
                 }
             }
@@ -115,5 +124,27 @@ class IdentifyScreenTest {
             onNodeWithText("Pug").performClick()
 
             assertEquals(listOf("pug"), opened)
+        }
+
+    @Test
+    fun asASheetItIsDismissedWithDoneInsteadOfBack() =
+        runComposeUiTest {
+            var dismissals = 0
+            setContent {
+                DogAppTheme {
+                    IdentifyScreen(
+                        state = IdentifyUiState(),
+                        presentation = IdentifyPresentation.Sheet,
+                        onChoosePhoto = {},
+                        onBreedClick = {},
+                        onDismiss = { dismissals++ },
+                    )
+                }
+            }
+
+            onNodeWithContentDescription("Back").assertDoesNotExist()
+            onNodeWithText("Done").performClick()
+
+            assertEquals(1, dismissals)
         }
 }

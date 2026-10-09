@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -16,21 +18,40 @@ import com.example.dogapp.core.presentation.error.toStringResource
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class HomeScreenTest {
-    private val revealButton = hasClickAction() and hasText("Reveal today's breed")
-    private val identifyButton = hasClickAction() and hasText("Identify a breed from a photo")
+    private val revealCard = hasClickAction() and hasText("Reveal today's breed")
+    private val identifyFab = hasClickAction() and hasContentDescription("Identify a breed from a photo")
+    private val identifyBarButton = hasClickAction() and hasText("Identify")
+
+    private fun identifyButton(layout: HomeLayout) =
+        when (layout) {
+            HomeLayout.Material -> identifyFab
+            HomeLayout.Cupertino -> identifyBarButton
+        }
 
     @Test
     fun loadingAndErrorStatesExplainTheFirstSyncAndRetry() =
         runComposeUiTest {
             val actions = mutableListOf<HomeAction>()
             var state by mutableStateOf(HomeUiState(content = HomeContent.Loading))
-            setContent { DogAppTheme { HomeScreen(state = state, onAction = { actions += it }, onBreedClick = {}, onIdentifyClick = {}) } }
+            setContent {
+                DogAppTheme {
+                    HomeScreen(
+                        state = state,
+                        layout = HomeLayout.Material,
+                        onAction = { actions += it },
+                        onBreedClick = {},
+                        onIdentifyClick = {},
+                    )
+                }
+            }
 
             onNodeWithText("Fetching all the breed data…").assertExists()
-            onNode(identifyButton).assertDoesNotExist()
+            onNode(identifyFab).assertDoesNotExist()
+            onNode(identifyBarButton).assertDoesNotExist()
 
             state = HomeUiState(content = HomeContent.Error(DataError.Remote.NoConnection.toStringResource()))
             onNodeWithText("We couldn't load the breeds").assertExists()
@@ -40,31 +61,43 @@ class HomeScreenTest {
         }
 
     @Test
-    fun revealButtonDrawsAndIsDisabledWhileDrawing() =
-        runComposeUiTest {
-            val actions = mutableListOf<HomeAction>()
-            var identifyClicks = 0
-            var state by mutableStateOf(HomeUiState(content = HomeContent.NotRevealed(isDrawing = false)))
-            setContent {
-                DogAppTheme {
-                    HomeScreen(
-                        state = state,
-                        onAction = { actions += it },
-                        onBreedClick = {},
-                        onIdentifyClick = { identifyClicks++ },
-                    )
+    fun revealCardDrawsAndEachLayoutOffersIdentifyInItsOwnWay() {
+        HomeLayout.entries.forEach { layout ->
+            runComposeUiTest {
+                val actions = mutableListOf<HomeAction>()
+                var identifyClicks = 0
+                var state by mutableStateOf(HomeUiState(content = HomeContent.NotRevealed(isDrawing = false)))
+                setContent {
+                    DogAppTheme {
+                        HomeScreen(
+                            state = state,
+                            layout = layout,
+                            onAction = { actions += it },
+                            onBreedClick = {},
+                            onIdentifyClick = { identifyClicks++ },
+                        )
+                    }
                 }
+
+                onNodeWithText("Your breed of the day").assertExists()
+                onNode(revealCard).performClick()
+                assertEquals(listOf<HomeAction>(HomeAction.Reveal), actions)
+
+                onNode(identifyButton(HomeLayout.entries.single { it != layout })).assertDoesNotExist()
+                val identifyTop = onNode(identifyButton(layout)).getUnclippedBoundsInRoot().top
+                val cardTop = onNode(revealCard).getUnclippedBoundsInRoot().top
+                when (layout) {
+                    HomeLayout.Material -> assertTrue(identifyTop > cardTop, "the FAB sits below the card")
+                    HomeLayout.Cupertino -> assertTrue(identifyTop < cardTop, "the toolbar button sits above the card")
+                }
+                onNode(identifyButton(layout)).performClick()
+                assertEquals(1, identifyClicks)
+
+                state = HomeUiState(content = HomeContent.NotRevealed(isDrawing = true))
+                onNode(revealCard).assertIsNotEnabled()
             }
-
-            onNodeWithText("Your breed of the day").assertExists()
-            onNode(revealButton).performClick()
-            assertEquals(listOf<HomeAction>(HomeAction.Reveal), actions)
-            onNode(identifyButton).performClick()
-            assertEquals(1, identifyClicks)
-
-            state = HomeUiState(content = HomeContent.NotRevealed(isDrawing = true))
-            onNode(revealButton).assertIsNotEnabled()
         }
+    }
 
     @Test
     fun revealedBreedOpensItsDetailAndPromisesAnotherDrawTomorrow() =
@@ -80,6 +113,7 @@ class HomeScreenTest {
                                         DrawnBreed.Available("akita", "Akita", subtitle = "Working", imageUrls = emptyList()),
                                     ),
                             ),
+                        layout = HomeLayout.Material,
                         onAction = {},
                         onBreedClick = { opened += it },
                         onIdentifyClick = {},
@@ -88,7 +122,7 @@ class HomeScreenTest {
             }
 
             onNodeWithText("Today's breed").assertExists()
-            onNode(revealButton).assertDoesNotExist()
+            onNode(revealCard).assertDoesNotExist()
             onNodeWithText("Working", substring = true).assertExists()
             onNodeWithText("One draw per day. Come back tomorrow for another breed.").assertExists()
             onNodeWithText("Akita", substring = true).performClick()
@@ -103,6 +137,7 @@ class HomeScreenTest {
                 DogAppTheme {
                     HomeScreen(
                         state = HomeUiState(content = HomeContent.Revealed(DrawnBreed.Unavailable("blenheim spaniel", "Blenheim Spaniel"))),
+                        layout = HomeLayout.Material,
                         onAction = {},
                         onBreedClick = {},
                         onIdentifyClick = {},

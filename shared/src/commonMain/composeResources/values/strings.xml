@@ -105,8 +105,11 @@
     <string name="home_revealed_title">Today's breed</string>
     <string name="home_learn_more">Tap to learn more</string>
     <string name="home_draw_hint">One draw per day. Come back tomorrow for another breed.</string>
+    <string name="home_draw_tap">Tap the card</string>
     <string name="home_identify">Identify a breed from a photo</string>
+    <string name="home_identify_action">Identify</string>
     <string name="identify_title">Identify a breed</string>
+    <string name="identify_done">Done</string>
     <string name="identify_intro">Choose a photo of a dog to find out its breed.</string>
     <string name="identify_choose_photo">Choose a photo</string>
     <string name="identify_choose_another">Choose another photo</string>

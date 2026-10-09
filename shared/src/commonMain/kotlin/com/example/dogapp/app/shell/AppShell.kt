@@ -24,6 +24,7 @@ import com.example.dogapp.core.presentation.animation.SharedElementsHost
 import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
 import com.example.dogapp.feature.breeddetail.presentation.breedDetailEntries
 import com.example.dogapp.feature.explore.presentation.exploreEntries
+import com.example.dogapp.feature.home.presentation.HomeLayout
 import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.identify.presentation.identifyEntries
@@ -37,11 +38,23 @@ fun AppShell(
     val navigationState = rememberNavigationState()
     val navigator = remember(navigationState) { Navigator(navigationState) }
 
+    val launchIdentify =
+        rememberIdentifyLauncher(
+            navigationStyle = navigationStyle,
+            navigateToIdentify = { navigator.navigate(IdentifyRoute) },
+            onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
+        )
+
     val provideEntry =
         entryProvider<NavKey> {
             homeEntries(
+                layout =
+                    when (navigationStyle) {
+                        NavigationStyle.Material -> HomeLayout.Material
+                        NavigationStyle.Cupertino -> HomeLayout.Cupertino
+                    },
                 onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
-                onIdentifyClick = { navigator.navigate(IdentifyRoute) },
+                onIdentifyClick = launchIdentify,
             )
             exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             profileEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })

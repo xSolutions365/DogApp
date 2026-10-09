@@ -7,11 +7,12 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 ## Features
 
 - **Home: breed of the day**
-  - Once a day, tap **Reveal today's breed** and the breed card drops in. Tapping the card opens the breed detail.
+  - Once a day, tap the face-down **Reveal today's breed** card: it flips over in 3D, with a haptic, to show the breed. Tapping the breed card opens the breed detail.
   - Draws are random with no repeats and prefer breeds that have photos. Once every breed has been drawn, a new cycle starts.
   - Each draw is stored per local calendar day.
 - **Home: identify a breed from a photo**
-  - **Identify a breed from a photo** on Home opens a screen where you choose a photo with the system photo picker (Android Photo Picker, iOS `PHPickerViewController`; neither needs a permission).
+  - Home offers it the way each platform does. **Android:** an extended **Identify a breed** FAB (it shrinks to an icon when Home scrolls) that grows into the identify screen with a container transform. **iOS:** an **Identify** text button in the top-right toolbar (like **Edit** in Mail) that opens identify as a native page sheet (grabber, swipe down or **Done** to close). Tapping a match closes the sheet and opens the breed on the Home tab.
+  - You choose a photo with the system photo picker (Android Photo Picker, iOS `PHPickerViewController`; neither needs a permission).
   - The photo is classified on the device: LiteRT on Android, Core ML + Vision on iOS. Nothing is uploaded.
   - A clear winner (60% or more) is shown on its own; otherwise the top 3 candidates are listed with their match percentages. A photo with little dog in it shows "No dog found".
   - Tapping a match opens its breed detail. A recognised breed that isn't in the merged breed list (for example "Eskimo dog", or most breeds when only Dog CEO is used) is shown by name only, with no photo or details.
@@ -157,6 +158,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify
   - Features expose `EntryProviderScope<NavKey>.xEntries(...)`.
   - Navigation is passed in as lambdas from `app`.
   - Every route is `@Serializable` and registered in that feature's serializers module.
+- **Platform variants** come from `NavigationStyle` (Material on Android, Cupertino on iOS), passed down from `AppShell`. Features expose their variants as plain parameters (`HomeLayout`, `IdentifyPresentation`), and `app` maps the style onto them, so iOS UI tests render both. Truly native pieces sit behind `expect`/`actual` in `app`: `rememberIdentifyLauncher` pushes the identify screen on Android and presents a `UISheetPresentationController` hosting a `ComposeUIViewController` on iOS.
 - **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows. Sources that need a key are bound only when their key is set.
 - **The first breed sync** is owned by the app-wide `BreedSyncCoordinator`. It starts at launch, Home and Explore share it, and it syncs only when the database is empty.
 
