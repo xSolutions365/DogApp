@@ -20,6 +20,50 @@
     <string name="explore_no_matches">No breeds match “%1$s”</string>
     <string name="breeds_empty">No breeds are available yet.</string>
     <string name="explore_favourite_indicator">Favourite</string>
+    <string name="explore_no_filter_matches">No breeds match these filters</string>
+    <string name="explore_no_search_filter_matches">No breeds match “%1$s” with these filters</string>
+    <string name="explore_filter_size">Size</string>
+    <string name="explore_filter_life_span">Life span</string>
+    <string name="explore_filter_group">Group</string>
+    <string name="explore_filter_energy">Energy</string>
+    <string name="explore_filter_traits">Traits</string>
+    <string name="explore_filter_favourites">Favourites</string>
+    <string name="explore_filter_summary">%1$s: %2$s</string>
+    <string name="explore_filters_clear">Clear all</string>
+    <string name="explore_size_toy">Toy</string>
+    <string name="explore_size_small">Small</string>
+    <string name="explore_size_medium">Medium</string>
+    <string name="explore_size_large">Large</string>
+    <string name="explore_size_giant">Giant</string>
+    <string name="explore_size_toy_range">Under 5 kg</string>
+    <string name="explore_size_small_range">5–11 kg</string>
+    <string name="explore_size_medium_range">11–25 kg</string>
+    <string name="explore_size_large_range">25–45 kg</string>
+    <string name="explore_size_giant_range">Over 45 kg</string>
+    <string name="explore_life_span_under_ten">Under 10 years</string>
+    <string name="explore_life_span_ten_to_twelve">10–12 years</string>
+    <string name="explore_life_span_thirteen_plus">13+ years</string>
+    <string name="explore_energy_low">Low</string>
+    <string name="explore_energy_medium">Medium</string>
+    <string name="explore_energy_high">High</string>
+    <string name="explore_trait_low_shedding">Low shedding</string>
+    <string name="explore_trait_easy_to_train">Easy to train</string>
+    <plurals name="explore_hidden_size">
+        <item quantity="one">%1$d breed hidden: no size listed</item>
+        <item quantity="other">%1$d breeds hidden: no size listed</item>
+    </plurals>
+    <plurals name="explore_hidden_life_span">
+        <item quantity="one">%1$d breed hidden: no life span listed</item>
+        <item quantity="other">%1$d breeds hidden: no life span listed</item>
+    </plurals>
+    <plurals name="explore_hidden_group">
+        <item quantity="one">%1$d breed hidden: no group listed</item>
+        <item quantity="other">%1$d breeds hidden: no group listed</item>
+    </plurals>
+    <plurals name="explore_hidden_traits">
+        <item quantity="one">%1$d breed hidden: no trait ratings listed</item>
+        <item quantity="other">%1$d breeds hidden: no trait ratings listed</item>
+    </plurals>
     <string name="detail_back">Back</string>
     <string name="detail_favourite_add">Add to favourites</string>
     <string name="detail_favourite_remove">Remove from favourites</string>

@@ -5,13 +5,21 @@ import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedSourceId
 import com.example.dogapp.core.domain.breed.BreedSyncCoordinator
 import com.example.dogapp.core.domain.breed.BreedSyncResult
+import com.example.dogapp.core.domain.breed.MeasureRange
 import com.example.dogapp.core.domain.breed.ObserveBreedsUseCase
 import com.example.dogapp.core.domain.breed.SearchBreedsUseCase
 import com.example.dogapp.core.domain.breed.SyncBreedsUseCase
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteIdsUseCase
 import com.example.dogapp.core.presentation.error.toStringResource
+import com.example.dogapp.feature.explore.domain.AvailableFiltersUseCase
+import com.example.dogapp.feature.explore.domain.BreedFilters
+import com.example.dogapp.feature.explore.domain.BreedInfo
+import com.example.dogapp.feature.explore.domain.BreedSize
+import com.example.dogapp.feature.explore.domain.FilterBreedsUseCase
+import com.example.dogapp.feature.explore.domain.FilterCategory
 import com.example.dogapp.testing.FakeBreedRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
+import com.example.dogapp.testing.testBreed
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +75,8 @@ class ExploreViewModelTest {
         ExploreViewModel(
             observeBreeds = ObserveBreedsUseCase(repository),
             searchBreeds = SearchBreedsUseCase(),
+            filterBreeds = FilterBreedsUseCase(),
+            availableFilters = AvailableFiltersUseCase(),
             breedSync = BreedSyncCoordinator(repository, SyncBreedsUseCase(repository), syncScope),
             observeFavouriteIds = ObserveFavouriteIdsUseCase(favourites),
         )
@@ -192,5 +202,57 @@ class ExploreViewModelTest {
             favourites.toggle("beagle", "Beagle")
 
             assertEquals(mapOf("akita" to true, "beagle" to false), marks())
+        }
+
+    @Test
+    fun filtersCombineWithTheQueryReportHiddenBreedsOfferOnlyFiltersWithStoredInfoAndResetOnResync() =
+        runTest {
+            repository.breeds.value =
+                listOf(
+                    testBreed("border collie", breedGroup = "Herding", weightKg = MeasureRange(14.0, 20.0)),
+                    testBreed("rough collie", breedGroup = "Herding"),
+                    testBreed("beagle", breedGroup = "Hound", weightKg = MeasureRange(9.0, 13.0)),
+                    testBreed("pug", weightKg = MeasureRange(6.0, 8.0)),
+                )
+            favourites.toggle("pug", "Pug")
+            val viewModel = viewModel()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
+
+            fun shown() = (viewModel.state.value.content as ExploreContent.Results).breeds.map { it.id }
+
+            fun hidden() = (viewModel.state.value.content as ExploreContent.Results).hiddenForMissingInfo
+
+            assertEquals(setOf(FilterCategory.Size, FilterCategory.Group), viewModel.state.value.availableFilters)
+            assertEquals(listOf("Herding", "Hound"), viewModel.state.value.groupOptions)
+
+            val medium = BreedFilters(sizes = setOf(BreedSize.Medium))
+            viewModel.onAction(ExploreAction.FiltersChange(medium))
+            assertEquals(medium, viewModel.state.value.filters)
+            assertEquals(listOf("border collie", "beagle"), shown())
+            assertEquals(mapOf(BreedInfo.Size to 1), hidden())
+
+            viewModel.onAction(ExploreAction.QueryChange("collie"))
+            assertEquals(listOf("border collie"), shown())
+            assertEquals(mapOf(BreedInfo.Size to 1), hidden())
+
+            viewModel.onAction(ExploreAction.FiltersChange(medium.copy(favouritesOnly = true)))
+            assertEquals(ExploreContent.NoMatches("collie", hasFilters = true), viewModel.state.value.content)
+
+            viewModel.onAction(ExploreAction.QueryChange(""))
+            assertEquals(ExploreContent.NoMatches("", hasFilters = true), viewModel.state.value.content)
+
+            viewModel.onAction(ExploreAction.FiltersChange(BreedFilters(favouritesOnly = true)))
+            assertEquals(listOf("pug"), shown())
+            assertEquals(emptyMap(), hidden())
+
+            val resync = CompletableDeferred<BreedSyncResult>().also { repository.syncResults += it }
+            viewModel.onAction(ExploreAction.Retry)
+            assertEquals(ExploreContent.Loading, viewModel.state.value.content)
+            assertEquals(BreedFilters(), viewModel.state.value.filters)
+            assertFalse(viewModel.state.value.isSearchEnabled)
+
+            resync.complete(BreedSyncResult(succeededSources = setOf(source), failures = emptyMap()))
+            assertEquals(listOf("border collie", "rough collie", "beagle", "pug"), shown())
+            assertEquals(BreedFilters(), viewModel.state.value.filters)
         }
 }

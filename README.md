@@ -10,10 +10,14 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
   - Once a day, tap **Reveal today's breed** and the breed card drops in. Tapping the card opens the breed detail.
   - Draws are random with no repeats and prefer breeds that have photos. Once every breed has been drawn, a new cycle starts.
   - Each draw is stored per local calendar day.
-- **Explore: breed search**
+- **Explore: breed search and filters**
   - Search matches the start of any word in a breed name across all merged breeds.
+  - Filter chips under the search field: **Size** (Toy under 5 kg, Small 5–11, Medium 11–25, Large 25–45, Giant over 45, from the middle of the weight range), **Life span** (under 10, 10–12, 13+ years, from the middle of the range), **Group**, **Energy** (low, medium, high), **Traits** (good with children, low shedding, easy to train) and **Favourites**. Options within a filter can be combined; search and every active filter must all match. **Clear all** resets them.
+  - The filter chips appear once the breeds have loaded. A filter's chip only shows when at least one breed has the info it needs, so filters with no data never appear. **Favourites** is always shown.
+  - Whenever a breed sync runs, Explore shows the full loading screen again and clears the filters.
+  - Breeds missing the info an active filter needs are hidden, and the list says how many and why (for example "22 breeds hidden: no size listed"). Energy and trait filters use the API Ninjas ratings, so they only cover breeds with ratings.
   - Each row shows a small favourite mark.
-  - On first launch, a loading screen is shown and search stays disabled until the breed database is filled.
+  - On first launch, a loading screen is shown and search stays disabled (and the filters hidden) until the breed database is filled.
 - **Breed detail**
   - A photo gallery (Dog CEO and TheDogAPI) with a shared-element transition from the list.
   - Sections appear only when there is data for them: weight, height, life span, temperament, about, history, 1–5 trait meters (API Ninjas) and sources.
@@ -43,9 +47,9 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 | [Dog CEO](https://dog.ceo/dog-api) (`https://dog.ceo/api`) | Breed and sub-breed names, photo galleries | None |
 
 **Dog CEO is enough to run the app.** It's always used. TheDogAPI and API Ninjas are each used only when their key is set, and each one adds its data on top:
-- **Dog CEO only:** breed names, photos and galleries. Detail screens show the photos and sources, and Explore's search works.
+- **Dog CEO only:** breed names, photos and galleries. Detail screens show the photos and sources; Explore offers search and the Favourites filter; the other filter chips don't appear because no breed has their info.
 - **With TheDogAPI:** sizes, life spans, temperament, about, history, groups, and more photos.
-- **With API Ninjas:** 1–5 trait ratings, plus sizes and life spans for the breeds it covers.
+- **With API Ninjas:** 1–5 trait ratings (and the Energy and Traits filters), plus sizes and life spans for the breeds it covers.
 
 **How the sources are merged:**
 - Breeds are matched by normalised name: lowercase, without diacritics or punctuation, and with sub-breeds written as `"<sub-breed> <breed>"`.

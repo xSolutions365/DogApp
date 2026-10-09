@@ -32,6 +32,7 @@ import com.example.dogapp.core.presentation.components.DogImage
 import com.example.dogapp.core.presentation.components.ErrorState
 import com.example.dogapp.core.presentation.components.LoadingState
 import com.example.dogapp.core.presentation.components.SearchField
+import com.example.dogapp.feature.explore.domain.BreedInfo
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.breeds_empty
 import dogapp.shared.generated.resources.breeds_error_title
@@ -39,12 +40,16 @@ import dogapp.shared.generated.resources.breeds_loading_body
 import dogapp.shared.generated.resources.breeds_loading_title
 import dogapp.shared.generated.resources.breeds_retry
 import dogapp.shared.generated.resources.explore_favourite_indicator
+import dogapp.shared.generated.resources.explore_no_filter_matches
 import dogapp.shared.generated.resources.explore_no_matches
+import dogapp.shared.generated.resources.explore_no_search_filter_matches
 import dogapp.shared.generated.resources.explore_search_placeholder
 import dogapp.shared.generated.resources.ic_favorite_filled
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+
+private const val HIDDEN_NOTE_KEY = "hidden-note"
 
 @Composable
 fun ExploreRoot(
@@ -70,6 +75,15 @@ fun ExploreScreen(
             enabled = state.isSearchEnabled,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
+        if (state.isSearchEnabled) {
+            ExploreFilterBar(
+                filters = state.filters,
+                availableFilters = state.availableFilters,
+                groupOptions = state.groupOptions,
+                onFiltersChange = { onAction(ExploreAction.FiltersChange(it)) },
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
         when (val content = state.content) {
             ExploreContent.Pending -> {
                 Box(Modifier.fillMaxSize())
@@ -92,19 +106,39 @@ fun ExploreScreen(
             }
 
             is ExploreContent.NoMatches -> {
-                MessageContent(stringResource(Res.string.explore_no_matches, content.query))
+                CenteredColumn {
+                    Text(
+                        text = noMatchesMessage(content),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    HiddenBreedsNote(content.hiddenForMissingInfo)
+                }
             }
 
             is ExploreContent.Results -> {
                 if (content.breeds.isEmpty()) {
                     MessageContent(stringResource(Res.string.breeds_empty))
                 } else {
-                    BreedList(breeds = content.breeds, onBreedClick = onBreedClick)
+                    BreedList(
+                        breeds = content.breeds,
+                        hiddenForMissingInfo = content.hiddenForMissingInfo,
+                        onBreedClick = onBreedClick,
+                    )
                 }
             }
         }
     }
 }
+
+@Composable
+private fun noMatchesMessage(content: ExploreContent.NoMatches): String =
+    when {
+        !content.hasFilters -> stringResource(Res.string.explore_no_matches, content.query)
+        content.query.isBlank() -> stringResource(Res.string.explore_no_filter_matches)
+        else -> stringResource(Res.string.explore_no_search_filter_matches, content.query)
+    }
 
 @Composable
 private fun MessageContent(
@@ -138,10 +172,16 @@ private fun CenteredColumn(
 @Composable
 private fun BreedList(
     breeds: List<BreedListItem>,
+    hiddenForMissingInfo: Map<BreedInfo, Int>,
     onBreedClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
+        if (hiddenForMissingInfo.isNotEmpty()) {
+            item(key = HIDDEN_NOTE_KEY) {
+                HiddenBreedsNote(hiddenForMissingInfo, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+        }
         items(breeds, key = { it.id }) { breed -> BreedRow(breed = breed, onClick = { onBreedClick(breed.id) }) }
     }
 }
