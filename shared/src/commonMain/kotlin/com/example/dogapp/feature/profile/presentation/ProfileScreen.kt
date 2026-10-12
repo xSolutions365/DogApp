@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dogapp.core.presentation.animation.breedImageSharedKey
 import com.example.dogapp.core.presentation.animation.navSharedElement
 import com.example.dogapp.core.presentation.components.DogImage
+import com.example.dogapp.core.presentation.components.platformDisclosureIcon
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.breed_unavailable
 import dogapp.shared.generated.resources.destination_profile
@@ -36,16 +38,25 @@ import dogapp.shared.generated.resources.profile_favourite_remove
 import dogapp.shared.generated.resources.profile_favourite_remove_description
 import dogapp.shared.generated.resources.profile_favourites
 import dogapp.shared.generated.resources.profile_favourites_empty
+import dogapp.shared.generated.resources.profile_feed_me
+import dogapp.shared.generated.resources.profile_support_charities
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ProfileRoot(
     onBreedClick: (String) -> Unit,
+    onSupportCharitiesClick: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ProfileScreen(state = state, onAction = viewModel::onAction, onBreedClick = onBreedClick)
+    ProfileScreen(
+        state = state,
+        onAction = viewModel::onAction,
+        onBreedClick = onBreedClick,
+        onSupportCharitiesClick = onSupportCharitiesClick,
+    )
 }
 
 @Composable
@@ -53,6 +64,7 @@ fun ProfileScreen(
     state: ProfileUiState,
     onAction: (ProfileAction) -> Unit,
     onBreedClick: (String) -> Unit,
+    onSupportCharitiesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -112,6 +124,35 @@ fun ProfileScreen(
         }
         items(draws.orEmpty(), key = { "draw-${it.day}" }) { draw ->
             DrawHistoryRow(draw = draw, onClick = { onBreedClick(draw.breedId) })
+        }
+        item(key = "feed-me-title") {
+            Text(
+                text = stringResource(Res.string.profile_feed_me),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp).semantics { heading() },
+            )
+        }
+        item(key = "support-charities") {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onSupportCharitiesClick)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.profile_support_charities),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    painter = painterResource(platformDisclosureIcon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }

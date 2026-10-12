@@ -23,6 +23,9 @@ import com.example.dogapp.app.navigation.tabSelectionTransition
 import com.example.dogapp.core.presentation.animation.SharedElementsHost
 import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
 import com.example.dogapp.feature.breeddetail.presentation.breedDetailEntries
+import com.example.dogapp.feature.donate.presentation.CharitiesRoute
+import com.example.dogapp.feature.donate.presentation.CharityRoute
+import com.example.dogapp.feature.donate.presentation.donateEntries
 import com.example.dogapp.feature.explore.presentation.exploreEntries
 import com.example.dogapp.feature.home.presentation.HomeLayout
 import com.example.dogapp.feature.home.presentation.homeEntries
@@ -57,9 +60,13 @@ fun AppShell(
                 onIdentifyClick = launchIdentify,
             )
             exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
-            profileEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
+            profileEntries(
+                onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
+                onSupportCharitiesClick = { navigator.navigate(CharitiesRoute) },
+            )
             breedDetailEntries(onBack = { navigator.goBack() })
             identifyEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) }, onBack = { navigator.goBack() })
+            donateEntries(onCharityClick = { charityId -> navigator.navigate(CharityRoute(charityId)) }, onBack = { navigator.goBack() })
         }
     val entriesByDestination =
         TopLevelDestination.entries.associateWith { destination ->

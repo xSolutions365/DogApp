@@ -123,4 +123,10 @@
     <string name="identify_error_model">Breed recognition isn't available right now.</string>
     <string name="profile_draws">Previous breeds of the day</string>
     <string name="profile_draws_empty">Each breed of the day you reveal will appear here the following day.</string>
+    <string name="profile_feed_me">Feed me</string>
+    <string name="profile_support_charities">Support dog charities</string>
+    <string name="donate_charities_title">Dog charities</string>
+    <string name="donate_mock_notice">Demo only: these charities are made up and no real money is ever taken.</string>
+    <string name="donate_charity_about">About</string>
+    <string name="donate_charity_not_found">This charity isn't available.</string>
 </resources>

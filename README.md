@@ -32,6 +32,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Profile**
   - **Favourite breeds.** If a favourite later disappears from the APIs, it's kept, shown by its saved name as "No longer available", and can be removed.
   - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
+  - **Feed me** (at the bottom): **Support dog charities** opens a list of dog charities, and each one has a detail page. See [Mock payments and security setup](#mock-payments-and-security-setup).
 - **Images**
   - A dog placeholder sits under every photo while it loads.
   - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
@@ -44,6 +45,11 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Light and dark themes** from the custom "Park Day" design system:
   - colours: Leash Blue, Fur Tan and Tennis Ball
   - fonts: Bricolage Grotesque and Figtree (the OFL licences ship in `composeResources/files/licenses/`)
+
+## Mock payments and security setup
+
+DogApp is a demo playground for learning how payments and security work on each platform. **It is never hooked to anything real**: there is no backend, no payment provider account and no real money.
+- **Charities are mock data.** The dog charities, their names, places and stories are made up and hardcoded in `feature/donate/data/MockCharityRepository.kt`. The app says so on the charity list.
 
 ## Data sources
 
@@ -134,8 +140,8 @@ core/
   data/              Ktor client, DataStore, Room database
     breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/
   presentation/      theme, shared components, shared-element helpers, error text
-feature/<name>/      home, explore, breeddetail, profile, identify
-  domain/  data/     a feature's own use cases and data, when it has any (explore, identify)
+feature/<name>/      home, explore, breeddetail, profile, identify, donate
+  domain/  data/     a feature's own use cases and data, when it has any (explore, identify, donate)
   presentation/      Route, Entries, UiState, Action, ViewModel, Root + Screen
   di/                the feature's Koin module
 ```

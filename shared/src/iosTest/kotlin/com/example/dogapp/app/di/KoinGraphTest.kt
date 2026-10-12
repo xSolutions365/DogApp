@@ -17,6 +17,7 @@ import com.example.dogapp.core.domain.draw.TodayProvider
 import com.example.dogapp.core.domain.favourite.FavouritesRepository
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteBreedsUseCase
 import com.example.dogapp.core.domain.favourite.ToggleFavouriteUseCase
+import com.example.dogapp.feature.donate.domain.CharityRepository
 import com.example.dogapp.feature.identify.domain.BreedClassifier
 import com.example.dogapp.feature.identify.domain.IdentifyBreedUseCase
 import io.ktor.client.HttpClient
@@ -61,5 +62,6 @@ class KoinGraphTest : KoinTest {
         assertNotNull(get<ObserveDrawHistoryUseCase>())
         assertNotNull(get<BreedClassifier>())
         assertNotNull(get<IdentifyBreedUseCase>())
+        assertNotNull(get<CharityRepository>())
     }
 }

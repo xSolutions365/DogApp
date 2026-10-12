@@ -1,6 +1,8 @@
 package com.example.dogapp.feature.profile.presentation
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,7 +16,16 @@ class ProfileScreenTest {
     @Test
     fun emptyFavouritesExplainHowToAddOne() =
         runComposeUiTest {
-            setContent { DogAppTheme { ProfileScreen(state = ProfileUiState(favourites = emptyList()), onAction = {}, onBreedClick = {}) } }
+            setContent {
+                DogAppTheme {
+                    ProfileScreen(
+                        state = ProfileUiState(favourites = emptyList()),
+                        onAction = {},
+                        onBreedClick = {},
+                        onSupportCharitiesClick = {},
+                    )
+                }
+            }
 
             onNodeWithText("Favourite breeds").assertExists()
             onNodeWithText("No favourites yet. Tap the heart on a breed to save it here.").assertExists()
@@ -38,6 +49,7 @@ class ProfileScreenTest {
                             ),
                         onAction = { actions += it },
                         onBreedClick = { opened += it },
+                        onSupportCharitiesClick = {},
                     )
                 }
             }
@@ -83,6 +95,7 @@ class ProfileScreenTest {
                             ),
                         onAction = {},
                         onBreedClick = { opened += it },
+                        onSupportCharitiesClick = {},
                     )
                 }
             }
@@ -105,10 +118,32 @@ class ProfileScreenTest {
                         state = ProfileUiState(favourites = emptyList(), draws = emptyList()),
                         onAction = {},
                         onBreedClick = {},
+                        onSupportCharitiesClick = {},
                     )
                 }
             }
 
             onNodeWithText("Each breed of the day you reveal will appear here the following day.").assertExists()
+        }
+
+    @Test
+    fun feedMeSectionAtTheBottomOpensTheDogCharities() =
+        runComposeUiTest {
+            var charitiesOpened = 0
+            setContent {
+                DogAppTheme {
+                    ProfileScreen(
+                        state = ProfileUiState(favourites = emptyList(), draws = emptyList()),
+                        onAction = {},
+                        onBreedClick = {},
+                        onSupportCharitiesClick = { charitiesOpened++ },
+                    )
+                }
+            }
+
+            onNode(isHeading() and hasText("Feed me")).assertExists()
+            onNodeWithText("Support dog charities").performClick()
+
+            assertEquals(1, charitiesOpened)
         }
 }

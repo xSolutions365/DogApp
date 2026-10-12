@@ -37,6 +37,7 @@ import com.example.dogapp.core.domain.favourite.FavouriteRecord
 import com.example.dogapp.core.domain.favourite.FavouritesRepository
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
+import com.example.dogapp.feature.donate.di.donateModule
 import com.example.dogapp.feature.explore.di.exploreModule
 import com.example.dogapp.feature.home.di.homeModule
 import com.example.dogapp.feature.identify.data.ImageLabeler
@@ -131,6 +132,7 @@ class AppShellTest {
                             breedDetailModule,
                             profileModule,
                             identifyModule,
+                            donateModule,
                             module {
                                 single<BreedRepository> { emptyBreedRepository }
                                 single<FavouritesRepository> { favourites }
@@ -286,6 +288,29 @@ class AppShellTest {
 
             assertDetailTitle("Border Collie")
             onNode(tab("Profile")).assertIsSelected()
+        }
+    }
+
+    @Test
+    fun supportingDogCharitiesFromProfileOpensACharityOnTheProfileTabAndBackReturns() {
+        NavigationStyle.entries.forEach { style ->
+            runComposeUiTest {
+                val backInput = setShell(style)
+                onNode(tab("Profile")).performClick()
+
+                onNode(verticalList).performScrollToNode(hasText("Support dog charities"))
+                onNode(hasText("Support dog charities")).performClick()
+                onNode(screenTitle("Dog charities")).assertExists()
+                onNode(verticalList).performScrollToNode(hasText("Fetch Club"))
+                onNode(hasText("Fetch Club")).performClick()
+                onNode(screenTitle("Fetch Club")).assertExists()
+                onNode(tab("Profile")).assertIsSelected()
+
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Dog charities")).assertExists()
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Profile")).assertExists()
+            }
         }
     }
 }
