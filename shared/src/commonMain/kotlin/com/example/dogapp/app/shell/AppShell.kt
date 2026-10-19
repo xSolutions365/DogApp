@@ -5,6 +5,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -32,15 +34,20 @@ import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.identify.presentation.identifyEntries
 import com.example.dogapp.feature.profile.presentation.profileEntries
+import com.example.dogapp.feature.wallet.domain.WalletAutoLock
 import com.example.dogapp.feature.wallet.presentation.WalletLayout
 import com.example.dogapp.feature.wallet.presentation.WalletRoute
 import com.example.dogapp.feature.wallet.presentation.walletEntries
+import org.koin.compose.koinInject
 
 @Composable
 fun AppShell(
     modifier: Modifier = Modifier,
     navigationStyle: NavigationStyle = platformNavigationStyle,
+    walletAutoLock: WalletAutoLock = koinInject(),
 ) {
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { walletAutoLock.onAppBackground() }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { walletAutoLock.onAppForeground() }
     val navigationState = rememberNavigationState()
     val navigator = remember(navigationState) { Navigator(navigationState) }
 

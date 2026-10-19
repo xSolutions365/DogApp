@@ -30,6 +30,7 @@ class WalletScreenTest {
                         state = state,
                         layout = WalletLayout.Material,
                         biometricName = "fingerprint",
+                        isScreenCaptured = false,
                         onAction = { actions += it },
                         onOpenSettings = { settingsOpened++ },
                         onBack = { backs++ },
@@ -63,16 +64,18 @@ class WalletScreenTest {
         }
 
     @Test
-    fun cupertinoWalletNamesFaceIdAndPointsToSettingsInWords() =
+    fun cupertinoWalletNamesFaceIdPointsToSettingsInWordsAndHidesWhileRecorded() =
         runComposeUiTest {
             val actions = mutableListOf<WalletAction>()
             var state: WalletUiState by mutableStateOf(WalletUiState.Locked)
+            var isScreenCaptured by mutableStateOf(false)
             setContent {
                 DogAppTheme {
                     WalletScreen(
                         state = state,
                         layout = WalletLayout.Cupertino,
                         biometricName = "Face ID",
+                        isScreenCaptured = isScreenCaptured,
                         onAction = { actions += it },
                         onOpenSettings = null,
                         onBack = {},
@@ -94,6 +97,16 @@ class WalletScreenTest {
             waitForIdle()
             onNode(isHeading() and hasText("Turn on Face ID in Settings to use your wallet.")).assertExists()
             onNodeWithText("Open settings").assertDoesNotExist()
+
+            state = WalletUiState.Unlocked(LocalDate(2026, 10, 19))
+            isScreenCaptured = true
+            waitForIdle()
+            onNode(isHeading() and hasText("Your wallet is hidden while the screen is being recorded.")).assertExists()
+            onNodeWithText("Created on 19 Oct 2026").assertDoesNotExist()
+
+            isScreenCaptured = false
+            waitForIdle()
+            onNodeWithText("Created on 19 Oct 2026").assertExists()
 
             assertEquals(listOf(WalletAction.Unlock, WalletAction.SetUpAgain), actions)
         }

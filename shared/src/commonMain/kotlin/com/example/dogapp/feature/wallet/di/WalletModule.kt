@@ -1,6 +1,7 @@
 package com.example.dogapp.feature.wallet.di
 
 import com.example.dogapp.feature.wallet.data.DefaultWalletRepository
+import com.example.dogapp.feature.wallet.domain.WalletAutoLock
 import com.example.dogapp.feature.wallet.domain.WalletCoordinator
 import com.example.dogapp.feature.wallet.domain.WalletRepository
 import com.example.dogapp.feature.wallet.presentation.WalletViewModel
@@ -12,5 +13,6 @@ val walletModule =
     module {
         single<WalletRepository> { DefaultWalletRepository(vault = get()) }
         singleOf(::WalletCoordinator)
+        single { WalletAutoLock(coordinator = get()) }
         viewModel { WalletViewModel(coordinator = get()) }
     }

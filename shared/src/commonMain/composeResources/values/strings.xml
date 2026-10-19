@@ -151,4 +151,5 @@
     <string name="wallet_reset_message_ios">%1$s was changed, so your wallet was cleared to keep it safe.</string>
     <string name="wallet_set_up_again_ios">Set Up Again</string>
     <string name="wallet_unavailable_message_ios">Turn on %1$s in Settings to use your wallet.</string>
+    <string name="wallet_hidden_while_recorded">Your wallet is hidden while the screen is being recorded.</string>
 </resources>

@@ -26,6 +26,7 @@ import com.example.dogapp.core.presentation.components.platformLockIcon
 import com.example.dogapp.core.presentation.toDisplayText
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.wallet_created
+import dogapp.shared.generated.resources.wallet_hidden_while_recorded
 import dogapp.shared.generated.resources.wallet_locked_message
 import dogapp.shared.generated.resources.wallet_locked_message_ios
 import dogapp.shared.generated.resources.wallet_locked_title
@@ -54,6 +55,7 @@ fun WalletRoot(
     viewModel: WalletViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    SecureScreenEffect()
     LifecycleResumeEffect(viewModel) {
         viewModel.onAction(WalletAction.ScreenResume)
         onPauseOrDispose {}
@@ -62,6 +64,7 @@ fun WalletRoot(
         state = state,
         layout = layout,
         biometricName = rememberBiometricName(),
+        isScreenCaptured = rememberIsScreenCaptured(),
         onAction = viewModel::onAction,
         onOpenSettings = rememberBiometricEnrollLauncher(),
         onBack = onBack,
@@ -73,6 +76,7 @@ fun WalletScreen(
     state: WalletUiState,
     layout: WalletLayout,
     biometricName: String,
+    isScreenCaptured: Boolean,
     onAction: (WalletAction) -> Unit,
     onOpenSettings: (() -> Unit)?,
     onBack: () -> Unit,
@@ -81,6 +85,16 @@ fun WalletScreen(
     val copy = layout.copy()
     Column(modifier = modifier.fillMaxSize()) {
         BackTopBar(title = stringResource(Res.string.wallet_title), onBack = onBack)
+        if (isScreenCaptured) {
+            WalletMessage(
+                layout = layout,
+                title = stringResource(Res.string.wallet_hidden_while_recorded),
+                message = null,
+                actionLabel = null,
+                onActionClick = {},
+            )
+            return@Column
+        }
         when (state) {
             WalletUiState.Locked -> {
                 WalletMessage(
