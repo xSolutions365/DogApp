@@ -4,4 +4,5 @@ import kotlin.time.Instant
 
 data class Wallet(
     val createdAt: Instant,
+    val cards: List<SavedCard> = emptyList(),
 )

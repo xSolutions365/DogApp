@@ -1,6 +1,10 @@
 package com.example.dogapp.feature.wallet.presentation
 
 import com.example.dogapp.feature.wallet.data.DefaultWalletRepository
+import com.example.dogapp.feature.wallet.domain.CardBrand
+import com.example.dogapp.feature.wallet.domain.CardExpiry
+import com.example.dogapp.feature.wallet.domain.CardValidation
+import com.example.dogapp.feature.wallet.domain.WalletChange
 import com.example.dogapp.feature.wallet.domain.WalletCoordinator
 import com.example.dogapp.feature.wallet.domain.WalletError
 import com.example.dogapp.testing.FakeWalletVault
@@ -12,8 +16,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -29,7 +31,6 @@ class WalletViewModelTest {
             override fun now(): Instant = Instant.parse("2026-10-19T23:30:00Z")
         }
     private val coordinator = WalletCoordinator(DefaultWalletRepository(vault, clock))
-    private val berlin = TimeZone.of("Europe/Berlin")
 
     @BeforeTest
     fun setUp() {
@@ -42,16 +43,16 @@ class WalletViewModelTest {
     }
 
     private fun TestScope.openWallet(): WalletViewModel =
-        WalletViewModel(coordinator) { berlin }.also { viewModel ->
+        WalletViewModel(coordinator).also { viewModel ->
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
         }
 
     @Test
-    fun openingTheWalletAsksForTheBiometricOnceAndShowsTheLocalCreationDay() =
+    fun openingTheWalletAsksForTheBiometricOnceAndShowsItsCards() =
         runTest {
             val viewModel = openWallet()
 
-            assertEquals(WalletUiState.Unlocked(LocalDate(2026, 10, 20)), viewModel.state.value)
+            assertEquals(WalletUiState.Unlocked(emptyList()), viewModel.state.value)
             assertEquals(1, vault.authentications)
 
             openWallet()
@@ -69,7 +70,7 @@ class WalletViewModelTest {
             assertEquals(1, vault.authentications)
 
             viewModel.onAction(WalletAction.Unlock)
-            assertEquals(WalletUiState.Unlocked(LocalDate(2026, 10, 20)), viewModel.state.value)
+            assertEquals(WalletUiState.Unlocked(emptyList()), viewModel.state.value)
         }
 
     @Test
@@ -81,7 +82,7 @@ class WalletViewModelTest {
             assertEquals(WalletUiState.BiometricUnavailable, viewModel.state.value)
 
             viewModel.onAction(WalletAction.ScreenResume)
-            assertEquals(WalletUiState.Unlocked(LocalDate(2026, 10, 20)), viewModel.state.value)
+            assertEquals(WalletUiState.Unlocked(emptyList()), viewModel.state.value)
             assertEquals(2, vault.authentications)
         }
 
@@ -96,6 +97,19 @@ class WalletViewModelTest {
             assertEquals(WalletUiState.KeyInvalidated, viewModel.state.value)
 
             viewModel.onAction(WalletAction.SetUpAgain)
-            assertEquals(WalletUiState.Unlocked(LocalDate(2026, 10, 20)), viewModel.state.value)
+            assertEquals(WalletUiState.Unlocked(emptyList()), viewModel.state.value)
+        }
+
+    @Test
+    fun removingACardFromTheListAsksForTheBiometricAndUpdatesTheList() =
+        runTest {
+            val viewModel = openWallet()
+            coordinator.addCard(CardValidation.Valid(brand = CardBrand.Visa, last4 = "4242", expiry = CardExpiry(month = 12, year = 2028)))
+            assertEquals(1, (viewModel.state.value as WalletUiState.Unlocked).cards.size)
+
+            viewModel.onAction(WalletAction.RemoveCard((viewModel.state.value as WalletUiState.Unlocked).cards.single().id))
+
+            assertEquals(WalletUiState.Unlocked(emptyList()), viewModel.state.value)
+            assertEquals(WalletChange.CardRemoved, vault.writes.last())
         }
 }

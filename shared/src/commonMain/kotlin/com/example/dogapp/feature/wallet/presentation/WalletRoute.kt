@@ -12,5 +12,7 @@ val walletNavigationSerializers =
     SerializersModule {
         polymorphic(NavKey::class) {
             subclass(WalletRoute::class, WalletRoute.serializer())
+            subclass(AddCardRoute::class, AddCardRoute.serializer())
+            subclass(CardDetailRoute::class, CardDetailRoute.serializer())
         }
     }

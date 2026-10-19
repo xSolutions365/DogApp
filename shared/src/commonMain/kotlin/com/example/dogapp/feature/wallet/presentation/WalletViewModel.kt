@@ -13,12 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 class WalletViewModel(
     private val coordinator: WalletCoordinator,
-    private val timeZone: () -> TimeZone = { TimeZone.currentSystemDefault() },
 ) : ViewModel() {
     private val biometricUnavailable = MutableStateFlow(false)
     private var isUnlocking = false
@@ -35,6 +32,7 @@ class WalletViewModel(
         when (action) {
             WalletAction.Unlock, WalletAction.SetUpAgain -> unlock()
             WalletAction.ScreenResume -> if (biometricUnavailable.value) unlock()
+            is WalletAction.RemoveCard -> viewModelScope.launch { coordinator.removeCard(action.cardId) }
         }
     }
 
@@ -52,7 +50,7 @@ class WalletViewModel(
 
     private fun WalletStatus.toUiState(unavailable: Boolean): WalletUiState =
         when (this) {
-            is WalletStatus.Unlocked -> WalletUiState.Unlocked(wallet.createdAt.toLocalDateTime(timeZone()).date)
+            is WalletStatus.Unlocked -> WalletUiState.Unlocked(wallet.cards)
             WalletStatus.KeyInvalidated -> WalletUiState.KeyInvalidated
             WalletStatus.Locked -> if (unavailable) WalletUiState.BiometricUnavailable else WalletUiState.Locked
         }

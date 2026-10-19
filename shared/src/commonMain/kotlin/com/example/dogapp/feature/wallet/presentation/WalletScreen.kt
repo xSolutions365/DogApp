@@ -1,20 +1,32 @@
 package com.example.dogapp.feature.wallet.presentation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -23,15 +35,19 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dogapp.core.presentation.components.BackTopBar
 import com.example.dogapp.core.presentation.components.platformLockIcon
-import com.example.dogapp.core.presentation.toDisplayText
+import com.example.dogapp.feature.wallet.domain.SavedCard
 import dogapp.shared.generated.resources.Res
-import dogapp.shared.generated.resources.wallet_created
+import dogapp.shared.generated.resources.ic_add
+import dogapp.shared.generated.resources.wallet_add_card
+import dogapp.shared.generated.resources.wallet_add_card_ios
 import dogapp.shared.generated.resources.wallet_hidden_while_recorded
 import dogapp.shared.generated.resources.wallet_locked_message
 import dogapp.shared.generated.resources.wallet_locked_message_ios
 import dogapp.shared.generated.resources.wallet_locked_title
 import dogapp.shared.generated.resources.wallet_locked_title_ios
+import dogapp.shared.generated.resources.wallet_no_cards
 import dogapp.shared.generated.resources.wallet_open_settings
+import dogapp.shared.generated.resources.wallet_remove
 import dogapp.shared.generated.resources.wallet_reset_message
 import dogapp.shared.generated.resources.wallet_reset_message_ios
 import dogapp.shared.generated.resources.wallet_reset_title
@@ -51,6 +67,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun WalletRoot(
     layout: WalletLayout,
+    onAddCardClick: () -> Unit,
+    onCardClick: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: WalletViewModel = koinViewModel(),
 ) {
@@ -67,6 +85,8 @@ fun WalletRoot(
         isScreenCaptured = rememberIsScreenCaptured(),
         onAction = viewModel::onAction,
         onOpenSettings = rememberBiometricEnrollLauncher(),
+        onAddCardClick = onAddCardClick,
+        onCardClick = onCardClick,
         onBack = onBack,
     )
 }
@@ -79,12 +99,61 @@ fun WalletScreen(
     isScreenCaptured: Boolean,
     onAction: (WalletAction) -> Unit,
     onOpenSettings: (() -> Unit)?,
+    onAddCardClick: () -> Unit,
+    onCardClick: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val copy = layout.copy()
+    val canAddCard = state is WalletUiState.Unlocked && !isScreenCaptured
+    Box(modifier = modifier.fillMaxSize()) {
+        WalletContent(
+            state = state,
+            layout = layout,
+            copy = copy,
+            biometricName = biometricName,
+            isScreenCaptured = isScreenCaptured,
+            canAddCard = canAddCard,
+            onAction = onAction,
+            onOpenSettings = onOpenSettings,
+            onAddCardClick = onAddCardClick,
+            onCardClick = onCardClick,
+            onBack = onBack,
+        )
+        if (canAddCard && layout == WalletLayout.Material) {
+            ExtendedFloatingActionButton(
+                text = { Text(stringResource(Res.string.wallet_add_card)) },
+                icon = { Icon(painterResource(Res.drawable.ic_add), contentDescription = stringResource(Res.string.wallet_add_card)) },
+                onClick = onAddCardClick,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun WalletContent(
+    state: WalletUiState,
+    layout: WalletLayout,
+    copy: WalletCopy,
+    biometricName: String,
+    isScreenCaptured: Boolean,
+    canAddCard: Boolean,
+    onAction: (WalletAction) -> Unit,
+    onOpenSettings: (() -> Unit)?,
+    onAddCardClick: () -> Unit,
+    onCardClick: (String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier.fillMaxSize()) {
-        BackTopBar(title = stringResource(Res.string.wallet_title), onBack = onBack)
+        BackTopBar(title = stringResource(Res.string.wallet_title), onBack = onBack) {
+            if (canAddCard && layout == WalletLayout.Cupertino) {
+                TextButton(onClick = onAddCardClick) {
+                    Text(stringResource(Res.string.wallet_add_card_ios), style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
         if (isScreenCaptured) {
             WalletMessage(
                 layout = layout,
@@ -127,14 +196,96 @@ fun WalletScreen(
             }
 
             is WalletUiState.Unlocked -> {
-                Text(
-                    text = stringResource(Res.string.wallet_created, state.createdOn.toDisplayText()),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                CardList(
+                    cards = state.cards,
+                    layout = layout,
+                    onCardClick = onCardClick,
+                    onRemoveCard = { cardId -> onAction(WalletAction.RemoveCard(cardId)) },
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CardList(
+    cards: List<SavedCard>,
+    layout: WalletLayout,
+    onCardClick: (String) -> Unit,
+    onRemoveCard: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (cards.isEmpty()) {
+        Text(
+            text = stringResource(Res.string.wallet_no_cards),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+        return
+    }
+    LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 88.dp)) {
+        items(cards, key = { it.id }) { card ->
+            when (layout) {
+                WalletLayout.Material -> CardRow(card = card, modifier = Modifier.clickable { onCardClick(card.id) })
+                WalletLayout.Cupertino -> SwipeToRemoveCardRow(card = card, onRemove = { onRemoveCard(card.id) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun SwipeToRemoveCardRow(
+    card: SavedCard,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val removeLabel = stringResource(Res.string.wallet_remove)
+    val swipeState =
+        rememberSwipeToDismissBoxState(
+            confirmValueChange = { value ->
+                if (value == SwipeToDismissBoxValue.EndToStart) onRemove()
+                false
+            },
+        )
+    SwipeToDismissBox(
+        state = swipeState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.error).padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Text(text = removeLabel, color = MaterialTheme.colorScheme.onError, style = MaterialTheme.typography.titleMedium)
+            }
+        },
+        modifier =
+            modifier.semantics {
+                customActions =
+                    listOf(
+                        CustomAccessibilityAction(removeLabel) {
+                            onRemove()
+                            true
+                        },
+                    )
+            },
+    ) {
+        CardRow(card = card, modifier = Modifier.background(MaterialTheme.colorScheme.surface))
+    }
+}
+
+@Composable
+private fun CardRow(
+    card: SavedCard,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text(text = card.label(), style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = card.expiry.expiresText(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

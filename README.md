@@ -32,7 +32,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Profile**
   - **Favourite breeds.** If a favourite later disappears from the APIs, it's kept, shown by its saved name as "No longer available", and can be removed.
   - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
-  - **Feed me** (at the bottom): **Support dog charities** opens a list of dog charities, and each one has a detail page. **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS). See [Mock payments and security setup](#mock-payments-and-security-setup).
+  - **Feed me** (at the bottom): **Support dog charities** opens a list of dog charities, and each one has a detail page. **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS), where you can add and remove demo cards. See [Mock payments and security setup](#mock-payments-and-security-setup).
 - **Images**
   - A dog placeholder sits under every photo while it loads.
   - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
@@ -50,7 +50,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 
 DogApp is a demo playground for learning how payments and security work on each platform. **It is never hooked to anything real**: there is no backend, no payment provider account and no real money.
 - **Charities are mock data.** The dog charities, their names, places and stories are made up and hardcoded in `feature/donate/data/MockCharityRepository.kt`. The app says so on the charity list.
-- **The wallet is real platform security around demo contents.** For now it holds only the date it was created; cards come later. The point is that a biometric unlocks a hardware-backed key, rather than just returning "succeeded":
+- **The wallet is real platform security around demo contents.** The point is that a biometric unlocks a hardware-backed key, rather than just returning "succeeded":
   - **Android:** an AES-256-GCM key in the Android Keystore (StrongBox when available) that needs a Class 3 biometric on every use and is invalidated by a new enrolment. It's unlocked through `BiometricPrompt` with a `CryptoObject` (`androidx.biometric` 1.1.0, so `MainActivity` is a `FragmentActivity`). The encrypted wallet and its IV are stored in DataStore.
   - **iOS:** a Keychain item with `SecAccessControl(.biometryCurrentSet)`, readable only while a passcode is set and only on this device. It's read through `LAContext`, which shows Face ID or Touch ID. A DataStore flag records that a wallet exists, so an item wiped by a new enrolment shows as a reset, not as "never set up".
   - **States:** the prompt shows as soon as the wallet opens. A cancel leaves it locked with an Unlock button. A new biometric enrolment wipes the wallet and says so ("Wallet reset"). With no biometric enrolled, Android offers "Open settings" (the system enrolment flow) and iOS explains it in words, because iOS has no public link to the Face ID settings.
@@ -58,6 +58,12 @@ DogApp is a demo playground for learning how payments and security work on each 
     - **Android:** `FLAG_SECURE` blanks screenshots, screen recordings and the Recents thumbnail, and `setRecentsScreenshotEnabled(false)` is set on Android 13+.
     - **iOS:** when the app goes inactive, a blur with the DogApp icon covers the window, so the app-switcher snapshot doesn't show the wallet. While the screen is recorded or mirrored (the `sceneCaptureState` trait), the wallet is hidden behind "Your wallet is hidden while the screen is being recorded."
   - **Auto-lock:** after 30 seconds or more in the background, the wallet is locked when the app comes back (`WalletAutoLock`, fed from the app lifecycle in `AppShell`). Nothing runs while the app is in the background.
+  - **Cards, kept the tokenised way.** Real apps never store the card number (PCI DSS): a payment provider keeps the card, and the app keeps a reference with brand, last 4 and expiry. DogApp has no provider, so it keeps only those three:
+    - **Validation** (`ValidateCardUseCase`, shared): the Luhn check; brand from the first digits (Visa, Mastercard, Amex, Discover, other) with that brand's number length and CVV length (4 for Amex); an expiry as `MM/YY` that hasn't passed (and isn't more than 20 years ahead). All errors show at once, and only on Save.
+    - **The form:** the number, expiry and CVV have the Compose credit-card autofill content types, number keyboards and a masked CVV. They live only in `AddCardViewModel` state, are never logged, and are cleared on save. The form says it's a demo and suggests the test card 4242 4242 4242 4242.
+    - **Adding:** Android: an "Add card" extended FAB opens a full-screen form with "Save card". iOS: an "Add Card" bar button opens a native page sheet with Cancel / Add.
+    - **Removing:** Android: tap a card for its detail, then "Remove card". iOS: swipe a row left to "Remove" (also a VoiceOver action).
+    - **Every change re-encrypts the wallet**, so saving or removing a card asks for the biometric ("Save card to your wallet" / "Remove card from your wallet"). A cancel changes nothing.
   - **Testing on devices:** Android emulator: set a screen lock and add a fingerprint in Settings, using `adb -e emu finger touch 1` to touch the sensor (another id fails). iOS simulator: Features → Face ID → Enrolled, then Matching / Non-matching Face. Untick and tick Enrolled again to simulate a new enrolment.
 
 ## Data sources

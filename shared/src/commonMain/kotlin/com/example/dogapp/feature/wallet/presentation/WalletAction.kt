@@ -6,4 +6,8 @@ sealed interface WalletAction {
     data object SetUpAgain : WalletAction
 
     data object ScreenResume : WalletAction
+
+    data class RemoveCard(
+        val cardId: String,
+    ) : WalletAction
 }

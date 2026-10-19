@@ -5,5 +5,10 @@ import com.example.dogapp.core.domain.Outcome
 interface WalletRepository {
     suspend fun unlock(): Outcome<Wallet, WalletError>
 
+    suspend fun save(
+        wallet: Wallet,
+        change: WalletChange,
+    ): Outcome<Unit, WalletError>
+
     suspend fun wipe()
 }

@@ -35,6 +35,8 @@ import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.identify.presentation.identifyEntries
 import com.example.dogapp.feature.profile.presentation.profileEntries
 import com.example.dogapp.feature.wallet.domain.WalletAutoLock
+import com.example.dogapp.feature.wallet.presentation.AddCardRoute
+import com.example.dogapp.feature.wallet.presentation.CardDetailRoute
 import com.example.dogapp.feature.wallet.presentation.WalletLayout
 import com.example.dogapp.feature.wallet.presentation.WalletRoute
 import com.example.dogapp.feature.wallet.presentation.walletEntries
@@ -56,6 +58,12 @@ fun AppShell(
             navigationStyle = navigationStyle,
             navigateToIdentify = { navigator.navigate(IdentifyRoute) },
             onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
+        )
+
+    val launchAddCard =
+        rememberAddCardLauncher(
+            navigationStyle = navigationStyle,
+            navigateToAddCard = { navigator.navigate(AddCardRoute) },
         )
 
     val provideEntry =
@@ -84,6 +92,8 @@ fun AppShell(
                         NavigationStyle.Material -> WalletLayout.Material
                         NavigationStyle.Cupertino -> WalletLayout.Cupertino
                     },
+                onAddCardClick = launchAddCard,
+                onCardClick = { cardId -> navigator.navigate(CardDetailRoute(cardId)) },
                 onBack = { navigator.goBack() },
             )
         }

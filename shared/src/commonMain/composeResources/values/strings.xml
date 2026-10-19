@@ -131,6 +131,8 @@
     <string name="donate_charity_not_found">This charity isn't available.</string>
     <string name="wallet_prompt_unlock_title">Unlock your wallet</string>
     <string name="wallet_prompt_set_up_title">Set up your wallet</string>
+    <string name="wallet_prompt_save_card_title">Save card to your wallet</string>
+    <string name="wallet_prompt_remove_card_title">Remove card from your wallet</string>
     <string name="wallet_prompt_cancel">Cancel</string>
     <string name="profile_wallet">Wallet</string>
     <string name="wallet_title">Wallet</string>
@@ -152,4 +154,27 @@
     <string name="wallet_set_up_again_ios">Set Up Again</string>
     <string name="wallet_unavailable_message_ios">Turn on %1$s in Settings to use your wallet.</string>
     <string name="wallet_hidden_while_recorded">Your wallet is hidden while the screen is being recorded.</string>
+    <string name="wallet_no_cards">No cards yet</string>
+    <string name="wallet_remove_card">Remove card</string>
+    <string name="wallet_remove">Remove</string>
+    <string name="wallet_card_label">%1$s •••• %2$s</string>
+    <string name="wallet_card_expires">Expires %1$s</string>
+    <string name="wallet_brand_visa">Visa</string>
+    <string name="wallet_brand_mastercard">Mastercard</string>
+    <string name="wallet_brand_amex">American Express</string>
+    <string name="wallet_brand_discover">Discover</string>
+    <string name="wallet_brand_other">Card</string>
+    <string name="wallet_add_card">Add card</string>
+    <string name="wallet_add_card_ios">Add Card</string>
+    <string name="wallet_add_card_save">Save card</string>
+    <string name="wallet_add_card_add">Add</string>
+    <string name="wallet_add_card_cancel">Cancel</string>
+    <string name="wallet_add_card_demo_notice">Demo only: use a test card such as 4242 4242 4242 4242. Only the brand, last 4 digits and expiry are kept.</string>
+    <string name="wallet_card_number">Card number</string>
+    <string name="wallet_card_expiry">Expiry (MM/YY)</string>
+    <string name="wallet_card_security_code">Security code</string>
+    <string name="wallet_card_error_number">Check the card number</string>
+    <string name="wallet_card_error_expiry">Enter the expiry as MM/YY</string>
+    <string name="wallet_card_error_expired">This card has expired</string>
+    <string name="wallet_card_error_security_code">Check the security code</string>
 </resources>

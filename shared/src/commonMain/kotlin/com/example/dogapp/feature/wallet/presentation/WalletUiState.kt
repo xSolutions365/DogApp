@@ -1,12 +1,12 @@
 package com.example.dogapp.feature.wallet.presentation
 
-import kotlinx.datetime.LocalDate
+import com.example.dogapp.feature.wallet.domain.SavedCard
 
 sealed interface WalletUiState {
     data object Locked : WalletUiState
 
     data class Unlocked(
-        val createdOn: LocalDate,
+        val cards: List<SavedCard>,
     ) : WalletUiState
 
     data object KeyInvalidated : WalletUiState

@@ -1,6 +1,7 @@
 package com.example.dogapp.core.presentation.components
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ fun BackTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     Row(modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) {
@@ -33,5 +35,6 @@ fun BackTopBar(
             style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.weight(1f).padding(end = 16.dp).semantics { heading() },
         )
+        actions()
     }
 }

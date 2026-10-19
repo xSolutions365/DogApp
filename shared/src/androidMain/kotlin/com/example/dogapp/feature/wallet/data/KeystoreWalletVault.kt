@@ -15,10 +15,10 @@ import androidx.datastore.preferences.core.byteArrayPreferencesKey
 import androidx.datastore.preferences.core.edit
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.map
+import com.example.dogapp.feature.wallet.domain.WalletChange
 import com.example.dogapp.feature.wallet.domain.WalletError
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.wallet_prompt_cancel
-import dogapp.shared.generated.resources.wallet_prompt_set_up_title
 import dogapp.shared.generated.resources.wallet_prompt_unlock_title
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -49,7 +49,10 @@ class KeystoreWalletVault(
         return authenticate(Res.string.wallet_prompt_unlock_title, cipher).map { it.doFinal(ciphertext) }
     }
 
-    override suspend fun write(contents: ByteArray): Outcome<Unit, WalletError> {
+    override suspend fun write(
+        contents: ByteArray,
+        change: WalletChange,
+    ): Outcome<Unit, WalletError> {
         if (BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_SUCCESS) {
             return Outcome.Failure(WalletError.BiometricUnavailable)
         }
@@ -57,7 +60,7 @@ class KeystoreWalletVault(
         val cipher =
             initialisedCipher { init(Cipher.ENCRYPT_MODE, key) }
                 ?: return Outcome.Failure(WalletError.KeyInvalidated)
-        return authenticate(Res.string.wallet_prompt_set_up_title, cipher).map { authenticated ->
+        return authenticate(change.promptTitle, cipher).map { authenticated ->
             val ciphertext = authenticated.doFinal(contents)
             dataStore.edit { preferences ->
                 preferences[IV] = authenticated.iv

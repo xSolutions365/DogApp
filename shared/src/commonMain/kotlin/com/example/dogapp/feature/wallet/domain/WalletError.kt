@@ -10,4 +10,6 @@ sealed interface WalletError : DomainError {
     data object BiometricUnavailable : WalletError
 
     data object KeyInvalidated : WalletError
+
+    data object Locked : WalletError
 }

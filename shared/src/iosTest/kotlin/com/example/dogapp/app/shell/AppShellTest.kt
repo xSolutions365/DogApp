@@ -12,10 +12,12 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.uikit.LocalUIViewController
 import androidx.navigationevent.DirectNavigationEventInput
@@ -329,12 +331,39 @@ class AppShellTest {
                 onNode(verticalList).performScrollToNode(hasText("Wallet"))
                 onNode(hasText("Wallet")).performClick()
                 onNode(screenTitle("Wallet")).assertExists()
-                onNode(hasText("Created on", substring = true)).assertExists()
+                onNode(hasText("No cards yet")).assertExists()
                 onNode(tab("Profile")).assertIsSelected()
 
                 performPredictiveBack(backInput)
                 onNode(screenTitle("Profile")).assertExists()
             }
+        }
+    }
+
+    @Test
+    fun addingAndRemovingACardOnMaterialGoesThroughTheFormAndTheCardDetail() {
+        runComposeUiTest {
+            setShell(NavigationStyle.Material)
+            onNode(tab("Profile")).performClick()
+            onNode(verticalList).performScrollToNode(hasText("Wallet"))
+            onNode(hasText("Wallet")).performClick()
+
+            onNode(hasContentDescription("Add card")).performClick()
+            onNode(screenTitle("Add card")).assertExists()
+            onNode(hasSetTextAction() and hasText("Card number")).performTextInput("4242 4242 4242 4242")
+            onNode(hasSetTextAction() and hasText("Expiry (MM/YY)")).performTextInput("12/40")
+            onNode(hasSetTextAction() and hasText("Security code")).performTextInput("123")
+            onNode(hasText("Save card") and hasClickAction()).performClick()
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("Visa •••• 4242")).fetchSemanticsNodes().isNotEmpty() }
+
+            onNode(screenTitle("Wallet")).assertExists()
+            onNode(hasText("Expires 12/40")).assertExists()
+
+            onNode(hasText("Visa •••• 4242")).performClick()
+            onNode(screenTitle("Visa •••• 4242")).assertExists()
+            onNode(hasText("Remove card") and hasClickAction()).performClick()
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("No cards yet")).fetchSemanticsNodes().isNotEmpty() }
+            onNode(screenTitle("Wallet")).assertExists()
         }
     }
 }
