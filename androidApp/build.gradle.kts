@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.fragment)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
 

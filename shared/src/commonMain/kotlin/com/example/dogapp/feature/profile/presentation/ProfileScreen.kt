@@ -40,6 +40,7 @@ import dogapp.shared.generated.resources.profile_favourites
 import dogapp.shared.generated.resources.profile_favourites_empty
 import dogapp.shared.generated.resources.profile_feed_me
 import dogapp.shared.generated.resources.profile_support_charities
+import dogapp.shared.generated.resources.profile_wallet
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -48,6 +49,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ProfileRoot(
     onBreedClick: (String) -> Unit,
     onSupportCharitiesClick: () -> Unit,
+    onWalletClick: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -56,6 +58,7 @@ fun ProfileRoot(
         onAction = viewModel::onAction,
         onBreedClick = onBreedClick,
         onSupportCharitiesClick = onSupportCharitiesClick,
+        onWalletClick = onWalletClick,
     )
 }
 
@@ -65,6 +68,7 @@ fun ProfileScreen(
     onAction: (ProfileAction) -> Unit,
     onBreedClick: (String) -> Unit,
     onSupportCharitiesClick: () -> Unit,
+    onWalletClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -133,27 +137,39 @@ fun ProfileScreen(
             )
         }
         item(key = "support-charities") {
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onSupportCharitiesClick)
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(Res.string.profile_support_charities),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    painter = painterResource(platformDisclosureIcon),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            FeedMeRow(text = stringResource(Res.string.profile_support_charities), onClick = onSupportCharitiesClick)
         }
+        item(key = "wallet") {
+            FeedMeRow(text = stringResource(Res.string.profile_wallet), onClick = onWalletClick)
+        }
+    }
+}
+
+@Composable
+private fun FeedMeRow(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            painter = painterResource(platformDisclosureIcon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

@@ -43,9 +43,12 @@ import com.example.dogapp.feature.home.di.homeModule
 import com.example.dogapp.feature.identify.data.ImageLabeler
 import com.example.dogapp.feature.identify.di.identifyModule
 import com.example.dogapp.feature.profile.di.profileModule
+import com.example.dogapp.feature.wallet.data.WalletVault
+import com.example.dogapp.feature.wallet.di.walletModule
 import com.example.dogapp.testing.FakeDailyDrawRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
 import com.example.dogapp.testing.FakeTodayProvider
+import com.example.dogapp.testing.FakeWalletVault
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.compose.KoinApplication
 import org.koin.core.context.stopKoin
@@ -133,11 +136,13 @@ class AppShellTest {
                             profileModule,
                             identifyModule,
                             donateModule,
+                            walletModule,
                             module {
                                 single<BreedRepository> { emptyBreedRepository }
                                 single<FavouritesRepository> { favourites }
                                 single<DailyDrawRepository> { draws }
                                 single<TodayProvider> { today }
+                                single<WalletVault> { FakeWalletVault() }
                                 single<ImageLabeler> {
                                     object : ImageLabeler {
                                         override suspend fun label(photo: ByteArray) = Outcome.Success(emptyMap<String, Float>())
@@ -308,6 +313,25 @@ class AppShellTest {
 
                 performPredictiveBack(backInput)
                 onNode(screenTitle("Dog charities")).assertExists()
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Profile")).assertExists()
+            }
+        }
+    }
+
+    @Test
+    fun walletFromProfileUnlocksOnOpenOnTheProfileTabAndBackReturns() {
+        NavigationStyle.entries.forEach { style ->
+            runComposeUiTest {
+                val backInput = setShell(style)
+                onNode(tab("Profile")).performClick()
+
+                onNode(verticalList).performScrollToNode(hasText("Wallet"))
+                onNode(hasText("Wallet")).performClick()
+                onNode(screenTitle("Wallet")).assertExists()
+                onNode(hasText("Created on", substring = true)).assertExists()
+                onNode(tab("Profile")).assertIsSelected()
+
                 performPredictiveBack(backInput)
                 onNode(screenTitle("Profile")).assertExists()
             }

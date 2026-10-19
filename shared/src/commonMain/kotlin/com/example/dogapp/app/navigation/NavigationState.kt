@@ -17,6 +17,7 @@ import com.example.dogapp.feature.explore.presentation.exploreNavigationSerializ
 import com.example.dogapp.feature.home.presentation.homeNavigationSerializers
 import com.example.dogapp.feature.identify.presentation.identifyNavigationSerializers
 import com.example.dogapp.feature.profile.presentation.profileNavigationSerializers
+import com.example.dogapp.feature.wallet.presentation.walletNavigationSerializers
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.plus
 
@@ -42,7 +43,7 @@ class NavigationState(
 
 internal val navigationSerializersModule: SerializersModule =
     homeNavigationSerializers + exploreNavigationSerializers + profileNavigationSerializers + breedDetailNavigationSerializers +
-        identifyNavigationSerializers + donateNavigationSerializers
+        identifyNavigationSerializers + donateNavigationSerializers + walletNavigationSerializers
 
 private val navigationSavedStateConfiguration =
     SavedStateConfiguration {

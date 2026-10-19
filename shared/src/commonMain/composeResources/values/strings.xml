@@ -129,4 +129,26 @@
     <string name="donate_mock_notice">Demo only: these charities are made up and no real money is ever taken.</string>
     <string name="donate_charity_about">About</string>
     <string name="donate_charity_not_found">This charity isn't available.</string>
+    <string name="wallet_prompt_unlock_title">Unlock your wallet</string>
+    <string name="wallet_prompt_set_up_title">Set up your wallet</string>
+    <string name="wallet_prompt_cancel">Cancel</string>
+    <string name="profile_wallet">Wallet</string>
+    <string name="wallet_title">Wallet</string>
+    <string name="wallet_biometric_fingerprint">fingerprint</string>
+    <string name="wallet_created">Created on %1$s</string>
+    <string name="wallet_locked_title">Wallet locked</string>
+    <string name="wallet_locked_message">Use your %1$s to unlock</string>
+    <string name="wallet_unlock">Unlock</string>
+    <string name="wallet_reset_title">Wallet reset</string>
+    <string name="wallet_reset_message">A new %1$s was added, so your wallet was cleared to keep it safe.</string>
+    <string name="wallet_set_up_again">Set up again</string>
+    <string name="wallet_unavailable_message">Add a %1$s to use your wallet</string>
+    <string name="wallet_open_settings">Open settings</string>
+    <string name="wallet_locked_title_ios">Wallet Locked</string>
+    <string name="wallet_locked_message_ios">Use %1$s to view your wallet.</string>
+    <string name="wallet_unlock_ios">Unlock with %1$s</string>
+    <string name="wallet_reset_title_ios">Wallet Reset</string>
+    <string name="wallet_reset_message_ios">%1$s was changed, so your wallet was cleared to keep it safe.</string>
+    <string name="wallet_set_up_again_ios">Set Up Again</string>
+    <string name="wallet_unavailable_message_ios">Turn on %1$s in Settings to use your wallet.</string>
 </resources>

@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.dogapp.core.presentation.components.BackTopBar
 import com.example.dogapp.core.presentation.components.platformDisclosureIcon
 import com.example.dogapp.feature.donate.domain.Charity
 import dogapp.shared.generated.resources.Res
@@ -46,7 +47,7 @@ fun CharitiesScreen(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        item(key = "title") { DonateTopBar(title = stringResource(Res.string.donate_charities_title), onBack = onBack) }
+        item(key = "title") { BackTopBar(title = stringResource(Res.string.donate_charities_title), onBack = onBack) }
         item(key = "notice") {
             Text(
                 text = stringResource(Res.string.donate_mock_notice),

@@ -10,6 +10,9 @@ import com.example.dogapp.core.data.datastore.PREFERENCES_FILE_NAME
 import com.example.dogapp.core.data.datastore.createPreferencesDataStore
 import com.example.dogapp.feature.identify.data.ImageLabeler
 import com.example.dogapp.feature.identify.data.LiteRtImageLabeler
+import com.example.dogapp.feature.wallet.data.BiometricPromptHost
+import com.example.dogapp.feature.wallet.data.KeystoreWalletVault
+import com.example.dogapp.feature.wallet.data.WalletVault
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.android.ext.koin.androidContext
@@ -31,4 +34,7 @@ actual val platformModule: Module =
             )
         }
         single<ImageLabeler> { LiteRtImageLabeler(androidContext()) }
+        single<WalletVault>(createdAtStart = true) {
+            KeystoreWalletVault(androidContext(), get(), BiometricPromptHost(androidContext()))
+        }
     }

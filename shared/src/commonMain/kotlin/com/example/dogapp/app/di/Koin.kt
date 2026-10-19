@@ -7,6 +7,7 @@ import com.example.dogapp.feature.explore.di.exploreModule
 import com.example.dogapp.feature.home.di.homeModule
 import com.example.dogapp.feature.identify.di.identifyModule
 import com.example.dogapp.feature.profile.di.profileModule
+import com.example.dogapp.feature.wallet.di.walletModule
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
@@ -26,6 +27,7 @@ val appModules: List<Module> =
         profileModule,
         identifyModule,
         donateModule,
+        walletModule,
     )
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) =

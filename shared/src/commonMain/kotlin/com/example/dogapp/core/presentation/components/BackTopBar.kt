@@ -1,4 +1,4 @@
-package com.example.dogapp.feature.donate.presentation
+package com.example.dogapp.core.presentation.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,14 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.example.dogapp.core.presentation.components.platformBackIcon
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.detail_back
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun DonateTopBar(
+fun BackTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,

@@ -32,6 +32,9 @@ import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.identify.presentation.identifyEntries
 import com.example.dogapp.feature.profile.presentation.profileEntries
+import com.example.dogapp.feature.wallet.presentation.WalletLayout
+import com.example.dogapp.feature.wallet.presentation.WalletRoute
+import com.example.dogapp.feature.wallet.presentation.walletEntries
 
 @Composable
 fun AppShell(
@@ -63,10 +66,19 @@ fun AppShell(
             profileEntries(
                 onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
                 onSupportCharitiesClick = { navigator.navigate(CharitiesRoute) },
+                onWalletClick = { navigator.navigate(WalletRoute) },
             )
             breedDetailEntries(onBack = { navigator.goBack() })
             identifyEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) }, onBack = { navigator.goBack() })
             donateEntries(onCharityClick = { charityId -> navigator.navigate(CharityRoute(charityId)) }, onBack = { navigator.goBack() })
+            walletEntries(
+                layout =
+                    when (navigationStyle) {
+                        NavigationStyle.Material -> WalletLayout.Material
+                        NavigationStyle.Cupertino -> WalletLayout.Cupertino
+                    },
+                onBack = { navigator.goBack() },
+            )
         }
     val entriesByDestination =
         TopLevelDestination.entries.associateWith { destination ->

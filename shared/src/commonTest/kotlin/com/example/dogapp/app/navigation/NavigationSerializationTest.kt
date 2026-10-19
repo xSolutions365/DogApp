@@ -2,6 +2,10 @@ package com.example.dogapp.app.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
+import com.example.dogapp.feature.donate.presentation.CharitiesRoute
+import com.example.dogapp.feature.donate.presentation.CharityRoute
+import com.example.dogapp.feature.identify.presentation.IdentifyRoute
+import com.example.dogapp.feature.wallet.presentation.WalletRoute
 import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -21,9 +25,14 @@ class NavigationSerializationTest {
     }
 
     @Test
-    fun featureRoutesWithArgumentsRoundTripThroughFeatureProvidedSerializers() {
-        val route: NavKey = BreedDetailRoute(breedId = "border collie")
-
-        assertEquals(route, json.decodeFromString(navKeySerializer, json.encodeToString(navKeySerializer, route)))
+    fun pushedFeatureRoutesRoundTripThroughFeatureProvidedSerializers() {
+        listOf<NavKey>(BreedDetailRoute(breedId = "border collie"), IdentifyRoute, CharitiesRoute, CharityRoute("fetch-club"), WalletRoute)
+            .forEach { route ->
+                assertEquals(
+                    route,
+                    json.decodeFromString(navKeySerializer, json.encodeToString(navKeySerializer, route)),
+                    "Round trip failed for $route",
+                )
+            }
     }
 }

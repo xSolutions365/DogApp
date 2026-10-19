@@ -59,6 +59,8 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.biometric)
+            implementation(libs.androidx.fragment)
             implementation(libs.litert)
         }
         iosMain.dependencies {

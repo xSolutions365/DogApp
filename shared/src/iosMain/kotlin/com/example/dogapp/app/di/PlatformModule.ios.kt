@@ -11,6 +11,8 @@ import com.example.dogapp.core.data.datastore.preferencesDataStorePath
 import com.example.dogapp.core.data.storage.documentsDirectoryPath
 import com.example.dogapp.feature.identify.data.CoreMlImageLabeler
 import com.example.dogapp.feature.identify.data.ImageLabeler
+import com.example.dogapp.feature.wallet.data.KeychainWalletVault
+import com.example.dogapp.feature.wallet.data.WalletVault
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.darwin.Darwin
 import org.koin.core.module.Module
@@ -24,4 +26,5 @@ actual val platformModule: Module =
             Room.databaseBuilder<DogAppDatabase>(name = documentsDirectoryPath() + "/" + DATABASE_FILE_NAME)
         }
         single<ImageLabeler> { CoreMlImageLabeler() }
+        single<WalletVault> { KeychainWalletVault(get()) }
     }

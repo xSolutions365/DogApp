@@ -32,7 +32,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Profile**
   - **Favourite breeds.** If a favourite later disappears from the APIs, it's kept, shown by its saved name as "No longer available", and can be removed.
   - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
-  - **Feed me** (at the bottom): **Support dog charities** opens a list of dog charities, and each one has a detail page. See [Mock payments and security setup](#mock-payments-and-security-setup).
+  - **Feed me** (at the bottom): **Support dog charities** opens a list of dog charities, and each one has a detail page. **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS). See [Mock payments and security setup](#mock-payments-and-security-setup).
 - **Images**
   - A dog placeholder sits under every photo while it loads.
   - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
@@ -50,6 +50,11 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 
 DogApp is a demo playground for learning how payments and security work on each platform. **It is never hooked to anything real**: there is no backend, no payment provider account and no real money.
 - **Charities are mock data.** The dog charities, their names, places and stories are made up and hardcoded in `feature/donate/data/MockCharityRepository.kt`. The app says so on the charity list.
+- **The wallet is real platform security around demo contents.** For now it holds only the date it was created; cards come later. The point is that a biometric unlocks a hardware-backed key, rather than just returning "succeeded":
+  - **Android:** an AES-256-GCM key in the Android Keystore (StrongBox when available) that needs a Class 3 biometric on every use and is invalidated by a new enrolment. It's unlocked through `BiometricPrompt` with a `CryptoObject` (`androidx.biometric` 1.1.0, so `MainActivity` is a `FragmentActivity`). The encrypted wallet and its IV are stored in DataStore.
+  - **iOS:** a Keychain item with `SecAccessControl(.biometryCurrentSet)`, readable only while a passcode is set and only on this device. It's read through `LAContext`, which shows Face ID or Touch ID. A DataStore flag records that a wallet exists, so an item wiped by a new enrolment shows as a reset, not as "never set up".
+  - **States:** the prompt shows as soon as the wallet opens. A cancel leaves it locked with an Unlock button. A new biometric enrolment wipes the wallet and says so ("Wallet reset"). With no biometric enrolled, Android offers "Open settings" (the system enrolment flow) and iOS explains it in words, because iOS has no public link to the Face ID settings.
+  - **Testing on devices:** Android emulator: set a screen lock and add a fingerprint in Settings, using `adb -e emu finger touch 1` to touch the sensor (another id fails). iOS simulator: Features → Face ID → Enrolled, then Matching / Non-matching Face. Untick and tick Enrolled again to simulate a new enrolment.
 
 ## Data sources
 
@@ -140,8 +145,8 @@ core/
   data/              Ktor client, DataStore, Room database
     breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/
   presentation/      theme, shared components, shared-element helpers, error text
-feature/<name>/      home, explore, breeddetail, profile, identify, donate
-  domain/  data/     a feature's own use cases and data, when it has any (explore, identify, donate)
+feature/<name>/      home, explore, breeddetail, profile, identify, donate, wallet
+  domain/  data/     a feature's own use cases and data, when it has any (explore, identify, donate, wallet)
   presentation/      Route, Entries, UiState, Action, ViewModel, Root + Screen
   di/                the feature's Koin module
 ```
@@ -164,7 +169,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate
   - Features expose `EntryProviderScope<NavKey>.xEntries(...)`.
   - Navigation is passed in as lambdas from `app`.
   - Every route is `@Serializable` and registered in that feature's serializers module.
-- **Platform variants** come from `NavigationStyle` (Material on Android, Cupertino on iOS), passed down from `AppShell`. Features expose their variants as plain parameters (`HomeLayout`, `IdentifyPresentation`), and `app` maps the style onto them, so iOS UI tests render both. Truly native pieces sit behind `expect`/`actual` in `app`: `rememberIdentifyLauncher` pushes the identify screen on Android and presents a `UISheetPresentationController` hosting a `ComposeUIViewController` on iOS.
+- **Platform variants** come from `NavigationStyle` (Material on Android, Cupertino on iOS), passed down from `AppShell`. Features expose their variants as plain parameters (`HomeLayout`, `IdentifyPresentation`, `WalletLayout`), and `app` maps the style onto them, so iOS UI tests render both. Truly native pieces sit behind `expect`/`actual` in `app`: `rememberIdentifyLauncher` pushes the identify screen on Android and presents a `UISheetPresentationController` hosting a `ComposeUIViewController` on iOS.
 - **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows. Sources that need a key are bound only when their key is set.
 - **The first breed sync** is owned by the app-wide `BreedSyncCoordinator`. It starts at launch, Home and Explore share it, and it syncs only when the database is empty.
 
@@ -173,14 +178,14 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate
   - `sourced_breed`: each source's breed data, which the sync replaces
   - `favourite_breed`: owned by the user, never touched by sync
   - `daily_draw`: one row per day; the first draw of a day is the one kept
-- **DataStore Preferences** is set up for small key-value settings.
+- **DataStore Preferences** (`dogapp.preferences_pb`) holds small key-value data. So far that's the wallet: the encrypted wallet on Android, and the "wallet exists" flag on iOS.
 
 ## Tools and libraries
 
 | Area | Library | Version |
 |---|---|---|
 | Language | Kotlin Multiplatform | 2.4.21 |
-| UI | Compose Multiplatform / Material 3 | 1.12.1 / 1.12.0-alpha03 |
+| UI | Compose Multiplatform / Material 3 | 1.12.2 / 1.12.0-alpha03 |
 | Navigation | JetBrains Navigation 3 (+ lifecycle-viewmodel-navigation3) | 1.1.2 (lifecycle 2.11.0) |
 | DI | Koin (classic DSL, compose, compose-viewmodel) | 4.2.2 |
 | Networking | Ktor (OkHttp on Android, Darwin on iOS) + kotlinx-serialization | 3.6.0 |
@@ -190,6 +195,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate
 | Logging | Kermit (also routes Koin and Ktor logs) | 2.2.0 |
 | Dates | kotlinx-datetime | 0.8.0 |
 | On-device ML | LiteRT `CompiledModel` (Android) / Core ML + Vision (iOS) | 2.3.0 / system |
+| Biometrics | androidx.biometric + androidx.fragment (Android) / LocalAuthentication + Keychain (iOS) | 1.1.0 / 1.9.1 / system |
 | Coroutines | kotlinx-coroutines (+ test) | 1.11.0 |
 | Build secrets | BuildKonfig | 0.23.0 |
 | Static analysis | ktlint Gradle plugin + compose-rules | 14.2.0 (ktlint 1.8.0) / 0.6.8 |

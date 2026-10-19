@@ -23,6 +23,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = {},
+                        onWalletClick = {},
                     )
                 }
             }
@@ -50,6 +51,7 @@ class ProfileScreenTest {
                         onAction = { actions += it },
                         onBreedClick = { opened += it },
                         onSupportCharitiesClick = {},
+                        onWalletClick = {},
                     )
                 }
             }
@@ -96,6 +98,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = { opened += it },
                         onSupportCharitiesClick = {},
+                        onWalletClick = {},
                     )
                 }
             }
@@ -119,6 +122,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = {},
+                        onWalletClick = {},
                     )
                 }
             }
@@ -127,9 +131,10 @@ class ProfileScreenTest {
         }
 
     @Test
-    fun feedMeSectionAtTheBottomOpensTheDogCharities() =
+    fun feedMeSectionAtTheBottomOpensTheDogCharitiesAndTheWallet() =
         runComposeUiTest {
             var charitiesOpened = 0
+            var walletOpened = 0
             setContent {
                 DogAppTheme {
                     ProfileScreen(
@@ -137,6 +142,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = { charitiesOpened++ },
+                        onWalletClick = { walletOpened++ },
                     )
                 }
             }
@@ -144,6 +150,9 @@ class ProfileScreenTest {
             onNode(isHeading() and hasText("Feed me")).assertExists()
             onNodeWithText("Support dog charities").performClick()
 
+            onNodeWithText("Wallet").performClick()
+
             assertEquals(1, charitiesOpened)
+            assertEquals(1, walletOpened)
         }
 }

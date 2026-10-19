@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.dogapp.core.presentation.components.BackTopBar
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.donate_charities_title
 import dogapp.shared.generated.resources.donate_charity_about
@@ -42,7 +43,7 @@ fun CharityScreen(
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         when (state) {
             CharityUiState.NotFound -> {
-                DonateTopBar(title = stringResource(Res.string.donate_charities_title), onBack = onBack)
+                BackTopBar(title = stringResource(Res.string.donate_charities_title), onBack = onBack)
                 Text(
                     text = stringResource(Res.string.donate_charity_not_found),
                     style = MaterialTheme.typography.bodyLarge,
@@ -52,7 +53,7 @@ fun CharityScreen(
 
             is CharityUiState.Loaded -> {
                 val charity = state.charity
-                DonateTopBar(title = charity.name, onBack = onBack)
+                BackTopBar(title = charity.name, onBack = onBack)
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
