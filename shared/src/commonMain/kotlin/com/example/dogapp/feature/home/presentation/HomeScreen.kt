@@ -21,25 +21,34 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.example.dogapp.core.presentation.animation.IDENTIFY_SHARED_KEY
 import com.example.dogapp.core.presentation.animation.breedImageSharedKey
 import com.example.dogapp.core.presentation.animation.navSharedBounds
@@ -55,17 +64,22 @@ import dogapp.shared.generated.resources.breeds_error_title
 import dogapp.shared.generated.resources.breeds_loading_body
 import dogapp.shared.generated.resources.breeds_loading_title
 import dogapp.shared.generated.resources.breeds_retry
+import dogapp.shared.generated.resources.home_choose_photo
 import dogapp.shared.generated.resources.home_draw_hint
 import dogapp.shared.generated.resources.home_draw_reveal
 import dogapp.shared.generated.resources.home_draw_tap
 import dogapp.shared.generated.resources.home_draw_title
 import dogapp.shared.generated.resources.home_identify
 import dogapp.shared.generated.resources.home_identify_action
+import dogapp.shared.generated.resources.home_identify_close
 import dogapp.shared.generated.resources.home_learn_more
 import dogapp.shared.generated.resources.home_revealed_title
+import dogapp.shared.generated.resources.home_take_photo
+import dogapp.shared.generated.resources.ic_close
 import dogapp.shared.generated.resources.ic_dog_placeholder
 import dogapp.shared.generated.resources.ic_image_search
-import dogapp.shared.generated.resources.identify_title
+import dogapp.shared.generated.resources.ic_photo_camera
+import dogapp.shared.generated.resources.ic_photo_library
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -78,12 +92,15 @@ private const val FLIP_DURATION_MILLIS = 600
 private const val CAMERA_DISTANCE = 12f
 private val CardShape = RoundedCornerShape(28.dp)
 private val FAB_CLEARANCE = 88.dp
+private const val HALF_PROGRESS = 0.5f
 
 @Composable
 fun HomeRoot(
     layout: HomeLayout,
     onBreedClick: (String) -> Unit,
-    onIdentifyClick: () -> Unit,
+    onTakePhotoClick: () -> Unit,
+    onChoosePhotoClick: () -> Unit,
+    identifyMenuButton: @Composable () -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -92,7 +109,9 @@ fun HomeRoot(
         layout = layout,
         onAction = viewModel::onAction,
         onBreedClick = onBreedClick,
-        onIdentifyClick = onIdentifyClick,
+        onTakePhotoClick = onTakePhotoClick,
+        onChoosePhotoClick = onChoosePhotoClick,
+        identifyMenuButton = identifyMenuButton,
     )
 }
 
@@ -102,8 +121,10 @@ fun HomeScreen(
     layout: HomeLayout,
     onAction: (HomeAction) -> Unit,
     onBreedClick: (String) -> Unit,
-    onIdentifyClick: () -> Unit,
+    onTakePhotoClick: () -> Unit,
+    onChoosePhotoClick: () -> Unit,
     modifier: Modifier = Modifier,
+    identifyMenuButton: @Composable () -> Unit,
 ) {
     when (val content = state.content) {
         HomeContent.Pending -> {
@@ -147,7 +168,8 @@ fun HomeScreen(
                         isDrawing = isDrawing,
                         onAction = onAction,
                         onBreedClick = onBreedClick,
-                        onIdentifyClick = onIdentifyClick,
+                        onTakePhotoClick = onTakePhotoClick,
+                        onChoosePhotoClick = onChoosePhotoClick,
                         modifier = modifier,
                     )
                 }
@@ -158,7 +180,7 @@ fun HomeScreen(
                         isDrawing = isDrawing,
                         onAction = onAction,
                         onBreedClick = onBreedClick,
-                        onIdentifyClick = onIdentifyClick,
+                        identifyMenuButton = identifyMenuButton,
                         modifier = modifier,
                     )
                 }
@@ -173,7 +195,8 @@ private fun MaterialHome(
     isDrawing: Boolean,
     onAction: (HomeAction) -> Unit,
     onBreedClick: (String) -> Unit,
-    onIdentifyClick: () -> Unit,
+    onTakePhotoClick: () -> Unit,
+    onChoosePhotoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -186,16 +209,69 @@ private fun MaterialHome(
             scrollState = scrollState,
             modifier = Modifier.padding(bottom = FAB_CLEARANCE),
         )
-        ExtendedFloatingActionButton(
-            text = { Text(stringResource(Res.string.identify_title)) },
-            icon = { Icon(painterResource(Res.drawable.ic_image_search), contentDescription = stringResource(Res.string.home_identify)) },
-            expanded = scrollState.value == 0,
-            onClick = onIdentifyClick,
-            modifier =
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .navSharedBounds(IDENTIFY_SHARED_KEY, FloatingActionButtonDefaults.extendedFabShape),
+        IdentifyMenu(
+            onTakePhotoClick = onTakePhotoClick,
+            onChoosePhotoClick = onChoosePhotoClick,
+            modifier = Modifier.align(Alignment.BottomEnd),
+        )
+    }
+}
+
+@Composable
+private fun IdentifyMenu(
+    onTakePhotoClick: () -> Unit,
+    onChoosePhotoClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val identifyLabel = stringResource(Res.string.home_identify)
+    val closeLabel = stringResource(Res.string.home_identify_close)
+    NavigationBackHandler(state = rememberNavigationEventState(NavigationEventInfo.None), isBackEnabled = expanded, onBackCompleted = {
+        expanded =
+            false
+    })
+    FloatingActionButtonMenu(
+        expanded = expanded,
+        button = {
+            ToggleFloatingActionButton(
+                checked = expanded,
+                onCheckedChange = { expanded = it },
+                modifier =
+                    Modifier
+                        .navSharedBounds(IDENTIFY_SHARED_KEY, FloatingActionButtonDefaults.shape)
+                        .semantics { contentDescription = if (expanded) closeLabel else identifyLabel },
+            ) {
+                Icon(
+                    painter = painterResource(if (checkedProgress > HALF_PROGRESS) Res.drawable.ic_close else Res.drawable.ic_image_search),
+                    contentDescription = null,
+                    tint =
+                        if (checkedProgress >
+                            HALF_PROGRESS
+                        ) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        },
+                )
+            }
+        },
+        modifier = modifier,
+    ) {
+        FloatingActionButtonMenuItem(
+            onClick = {
+                expanded = false
+                onTakePhotoClick()
+            },
+            text = { Text(stringResource(Res.string.home_take_photo)) },
+            icon = { Icon(painterResource(Res.drawable.ic_photo_camera), contentDescription = null) },
+        )
+        FloatingActionButtonMenuItem(
+            onClick = {
+                expanded = false
+                onChoosePhotoClick()
+            },
+            text = { Text(stringResource(Res.string.home_choose_photo)) },
+            icon = { Icon(painterResource(Res.drawable.ic_photo_library), contentDescription = null) },
         )
     }
 }
@@ -206,17 +282,15 @@ private fun CupertinoHome(
     isDrawing: Boolean,
     onAction: (HomeAction) -> Unit,
     onBreedClick: (String) -> Unit,
-    onIdentifyClick: () -> Unit,
     modifier: Modifier = Modifier,
+    identifyMenuButton: @Composable () -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.End,
         ) {
-            TextButton(onClick = onIdentifyClick) {
-                Text(stringResource(Res.string.home_identify_action), style = MaterialTheme.typography.titleMedium)
-            }
+            identifyMenuButton()
         }
         DrawSection(
             revealed = revealed,

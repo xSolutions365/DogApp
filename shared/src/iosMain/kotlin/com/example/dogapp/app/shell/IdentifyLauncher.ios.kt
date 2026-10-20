@@ -10,6 +10,7 @@ import com.example.dogapp.app.navigation.NavigationStyle
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.identify.presentation.IdentifyPresentation
 import com.example.dogapp.feature.identify.presentation.IdentifyRoot
+import com.example.dogapp.feature.identify.presentation.PhotoSource
 import platform.UIKit.UIModalPresentationPageSheet
 import platform.UIKit.UISheetPresentationControllerDetent
 import platform.UIKit.UIViewController
@@ -18,20 +19,20 @@ import platform.UIKit.sheetPresentationController
 @Composable
 actual fun rememberIdentifyLauncher(
     navigationStyle: NavigationStyle,
-    navigateToIdentify: () -> Unit,
+    navigateToIdentify: (PhotoSource) -> Unit,
     onBreedClick: (String) -> Unit,
-): () -> Unit {
+): (PhotoSource) -> Unit {
     val presenter = LocalUIViewController.current
     val currentNavigateToIdentify by rememberUpdatedState(navigateToIdentify)
     val currentOnBreedClick by rememberUpdatedState(onBreedClick)
     return remember(navigationStyle, presenter) {
         when (navigationStyle) {
             NavigationStyle.Material -> {
-                { currentNavigateToIdentify() }
+                { source -> currentNavigateToIdentify(source) }
             }
 
             NavigationStyle.Cupertino -> {
-                { presentIdentifySheet(presenter) { breedId -> currentOnBreedClick(breedId) } }
+                { source -> presentIdentifySheet(presenter, source) { breedId -> currentOnBreedClick(breedId) } }
             }
         }
     }
@@ -39,6 +40,7 @@ actual fun rememberIdentifyLauncher(
 
 private fun presentIdentifySheet(
     presenter: UIViewController,
+    source: PhotoSource,
     onBreedClick: (String) -> Unit,
 ) {
     lateinit var sheet: UIViewController
@@ -47,6 +49,7 @@ private fun presentIdentifySheet(
             DogAppTheme {
                 IdentifyRoot(
                     presentation = IdentifyPresentation.Sheet,
+                    source = source,
                     onBreedClick = { breedId -> sheet.dismissViewControllerAnimated(true) { onBreedClick(breedId) } },
                     onDismiss = { sheet.dismissViewControllerAnimated(true, completion = null) },
                 )

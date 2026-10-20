@@ -1,5 +1,7 @@
 package com.example.dogapp.app.shell
 
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.Role
@@ -163,7 +165,12 @@ class AppShellTest {
                     },
             ) {
                 CompositionLocalProvider(LocalUIViewController provides UIViewController()) {
-                    DogAppTheme { AppShell(navigationStyle = style) }
+                    DogAppTheme {
+                        AppShell(
+                            navigationStyle = style,
+                            identifyMenuButton = { _, onChoosePhotoClick -> TextButton(onClick = onChoosePhotoClick) { Text("Identify") } },
+                        )
+                    }
                 }
             }
         }
@@ -275,11 +282,12 @@ class AppShellTest {
     }
 
     @Test
-    fun theIdentifyFabOnMaterialHomeOpensIdentifyOnTheHomeTabAndBackReturns() {
+    fun theIdentifyMenuOnMaterialHomeOpensIdentifyOnTheHomeTabAndBackReturns() {
         runComposeUiTest {
             val backInput = setShell(NavigationStyle.Material)
 
             onNode(hasClickAction() and hasContentDescription("Identify a breed from a photo")).performClick()
+            onNode(hasText("Choose photo")).performClick()
             waitForIdle()
 
             onNode(screenTitle("Identify a breed")).assertExists()

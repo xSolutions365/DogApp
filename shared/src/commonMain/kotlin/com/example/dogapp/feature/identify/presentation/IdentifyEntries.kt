@@ -25,12 +25,13 @@ fun EntryProviderScope<NavKey>.identifyEntries(
             NavDisplay.transitionSpec { containerTransform } +
                 NavDisplay.popTransitionSpec { containerTransform } +
                 NavDisplay.predictivePopTransitionSpec { containerTransform },
-    ) {
+    ) { route ->
         IdentifyRoot(
             presentation = IdentifyPresentation.Screen,
+            source = route.source,
             onBreedClick = onBreedClick,
             onDismiss = onBack,
-            modifier = Modifier.navSharedBounds(IDENTIFY_SHARED_KEY, FloatingActionButtonDefaults.extendedFabShape),
+            modifier = Modifier.navSharedBounds(IDENTIFY_SHARED_KEY, FloatingActionButtonDefaults.shape),
         )
     }
 }

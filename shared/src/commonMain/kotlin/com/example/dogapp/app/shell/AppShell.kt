@@ -33,8 +33,10 @@ import com.example.dogapp.feature.donate.presentation.DonationsRoute
 import com.example.dogapp.feature.donate.presentation.donateEntries
 import com.example.dogapp.feature.explore.presentation.exploreEntries
 import com.example.dogapp.feature.home.presentation.HomeLayout
+import com.example.dogapp.feature.home.presentation.IdentifyMenuButton
 import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
+import com.example.dogapp.feature.identify.presentation.PhotoSource
 import com.example.dogapp.feature.identify.presentation.identifyEntries
 import com.example.dogapp.feature.profile.presentation.DeviceStateRoute
 import com.example.dogapp.feature.profile.presentation.DrawHistoryRoute
@@ -54,6 +56,12 @@ fun AppShell(
     modifier: Modifier = Modifier,
     navigationStyle: NavigationStyle = platformNavigationStyle,
     walletAutoLock: WalletAutoLock = koinInject(),
+    identifyMenuButton: @Composable (
+        onTakePhotoClick: () -> Unit,
+        onChoosePhotoClick: () -> Unit,
+    ) -> Unit = { onTakePhotoClick, onChoosePhotoClick ->
+        IdentifyMenuButton(onTakePhotoClick = onTakePhotoClick, onChoosePhotoClick = onChoosePhotoClick)
+    },
 ) {
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { walletAutoLock.onAppBackground() }
     LifecycleEventEffect(Lifecycle.Event.ON_START) { walletAutoLock.onAppForeground() }
@@ -63,7 +71,7 @@ fun AppShell(
     val launchIdentify =
         rememberIdentifyLauncher(
             navigationStyle = navigationStyle,
-            navigateToIdentify = { navigator.navigate(IdentifyRoute) },
+            navigateToIdentify = { source -> navigator.navigate(IdentifyRoute(source)) },
             onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
         )
 
@@ -90,7 +98,11 @@ fun AppShell(
                         NavigationStyle.Cupertino -> HomeLayout.Cupertino
                     },
                 onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
-                onIdentifyClick = launchIdentify,
+                onTakePhotoClick = { launchIdentify(PhotoSource.Camera) },
+                onChoosePhotoClick = { launchIdentify(PhotoSource.Library) },
+                identifyMenuButton = {
+                    identifyMenuButton({ launchIdentify(PhotoSource.Camera) }, { launchIdentify(PhotoSource.Library) })
+                },
             )
             exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             profileEntries(

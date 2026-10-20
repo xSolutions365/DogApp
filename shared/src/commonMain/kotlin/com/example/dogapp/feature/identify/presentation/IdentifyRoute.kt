@@ -6,7 +6,9 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
 @Serializable
-data object IdentifyRoute : NavKey
+data class IdentifyRoute(
+    val source: PhotoSource,
+) : NavKey
 
 val identifyNavigationSerializers =
     SerializersModule {

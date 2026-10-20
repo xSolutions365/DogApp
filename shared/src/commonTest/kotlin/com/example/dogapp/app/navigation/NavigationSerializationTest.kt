@@ -6,6 +6,7 @@ import com.example.dogapp.feature.donate.presentation.CharitiesRoute
 import com.example.dogapp.feature.donate.presentation.CharityRoute
 import com.example.dogapp.feature.donate.presentation.DonationsRoute
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
+import com.example.dogapp.feature.identify.presentation.PhotoSource
 import com.example.dogapp.feature.profile.presentation.DeviceStateRoute
 import com.example.dogapp.feature.profile.presentation.DrawHistoryRoute
 import com.example.dogapp.feature.profile.presentation.FavouritesRoute
@@ -34,7 +35,8 @@ class NavigationSerializationTest {
     fun pushedFeatureRoutesRoundTripThroughFeatureProvidedSerializers() {
         listOf<NavKey>(
             BreedDetailRoute(breedId = "border collie"),
-            IdentifyRoute,
+            IdentifyRoute(PhotoSource.Camera),
+            IdentifyRoute(PhotoSource.Library),
             CharitiesRoute,
             CharityRoute("fetch-club"),
             DonationsRoute,

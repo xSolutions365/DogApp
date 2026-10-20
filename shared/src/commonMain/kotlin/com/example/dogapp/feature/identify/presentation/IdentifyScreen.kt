@@ -27,10 +27,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +60,8 @@ import dogapp.shared.generated.resources.identify_intro
 import dogapp.shared.generated.resources.identify_match
 import dogapp.shared.generated.resources.identify_no_dog
 import dogapp.shared.generated.resources.identify_photo
+import dogapp.shared.generated.resources.identify_take_another
+import dogapp.shared.generated.resources.identify_take_photo
 import dogapp.shared.generated.resources.identify_title
 import dogapp.shared.generated.resources.identify_uncertain
 import dogapp.shared.generated.resources.identify_working
@@ -68,6 +75,7 @@ private const val PLACEHOLDER_SIZE_FRACTION = 0.3f
 @Composable
 fun IdentifyRoot(
     presentation: IdentifyPresentation,
+    source: PhotoSource,
     onBreedClick: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -75,9 +83,24 @@ fun IdentifyRoot(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val pickPhoto = rememberPhotoPicker { photo -> viewModel.onAction(IdentifyAction.PhotoPick(photo)) }
+    val takePhoto =
+        rememberPhotoCapture(onPhotoCapture = { photo ->
+            viewModel.onAction(IdentifyAction.PhotoPick(photo))
+        }, onChoosePhoto = pickPhoto)
+    var hasOpenedSource by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!hasOpenedSource) {
+            hasOpenedSource = true
+            when (source) {
+                PhotoSource.Camera -> takePhoto()
+                PhotoSource.Library -> pickPhoto()
+            }
+        }
+    }
     IdentifyScreen(
         state = state,
         presentation = presentation,
+        onTakePhoto = takePhoto,
         onChoosePhoto = pickPhoto,
         onBreedClick = onBreedClick,
         onDismiss = onDismiss,
@@ -89,6 +112,7 @@ fun IdentifyRoot(
 fun IdentifyScreen(
     state: IdentifyUiState,
     presentation: IdentifyPresentation,
+    onTakePhoto: () -> Unit,
     onChoosePhoto: () -> Unit,
     onBreedClick: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -106,8 +130,14 @@ fun IdentifyScreen(
     ) {
         TopBar(presentation = presentation, onDismiss = onDismiss)
         PhotoFrame(photo = state.photo, modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth().aspectRatio(PHOTO_ASPECT_RATIO))
-        Button(onClick = onChoosePhoto, enabled = state.content != IdentifyContent.Identifying) {
-            Text(stringResource(if (state.photo == null) Res.string.identify_choose_photo else Res.string.identify_choose_another))
+        val isIdentifying = state.content == IdentifyContent.Identifying
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onTakePhoto, enabled = !isIdentifying) {
+                Text(stringResource(if (state.photo == null) Res.string.identify_take_photo else Res.string.identify_take_another))
+            }
+            OutlinedButton(onClick = onChoosePhoto, enabled = !isIdentifying) {
+                Text(stringResource(if (state.photo == null) Res.string.identify_choose_photo else Res.string.identify_choose_another))
+            }
         }
         AnimatedContent(
             targetState = state.content,

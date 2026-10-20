@@ -1,5 +1,8 @@
 package com.example.dogapp.feature.home.presentation
 
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -44,7 +47,9 @@ class HomeScreenTest {
                         layout = HomeLayout.Material,
                         onAction = { actions += it },
                         onBreedClick = {},
-                        onIdentifyClick = {},
+                        onTakePhotoClick = {},
+                        onChoosePhotoClick = {},
+                        identifyMenuButton = { IdentifyStandIn {} },
                     )
                 }
             }
@@ -65,7 +70,9 @@ class HomeScreenTest {
         HomeLayout.entries.forEach { layout ->
             runComposeUiTest {
                 val actions = mutableListOf<HomeAction>()
-                var identifyClicks = 0
+                var takePhotoClicks = 0
+                var menuButtonClicks = 0
+                var choosePhotoClicks = 0
                 var state by mutableStateOf(HomeUiState(content = HomeContent.NotRevealed(isDrawing = false)))
                 setContent {
                     DogAppTheme {
@@ -74,7 +81,9 @@ class HomeScreenTest {
                             layout = layout,
                             onAction = { actions += it },
                             onBreedClick = {},
-                            onIdentifyClick = { identifyClicks++ },
+                            onTakePhotoClick = { takePhotoClicks++ },
+                            onChoosePhotoClick = { choosePhotoClicks++ },
+                            identifyMenuButton = { IdentifyStandIn { menuButtonClicks++ } },
                         )
                     }
                 }
@@ -90,8 +99,25 @@ class HomeScreenTest {
                     HomeLayout.Material -> assertTrue(identifyTop > cardTop, "the FAB sits below the card")
                     HomeLayout.Cupertino -> assertTrue(identifyTop < cardTop, "the toolbar button sits above the card")
                 }
-                onNode(identifyButton(layout)).performClick()
-                assertEquals(1, identifyClicks)
+                when (layout) {
+                    HomeLayout.Material -> {
+                        onNodeWithText("Take photo").assertDoesNotExist()
+                        onNode(identifyButton(layout)).performClick()
+                        onNodeWithText("Take photo").performClick()
+                        onNodeWithText("Take photo").assertDoesNotExist()
+                        onNode(identifyButton(layout)).performClick()
+                        onNode(hasContentDescription("Close the identify menu")).assertExists()
+                        onNodeWithText("Choose photo").performClick()
+                        assertEquals(1, takePhotoClicks)
+                        assertEquals(1, choosePhotoClicks)
+                    }
+
+                    HomeLayout.Cupertino -> {
+                        onNode(identifyButton(layout)).performClick()
+                        assertEquals(1, menuButtonClicks)
+                        assertEquals(0, takePhotoClicks + choosePhotoClicks)
+                    }
+                }
 
                 state = HomeUiState(content = HomeContent.NotRevealed(isDrawing = true))
                 onNode(revealCard).assertIsNotEnabled()
@@ -116,7 +142,9 @@ class HomeScreenTest {
                         layout = HomeLayout.Material,
                         onAction = {},
                         onBreedClick = { opened += it },
-                        onIdentifyClick = {},
+                        onTakePhotoClick = {},
+                        onChoosePhotoClick = {},
+                        identifyMenuButton = { IdentifyStandIn {} },
                     )
                 }
             }
@@ -140,7 +168,9 @@ class HomeScreenTest {
                         layout = HomeLayout.Material,
                         onAction = {},
                         onBreedClick = {},
-                        onIdentifyClick = {},
+                        onTakePhotoClick = {},
+                        onChoosePhotoClick = {},
+                        identifyMenuButton = { IdentifyStandIn {} },
                     )
                 }
             }
@@ -148,4 +178,9 @@ class HomeScreenTest {
             onNodeWithText("No longer available").assertExists()
             onNodeWithText("Blenheim Spaniel").assertHasNoClickAction()
         }
+
+    @Composable
+    private fun IdentifyStandIn(onClick: () -> Unit) {
+        TextButton(onClick = onClick) { Text("Identify") }
+    }
 }

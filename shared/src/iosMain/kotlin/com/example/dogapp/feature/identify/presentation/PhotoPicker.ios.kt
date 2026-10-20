@@ -35,7 +35,7 @@ actual fun rememberPhotoPicker(onPhotoPick: (ByteArray) -> Unit): () -> Unit {
                     preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCompatible
                 }
             val picker = PHPickerViewController(configuration = configuration).apply { this.delegate = delegate }
-            viewController.presentViewController(picker, animated = true, completion = null)
+            viewController.presentWhenSettled(picker)
         }
     }
 }

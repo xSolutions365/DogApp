@@ -4,6 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>DogApp uses the camera to take a photo of a dog and identify its breed.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>DogApp uses Face ID to unlock your wallet.</string>
 </dict>

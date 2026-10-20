@@ -23,8 +23,9 @@ class IdentifyScreenTest {
     private val photo = byteArrayOf(1)
 
     @Test
-    fun choosingAPhotoStartsFromTheIntroAndIsBlockedWhileIdentifying() =
+    fun takingOrChoosingAPhotoStartsFromTheIntroAndIsBlockedWhileIdentifying() =
         runComposeUiTest {
+            var takeClicks = 0
             var chooseClicks = 0
             var backClicks = 0
             var state by mutableStateOf(IdentifyUiState())
@@ -33,6 +34,7 @@ class IdentifyScreenTest {
                     IdentifyScreen(
                         state = state,
                         presentation = IdentifyPresentation.Screen,
+                        onTakePhoto = { takeClicks++ },
                         onChoosePhoto = { chooseClicks++ },
                         onBreedClick = {},
                         onDismiss = { backClicks++ },
@@ -41,14 +43,17 @@ class IdentifyScreenTest {
             }
 
             onNodeWithText("Choose a photo of a dog to find out its breed.").assertExists()
+            onNode(hasClickAction() and hasText("Take a photo")).performClick()
             onNode(hasClickAction() and hasText("Choose a photo")).performClick()
             onNodeWithText("Done").assertDoesNotExist()
             onNodeWithContentDescription("Back").performClick()
+            assertEquals(1, takeClicks)
             assertEquals(1, chooseClicks)
             assertEquals(1, backClicks)
 
             state = IdentifyUiState(photo = photo, content = IdentifyContent.Identifying)
             onNodeWithText("Looking closely…").assertExists()
+            onNodeWithText("Take another photo").assertIsNotEnabled()
             onNodeWithText("Choose another photo").assertIsNotEnabled()
 
             state = IdentifyUiState(photo = photo, content = IdentifyContent.NoDog)
@@ -75,6 +80,7 @@ class IdentifyScreenTest {
                                         matches = listOf(BreedMatch("akita", "Akita", 87, emptyList())),
                                     ),
                             ),
+                        onTakePhoto = {},
                         onChoosePhoto = {},
                         onBreedClick = { opened += it },
                         onDismiss = {},
@@ -111,6 +117,7 @@ class IdentifyScreenTest {
                                             ),
                                     ),
                             ),
+                        onTakePhoto = {},
                         onChoosePhoto = {},
                         onBreedClick = { opened += it },
                         onDismiss = {},
@@ -135,6 +142,7 @@ class IdentifyScreenTest {
                     IdentifyScreen(
                         state = IdentifyUiState(),
                         presentation = IdentifyPresentation.Sheet,
+                        onTakePhoto = {},
                         onChoosePhoto = {},
                         onBreedClick = {},
                         onDismiss = { dismissals++ },
