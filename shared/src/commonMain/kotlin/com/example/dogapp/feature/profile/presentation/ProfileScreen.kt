@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -121,6 +122,7 @@ fun ProfileScreen(
                 SectionLinkRow(text = seeAllText(layout, favourites.size), onClick = onSeeAllFavouritesClick)
             }
         }
+        item(key = "draws-divider") { SectionDivider() }
         item(key = "draws-title") {
             Text(
                 text = stringResource(Res.string.profile_draws),
@@ -140,6 +142,7 @@ fun ProfileScreen(
                 SectionLinkRow(text = seeAllText(layout, draws.size), onClick = onSeeAllDrawsClick)
             }
         }
+        item(key = "feed-me-divider") { SectionDivider() }
         item(key = "feed-me-title") {
             Text(
                 text = stringResource(Res.string.profile_feed_me),
@@ -156,6 +159,7 @@ fun ProfileScreen(
         item(key = "wallet") {
             SectionLinkRow(text = stringResource(Res.string.profile_wallet), onClick = onWalletClick)
         }
+        item(key = "about-divider") { SectionDivider() }
         item(key = "about-title") {
             Text(
                 text = stringResource(Res.string.profile_about),
@@ -181,6 +185,14 @@ fun ProfileScreen(
 }
 
 private const val PREVIEW_ROWS = 2
+
+@Composable
+private fun SectionDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(
+        color = MaterialTheme.colorScheme.outlineVariant,
+        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
+    )
+}
 
 @Composable
 private fun seeAllText(
