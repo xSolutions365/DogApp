@@ -8,6 +8,7 @@ import com.example.dogapp.core.data.database.DATABASE_FILE_NAME
 import com.example.dogapp.core.data.database.DogAppDatabase
 import com.example.dogapp.core.data.datastore.PREFERENCES_FILE_NAME
 import com.example.dogapp.core.data.datastore.createPreferencesDataStore
+import com.example.dogapp.core.data.security.PinReportingInterceptor
 import com.example.dogapp.feature.identify.data.ImageLabeler
 import com.example.dogapp.feature.identify.data.LiteRtImageLabeler
 import com.example.dogapp.feature.wallet.data.BiometricPromptHost
@@ -21,7 +22,7 @@ import org.koin.dsl.module
 
 actual val platformModule: Module =
     module {
-        single<HttpClientEngine> { OkHttp.create() }
+        single<HttpClientEngine> { OkHttp.create { addNetworkInterceptor(PinReportingInterceptor(get())) } }
         single<DataStore<Preferences>> {
             createPreferencesDataStore {
                 androidContext().filesDir.resolve(PREFERENCES_FILE_NAME).absolutePath

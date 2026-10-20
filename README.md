@@ -79,6 +79,13 @@ DogApp is a demo playground for learning how payments and security work on each 
   - **Apple Pay isn't available.** It needs a Merchant ID entitlement, which needs a paid Apple developer account, so iOS offers saved cards only.
   - **Store rules**, for reference: Apple lets only approved nonprofits take donations in-app (and they must offer Apple Pay), and Google Play doesn't allow Play Billing for tax-exempt donations. Neither applies here, because nothing is real.
 - **The donation history** is kept on the device in Room (the `donation` table): charity, amount, how it was paid and when. No card number is ever stored.
+- **Certificate pinning is report-only, on purpose.** The API hosts are pinned to their root CA keys (SPKI SHA-256), each with a backup root from the same CA:
+  - `api.thedogapi.com` and `dog.ceo`: GTS Root R4, backup GTS Root R1 (Google Trust Services)
+  - `api.api-ninjas.com`: Amazon Root CA 1, backup Amazon Root CA 3
+  - Image hosts aren't checked, because a CDN can change its CA at any time.
+  - **How:** both platforms read the chain the system has already validated, so it ends at the trusted root. Android: an OkHttp network interceptor (`PinReportingInterceptor`) reads the handshake's certificates. iOS: the Ktor Darwin engine's `handleChallenge` (`pinReportingChallengeHandler`) evaluates the server trust and reads `SecTrustCopyCertificateChain`, then lets the system handle the challenge as usual. The pin of each certificate comes from its DER in shared code (`spkiPin`), and `CertificatePinReporter` compares them with `PinnedHosts`.
+  - **A mismatch never fails a request.** It's logged once per host per app run as a warning under the `CertificatePins` tag, with the chain's pins and the expected ones. An enforcing app would cancel the request instead (OkHttp `CertificatePinner`, Android `<pin-set>` or iOS `NSPinnedDomains`), and would need a plan for rotating pins.
+  - **To see a report:** change one host's pins in `core/data/security/PinnedHosts.kt` and run a fresh install, so the first sync calls every API. The warning appears in Logcat or the Xcode console, and the data still loads.
 - **Testing on devices:** Android emulator: set a screen lock and add a fingerprint in Settings, using `adb -e emu finger touch 1` to touch the sensor (another id fails). iOS simulator: Features → Face ID → Enrolled, then Matching / Non-matching Face. Untick and tick Enrolled again to simulate a new enrolment.
 
 ## Data sources
@@ -167,8 +174,8 @@ app/                 composition root: may depend on everything
 core/
   domain/            pure Kotlin: models, repository interfaces, use cases, Outcome, errors
     breed/  favourite/  draw/
-  data/              Ktor client, DataStore, Room database
-    breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/
+  data/              Ktor client, DataStore, Room database, report-only certificate pinning
+    breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/  donation/  security/
   presentation/      theme, shared components, shared-element helpers, error text
 feature/<name>/      home, explore, breeddetail, profile, identify, donate, wallet
   domain/  data/     a feature's own use cases and data, when it has any (explore, identify, donate, wallet)
@@ -233,7 +240,7 @@ All versions are in `gradle/libs.versions.toml`.
 
 ## Useful notes
 
-- **Logging:** debug builds log to Logcat or OSLog under the `DogApp` tag (Koin under `Koin`, HTTP under `HttpClient`). Release builds log nothing.
+- **Logging:** debug builds log to Logcat or OSLog under the `DogApp` tag (Koin under `Koin`, HTTP under `HttpClient`, certificate pin reports under `CertificatePins`). Release builds log nothing.
 - **Known warnings:**
   - Kotlin's "expect/actual classes are in Beta" warning on the Room-generated `DogAppDatabaseConstructor`
   - AGP's `Configuration.setVisible` deprecation

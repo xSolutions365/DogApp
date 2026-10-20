@@ -8,6 +8,7 @@ import com.example.dogapp.core.data.database.DATABASE_FILE_NAME
 import com.example.dogapp.core.data.database.DogAppDatabase
 import com.example.dogapp.core.data.datastore.createPreferencesDataStore
 import com.example.dogapp.core.data.datastore.preferencesDataStorePath
+import com.example.dogapp.core.data.security.pinReportingChallengeHandler
 import com.example.dogapp.core.data.storage.documentsDirectoryPath
 import com.example.dogapp.feature.identify.data.CoreMlImageLabeler
 import com.example.dogapp.feature.identify.data.ImageLabeler
@@ -20,7 +21,7 @@ import org.koin.dsl.module
 
 actual val platformModule: Module =
     module {
-        single<HttpClientEngine> { Darwin.create() }
+        single<HttpClientEngine> { Darwin.create { handleChallenge(pinReportingChallengeHandler(get())) } }
         single<DataStore<Preferences>> { createPreferencesDataStore(::preferencesDataStorePath) }
         single<RoomDatabase.Builder<DogAppDatabase>> {
             Room.databaseBuilder<DogAppDatabase>(name = documentsDirectoryPath() + "/" + DATABASE_FILE_NAME)
