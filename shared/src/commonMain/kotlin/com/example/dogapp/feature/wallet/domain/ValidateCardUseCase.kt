@@ -15,11 +15,7 @@ class ValidateCardUseCase(
         val parsedExpiry = parseExpiry(expiry)
         val errors =
             buildSet {
-                if (!digits.isDigitsOnly() || digits.length !in brand.numberLengths ||
-                    !digits.passesLuhn()
-                ) {
-                    add(CardFieldError.InvalidNumber)
-                }
+                if (!digits.isDigitsOnly() || digits.length !in brand.numberLengths) add(CardFieldError.InvalidNumber)
                 when {
                     parsedExpiry == null -> add(CardFieldError.InvalidExpiry)
                     parsedExpiry < currentMonth() -> add(CardFieldError.ExpiredCard)
@@ -48,13 +44,6 @@ class ValidateCardUseCase(
     }
 
     private fun String.isDigitsOnly(): Boolean = isNotEmpty() && all { it in '0'..'9' }
-
-    private fun String.passesLuhn(): Boolean =
-        reversed()
-            .mapIndexed { index, char ->
-                val digit = char - '0'
-                if (index % 2 == 1) (digit * 2).let { if (it > 9) it - 9 else it } else digit
-            }.sum() % 10 == 0
 
     private companion object {
         const val LAST_DIGITS = 4

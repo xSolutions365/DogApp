@@ -66,7 +66,7 @@ class AddCardViewModelTest {
             viewModel.onAction(AddCardAction.NumberChange("37"))
             assertEquals(CardBrand.Amex, viewModel.state.value.brand)
 
-            enter(number = "4242 4242 4242 4241", expiry = "09/26", securityCode = "12")
+            enter(number = "4242 4242 4242 424", expiry = "09/26", securityCode = "12")
             viewModel.onAction(AddCardAction.Save)
 
             assertEquals(

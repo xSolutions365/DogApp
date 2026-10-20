@@ -40,8 +40,11 @@ class ValidateCardUseCaseTest {
     }
 
     @Test
-    fun numberMustPassTheLuhnCheckAndContainOnlyDigits() {
-        assertEquals(setOf(CardFieldError.InvalidNumber), errorsFor(number = "4242 4242 4242 4241"))
+    fun anyFakeNumberIsAcceptedWhenItHasOnlyDigitsAndItsBrandsLength() {
+        assertEquals(emptySet(), errorsFor(number = "4242 4242 4242 4241"))
+        assertEquals(emptySet(), errorsFor(number = "1234 5678 9012 3456"))
+        assertEquals(emptySet(), errorsFor(number = "3700 0000 0000 001", securityCode = "1234"))
+        assertEquals(setOf(CardFieldError.InvalidNumber), errorsFor(number = "3700 0000 0000 0012", securityCode = "1234"))
         assertEquals(setOf(CardFieldError.InvalidNumber), errorsFor(number = "4242 4242 4242 424a"))
         assertEquals(setOf(CardFieldError.InvalidNumber), errorsFor(number = ""))
         assertEquals(emptySet(), errorsFor(number = "4242-4242-4242-4242"))
