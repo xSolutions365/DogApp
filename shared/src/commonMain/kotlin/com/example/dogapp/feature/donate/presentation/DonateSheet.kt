@@ -36,7 +36,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.presentation.ObserveAsEvents
 import com.example.dogapp.feature.donate.domain.Donation
 import com.example.dogapp.feature.donate.domain.DonationAmount
@@ -53,7 +52,6 @@ import dogapp.shared.generated.resources.donate_done
 import dogapp.shared.generated.resources.donate_error_authentication
 import dogapp.shared.generated.resources.donate_error_card_missing
 import dogapp.shared.generated.resources.donate_error_declined
-import dogapp.shared.generated.resources.donate_error_google_pay
 import dogapp.shared.generated.resources.donate_error_wallet
 import dogapp.shared.generated.resources.donate_other_amount
 import dogapp.shared.generated.resources.donate_other_amount_hint
@@ -79,12 +77,7 @@ fun DonateSheetRoot(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val googlePay =
-        rememberGooglePayLauncher { outcome ->
-            when (outcome) {
-                is Outcome.Success -> viewModel.onAction(DonateAction.DonateWithGooglePay(outcome.data))
-                is Outcome.Failure -> viewModel.onAction(DonateAction.GooglePayFailed(outcome.error))
-            }
-        }
+        rememberGooglePayLauncher { payment -> viewModel.onAction(DonateAction.DonateWithGooglePay(payment)) }
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             is DonateEvent.Donated -> onDonationComplete(event.donation)
@@ -362,6 +355,5 @@ private fun PaymentError.message(): String? =
         PaymentError.AuthenticationFailed -> stringResource(Res.string.donate_error_authentication)
         PaymentError.WalletUnavailable -> stringResource(Res.string.donate_error_wallet)
         PaymentError.CardNotFound -> stringResource(Res.string.donate_error_card_missing)
-        PaymentError.GooglePayFailed -> stringResource(Res.string.donate_error_google_pay)
         PaymentError.Cancelled -> null
     }

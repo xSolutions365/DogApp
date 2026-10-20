@@ -117,7 +117,7 @@ class ProfileViewModelTest {
 
             assertEquals(emptyList(), viewModel.state.value.favourites)
             assertEquals(emptyList(), viewModel.state.value.draws)
-            assertEquals(2, viewModel.state.value.deviceCheckWarnings)
+            assertEquals(2, viewModel.state.value.deviceStateWarnings)
         }
 
     @Test

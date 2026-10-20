@@ -127,26 +127,15 @@ class DonateViewModelTest {
 
             viewModel.onAction(DonateAction.OtherAmountChange("12"))
             viewModel.onAction(DonateAction.StartGooglePay)
-            viewModel.onAction(DonateAction.GooglePayFailed(PaymentError.Cancelled))
-            assertNull(viewModel.state.value.error)
-
-            viewModel.onAction(DonateAction.StartGooglePay)
-            viewModel.onAction(DonateAction.GooglePayFailed(PaymentError.GooglePayFailed))
-            assertEquals(PaymentError.GooglePayFailed, viewModel.state.value.error)
-
-            viewModel.onAction(DonateAction.StartGooglePay)
-            assertNull(viewModel.state.value.error)
             viewModel.onAction(DonateAction.SelectPreset(DonationAmount(2000)))
-            viewModel.onAction(
-                DonateAction.DonateWithGooglePay(PaymentMethod.GooglePay(token = "token", cardDescription = "Visa •••• 1111")),
-            )
+            viewModel.onAction(DonateAction.DonateWithGooglePay(PaymentMethod.GooglePay(token = null, cardDescription = null)))
 
             val donation = donations.donations.value.single()
             assertEquals(DonationAmount(1200), donation.amount)
-            assertEquals(PaidWith.GooglePay("Visa •••• 1111"), donation.paidWith)
+            assertEquals(PaidWith.GooglePay(cardDescription = null), donation.paidWith)
             assertNull(viewModel.state.value.cards)
             assertEquals(
-                List(3) { DonateEvent.LaunchGooglePay(DonationAmount(1200)) } + DonateEvent.Donated(donation),
+                listOf(DonateEvent.LaunchGooglePay(DonationAmount(1200)), DonateEvent.Donated(donation)),
                 events,
             )
         }

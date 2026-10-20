@@ -12,9 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
-import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.feature.donate.domain.DonationAmount
-import com.example.dogapp.feature.donate.domain.PaymentError
 import com.example.dogapp.feature.donate.domain.PaymentMethod
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.tasks.Task
@@ -30,9 +28,9 @@ import com.google.pay.button.ButtonType
 import com.google.pay.button.PayButton
 
 @Composable
-actual fun rememberGooglePayLauncher(onResult: (Outcome<PaymentMethod.GooglePay, PaymentError>) -> Unit): GooglePayLauncher? {
+actual fun rememberGooglePayLauncher(onPaymentComplete: (PaymentMethod.GooglePay) -> Unit): GooglePayLauncher? {
     val context = LocalContext.current
-    val currentOnResult by rememberUpdatedState(onResult)
+    val currentOnPaymentComplete by rememberUpdatedState(onPaymentComplete)
     val client =
         remember(context) {
             Wallet.getPaymentsClient(
@@ -53,26 +51,11 @@ actual fun rememberGooglePayLauncher(onResult: (Outcome<PaymentMethod.GooglePay,
     }
     val launcher =
         rememberLauncherForActivityResult(TaskResultContracts.GetPaymentDataResult()) { result ->
-            val outcome =
-                when (result.status.statusCode) {
-                    CommonStatusCodes.SUCCESS -> {
-                        result.result
-                            ?.toJson()
-                            ?.let(GooglePayRequests::googlePayMethod)
-                            ?.let { Outcome.Success(it) }
-                            ?: Outcome.Failure(PaymentError.GooglePayFailed)
-                    }
-
-                    CommonStatusCodes.CANCELED -> {
-                        Outcome.Failure(PaymentError.Cancelled)
-                    }
-
-                    else -> {
-                        Logger.w { "Google Pay failed with status ${result.status.statusCode}" }
-                        Outcome.Failure(PaymentError.GooglePayFailed)
-                    }
-                }
-            currentOnResult(outcome)
+            val statusCode = result.status.statusCode
+            if (statusCode != CommonStatusCodes.SUCCESS) {
+                Logger.i { "Google Pay returned status $statusCode; the donation is recorded as a demo payment" }
+            }
+            currentOnPaymentComplete(GooglePayRequests.googlePayResult(statusCode, result.result?.toJson()))
         }
     return remember(client, launcher, isReady) {
         if (isReady) AndroidGooglePayLauncher(client) { request -> launcher.launch(request) } else null
@@ -84,7 +67,9 @@ private class AndroidGooglePayLauncher(
     private val launchTask: (Task<PaymentData>) -> Unit,
 ) : GooglePayLauncher {
     override fun launch(amount: DonationAmount) {
-        launchTask(client.loadPaymentData(PaymentDataRequest.fromJson(GooglePayRequests.paymentData(amount))))
+        client.loadPaymentData(PaymentDataRequest.fromJson(GooglePayRequests.paymentData(amount))).addOnCompleteListener { task ->
+            launchTask(task)
+        }
     }
 
     @Composable

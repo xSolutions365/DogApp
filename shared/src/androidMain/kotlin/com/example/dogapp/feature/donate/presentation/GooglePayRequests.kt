@@ -2,6 +2,7 @@ package com.example.dogapp.feature.donate.presentation
 
 import com.example.dogapp.feature.donate.domain.DonationAmount
 import com.example.dogapp.feature.donate.domain.PaymentMethod
+import com.google.android.gms.common.api.CommonStatusCodes
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -71,7 +72,14 @@ internal object GooglePayRequests {
             }
         }.toString()
 
-    fun googlePayMethod(paymentDataJson: String): PaymentMethod.GooglePay? {
+    fun googlePayResult(
+        statusCode: Int,
+        paymentDataJson: String?,
+    ): PaymentMethod.GooglePay =
+        paymentDataJson?.takeIf { statusCode == CommonStatusCodes.SUCCESS }?.let(::googlePayMethod)
+            ?: PaymentMethod.GooglePay(token = null, cardDescription = null)
+
+    private fun googlePayMethod(paymentDataJson: String): PaymentMethod.GooglePay? {
         val paymentMethodData =
             runCatching { Json.parseToJsonElement(paymentDataJson).jsonObject["paymentMethodData"]?.jsonObject }.getOrNull()
                 ?: return null
@@ -81,7 +89,7 @@ internal object GooglePayRequests {
                 ?.get("token")
                 ?.jsonPrimitive
                 ?.contentOrNull
-                ?.takeIf { it.isNotBlank() } ?: return null
+                ?.takeIf { it.isNotBlank() }
         val description = paymentMethodData["description"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
         return PaymentMethod.GooglePay(token = token, cardDescription = description)
     }

@@ -28,7 +28,10 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
-                        onDeviceChecksClick = {},
+                        onDeviceStateClick = {},
+                        layout = ProfileLayout.Material,
+                        onSeeAllFavouritesClick = {},
+                        onSeeAllDrawsClick = {},
                     )
                 }
             }
@@ -58,7 +61,10 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
-                        onDeviceChecksClick = {},
+                        onDeviceStateClick = {},
+                        layout = ProfileLayout.Material,
+                        onSeeAllFavouritesClick = {},
+                        onSeeAllDrawsClick = {},
                     )
                 }
             }
@@ -107,7 +113,10 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
-                        onDeviceChecksClick = {},
+                        onDeviceStateClick = {},
+                        layout = ProfileLayout.Material,
+                        onSeeAllFavouritesClick = {},
+                        onSeeAllDrawsClick = {},
                     )
                 }
             }
@@ -122,6 +131,52 @@ class ProfileScreenTest {
         }
 
     @Test
+    fun eachListShowsAtMostTwoRowsThenSeeAllWithTheCountInThePlatformCasing() =
+        runComposeUiTest {
+            var seeAllFavourites = 0
+            var seeAllDraws = 0
+            var layout by mutableStateOf(ProfileLayout.Material)
+            var state by mutableStateOf(ProfileUiState(favourites = favourites(1), draws = draws(2)))
+            setContent {
+                DogAppTheme {
+                    ProfileScreen(
+                        state = state,
+                        layout = layout,
+                        onAction = {},
+                        onBreedClick = {},
+                        onSeeAllFavouritesClick = { seeAllFavourites++ },
+                        onSeeAllDrawsClick = { seeAllDraws++ },
+                        onSupportCharitiesClick = {},
+                        onDonationsClick = {},
+                        onWalletClick = {},
+                        onDeviceStateClick = {},
+                    )
+                }
+            }
+
+            onNodeWithText("Breed 1").assertExists()
+            onNodeWithText("Day 1").assertExists()
+            onNodeWithText("Day 2").assertExists()
+            onNodeWithText("See all", substring = true).assertDoesNotExist()
+
+            state = ProfileUiState(favourites = favourites(5), draws = draws(3))
+            waitForIdle()
+            onNodeWithText("Breed 2").assertExists()
+            onNodeWithText("Breed 3").assertDoesNotExist()
+            onNodeWithText("Day 3").assertDoesNotExist()
+            onNodeWithText("See all (5)").performClick()
+            onNodeWithText("See all (3)").performClick()
+
+            layout = ProfileLayout.Cupertino
+            waitForIdle()
+            onNodeWithText("See All (5)").assertExists()
+            onNodeWithText("See All (3)").assertExists()
+
+            assertEquals(1, seeAllFavourites)
+            assertEquals(1, seeAllDraws)
+        }
+
+    @Test
     fun emptyDrawHistoryExplainsWhereDrawsComeFrom() =
         runComposeUiTest {
             setContent {
@@ -133,7 +188,10 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
-                        onDeviceChecksClick = {},
+                        onDeviceStateClick = {},
+                        layout = ProfileLayout.Material,
+                        onSeeAllFavouritesClick = {},
+                        onSeeAllDrawsClick = {},
                     )
                 }
             }
@@ -142,13 +200,13 @@ class ProfileScreenTest {
         }
 
     @Test
-    fun feedMeSectionAtTheBottomOpensTheDogCharitiesTheDonationsTheWalletAndTheDeviceChecks() =
+    fun feedMeOpensTheDogCharitiesTheDonationsAndTheWalletAndAboutAtTheBottomOpensTheDeviceState() =
         runComposeUiTest {
             var charitiesOpened = 0
             var donationsOpened = 0
             var walletOpened = 0
-            var deviceChecksOpened = 0
-            var state by mutableStateOf(ProfileUiState(favourites = emptyList(), draws = emptyList(), deviceCheckWarnings = 2))
+            var deviceStateOpened = 0
+            var state by mutableStateOf(ProfileUiState(favourites = emptyList(), draws = emptyList(), deviceStateWarnings = 2))
             setContent {
                 DogAppTheme {
                     ProfileScreen(
@@ -158,7 +216,10 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = { charitiesOpened++ },
                         onDonationsClick = { donationsOpened++ },
                         onWalletClick = { walletOpened++ },
-                        onDeviceChecksClick = { deviceChecksOpened++ },
+                        onDeviceStateClick = { deviceStateOpened++ },
+                        layout = ProfileLayout.Material,
+                        onSeeAllFavouritesClick = {},
+                        onSeeAllDrawsClick = {},
                     )
                 }
             }
@@ -167,27 +228,36 @@ class ProfileScreenTest {
             onNodeWithText("Support dog charities").performClick()
             onNodeWithText("Donations").performClick()
             onNodeWithText("Wallet").performClick()
+            onNode(isHeading() and hasText("About")).assertExists()
             onNodeWithText("2 warnings").assertExists()
-            onNodeWithText("Device checks").performClick()
+            onNodeWithText("Device state").performClick()
             val rowTops =
                 listOf(
+                    "Feed me",
                     "Support dog charities",
                     "Donations",
                     "Wallet",
-                    "Device checks",
+                    "About",
+                    "Device state",
                 ).map { onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top }
             assertEquals(rowTops.sorted(), rowTops)
 
-            state = state.copy(deviceCheckWarnings = 1)
+            state = state.copy(deviceStateWarnings = 1)
             waitForIdle()
             onNodeWithText("1 warning").assertExists()
-            state = state.copy(deviceCheckWarnings = 0)
+            state = state.copy(deviceStateWarnings = 0)
             waitForIdle()
             onNodeWithText("No warnings").assertExists()
 
             assertEquals(1, charitiesOpened)
             assertEquals(1, donationsOpened)
             assertEquals(1, walletOpened)
-            assertEquals(1, deviceChecksOpened)
+            assertEquals(1, deviceStateOpened)
         }
+
+    private fun favourites(count: Int) =
+        (1..count).map { FavouriteListItem.Available("breed-$it", "Breed $it", subtitle = null, imageUrls = emptyList()) }
+
+    private fun draws(count: Int) =
+        (1..count).map { DrawHistoryItem("2026-09-${10 + it}", "Day $it", "draw-$it", "Drawn $it", emptyList(), isAvailable = true) }
 }

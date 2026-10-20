@@ -36,7 +36,10 @@ import com.example.dogapp.feature.home.presentation.HomeLayout
 import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.identify.presentation.identifyEntries
-import com.example.dogapp.feature.profile.presentation.DeviceChecksRoute
+import com.example.dogapp.feature.profile.presentation.DeviceStateRoute
+import com.example.dogapp.feature.profile.presentation.DrawHistoryRoute
+import com.example.dogapp.feature.profile.presentation.FavouritesRoute
+import com.example.dogapp.feature.profile.presentation.ProfileLayout
 import com.example.dogapp.feature.profile.presentation.profileEntries
 import com.example.dogapp.feature.wallet.domain.WalletAutoLock
 import com.example.dogapp.feature.wallet.presentation.AddCardRoute
@@ -91,11 +94,18 @@ fun AppShell(
             )
             exploreEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) })
             profileEntries(
+                layout =
+                    when (navigationStyle) {
+                        NavigationStyle.Material -> ProfileLayout.Material
+                        NavigationStyle.Cupertino -> ProfileLayout.Cupertino
+                    },
                 onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
+                onSeeAllFavouritesClick = { navigator.navigate(FavouritesRoute) },
+                onSeeAllDrawsClick = { navigator.navigate(DrawHistoryRoute) },
                 onSupportCharitiesClick = { navigator.navigate(CharitiesRoute) },
                 onDonationsClick = { navigator.navigate(DonationsRoute) },
                 onWalletClick = { navigator.navigate(WalletRoute) },
-                onDeviceChecksClick = { navigator.navigate(DeviceChecksRoute) },
+                onDeviceStateClick = { navigator.navigate(DeviceStateRoute) },
                 onBack = { navigator.goBack() },
             )
             breedDetailEntries(onBack = { navigator.goBack() })

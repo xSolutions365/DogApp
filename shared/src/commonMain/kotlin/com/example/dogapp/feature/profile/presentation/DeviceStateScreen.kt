@@ -30,35 +30,35 @@ import dogapp.shared.generated.resources.device_check_sandbox_write
 import dogapp.shared.generated.resources.device_check_sandbox_write_ok
 import dogapp.shared.generated.resources.device_check_simulator
 import dogapp.shared.generated.resources.device_check_test_keys_build
-import dogapp.shared.generated.resources.device_checks_intro
-import dogapp.shared.generated.resources.device_checks_not_detected
-import dogapp.shared.generated.resources.device_checks_not_found
-import dogapp.shared.generated.resources.device_checks_warning
-import dogapp.shared.generated.resources.profile_device_checks
+import dogapp.shared.generated.resources.device_state_intro
+import dogapp.shared.generated.resources.device_state_not_detected
+import dogapp.shared.generated.resources.device_state_not_found
+import dogapp.shared.generated.resources.device_state_warning
+import dogapp.shared.generated.resources.profile_device_state
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun DeviceChecksRoot(
+fun DeviceStateRoot(
     onBack: () -> Unit,
-    viewModel: DeviceChecksViewModel = koinViewModel(),
+    viewModel: DeviceStateViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    DeviceChecksScreen(state = state, onBack = onBack)
+    DeviceStateScreen(state = state, onBack = onBack)
 }
 
 @Composable
-fun DeviceChecksScreen(
-    state: DeviceChecksUiState,
+fun DeviceStateScreen(
+    state: DeviceStateUiState,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        item(key = "title") { BackTopBar(title = stringResource(Res.string.profile_device_checks), onBack = onBack) }
+        item(key = "title") { BackTopBar(title = stringResource(Res.string.profile_device_state), onBack = onBack) }
         item(key = "intro") {
             Text(
-                text = stringResource(Res.string.device_checks_intro),
+                text = stringResource(Res.string.device_state_intro),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -81,7 +81,7 @@ private fun DeviceCheckRow(
     ) {
         Text(text = stringResource(check.kind.label), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         Text(
-            text = stringResource(if (check.isFlagged) Res.string.device_checks_warning else check.kind.passedText),
+            text = stringResource(if (check.isFlagged) Res.string.device_state_warning else check.kind.passedText),
             style = MaterialTheme.typography.bodyLarge,
             color = if (check.isFlagged) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 16.dp),
@@ -108,9 +108,9 @@ private val IntegrityCheckKind.passedText: StringResource
             IntegrityCheckKind.RootOrMagisk,
             IntegrityCheckKind.TestKeysBuild,
             IntegrityCheckKind.JailbreakFiles,
-            -> Res.string.device_checks_not_found
+            -> Res.string.device_state_not_found
 
-            IntegrityCheckKind.Emulator, IntegrityCheckKind.Simulator -> Res.string.device_checks_not_detected
+            IntegrityCheckKind.Emulator, IntegrityCheckKind.Simulator -> Res.string.device_state_not_detected
 
             IntegrityCheckKind.AppSignature -> Res.string.device_check_app_signature_ok
 

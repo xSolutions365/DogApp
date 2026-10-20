@@ -19,6 +19,8 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.example.dogapp.app.navigation.NavigationStyle
+import com.example.dogapp.feature.donate.domain.Donation
+import com.example.dogapp.feature.donate.domain.PaidWith
 import com.example.dogapp.feature.donate.presentation.DonatePresentation
 import com.example.dogapp.feature.donate.presentation.DonateSheetRoot
 import com.example.dogapp.feature.donate.presentation.displayText
@@ -39,9 +41,11 @@ expect fun rememberDonateLauncher(
 internal fun rememberMaterialDonateSheet(
     snackbarHostState: SnackbarHostState,
     onOpenWallet: () -> Unit,
+    onGooglePayDonation: (Donation) -> Unit,
 ): (String) -> Unit {
     var charityId by rememberSaveable { mutableStateOf<String?>(null) }
     val currentOnOpenWallet by rememberUpdatedState(onOpenWallet)
+    val currentOnGooglePayDonation by rememberUpdatedState(onGooglePayDonation)
     val scope = rememberCoroutineScope()
     charityId?.let { id ->
         val sheetOwner = remember(id) { DonateSheetViewModelStoreOwner() }
@@ -65,10 +69,18 @@ internal fun rememberMaterialDonateSheet(
                     onDismiss = { charityId = null },
                     onDonationComplete = { donation ->
                         charityId = null
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                getString(Res.string.donate_thank_you, donation.amount.displayText(), donation.charityName),
-                            )
+                        when (donation.paidWith) {
+                            is PaidWith.GooglePay -> {
+                                currentOnGooglePayDonation(donation)
+                            }
+
+                            is PaidWith.Card -> {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        getString(Res.string.donate_thank_you, donation.amount.displayText(), donation.charityName),
+                                    )
+                                }
+                            }
                         }
                     },
                 )

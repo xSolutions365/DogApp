@@ -14,16 +14,16 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
-class DeviceChecksScreenTest {
+class DeviceStateScreenTest {
     @Test
     fun everyCheckShowsItsResultAndTheScreenSaysTheChecksAreEasyToBypass() =
         runComposeUiTest {
             var backs = 0
             setContent {
                 DogAppTheme {
-                    DeviceChecksScreen(
+                    DeviceStateScreen(
                         state =
-                            DeviceChecksUiState(
+                            DeviceStateUiState(
                                 IntegrityCheckKind.entries.map { kind ->
                                     IntegrityCheck(
                                         kind,
@@ -37,7 +37,7 @@ class DeviceChecksScreenTest {
                 }
             }
 
-            onNode(isHeading() and hasText("Device checks")).assertExists()
+            onNode(isHeading() and hasText("Device state")).assertExists()
             onNodeWithText(
                 "These checks run on the device and are easy to bypass. They never block anything. " +
                     "Real apps confirm a device's integrity with a server (Play Integrity on Android, App Attest on iOS).",

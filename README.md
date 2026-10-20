@@ -32,12 +32,13 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Profile**
   - **Favourite breeds.** If a favourite later disappears from the APIs, it's kept, shown by its saved name as "No longer available", and can be removed.
   - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
-  - **Feed me** (at the bottom):
+  - Both lists show at most two rows. With more, a "See all (5)" row ("See All (5)" on iOS) opens the full list.
+  - **Feed me:**
     - **Support dog charities** opens a list of dog charities. Each one has a detail page with a **Donate** button: pick £3, £5, £10, £20 or another amount (£1 to £500), then pay with a saved card or, on Android, Google Pay.
     - **Donations** lists your donations, newest first, with how each was paid ("Paid with Visa •••• 4242", "Paid with Google Pay (Visa •••• 1111)"). With none yet, it links to the charities.
     - **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS), where you can add and remove demo cards.
-    - **Device checks** shows how many on-device integrity warnings there are ("1 warning", "No warnings") and opens a list of every check with its result.
     - See [Mock payments and security setup](#mock-payments-and-security-setup).
+  - **About** (at the bottom): **Device state** shows how many on-device integrity warnings there are ("1 warning", "No warnings") and opens a list of every check with its result.
 - **Images**
   - A dog placeholder sits under every photo while it loads.
   - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
@@ -73,10 +74,11 @@ DogApp is a demo playground for learning how payments and security work on each 
   - amounts outside £1 to £500
   - the test card ending `0002` (for example 4000 0000 0000 0002), which is declined so the error can be tried
 - **Donating:**
-  - **Android:** "Donate" opens a Material bottom sheet with amount chips, the saved cards and the Google Pay button, and a success closes it with a "Thank you" snackbar.
+  - **Android:** "Donate" opens a Material bottom sheet with amount chips, the saved cards and the Google Pay button, and a card donation closes it with a "Thank you" snackbar.
   - **iOS:** "Donate" opens a native page sheet with checkmark rows, which thanks you inside the sheet with Done.
   - **With a saved card:** a locked wallet first shows "Unlock wallet to pay with a card". "Donate £5" then asks for the biometric again ("Confirm your donation") as the payment confirmation, and reads the card fresh from the wallet. With no cards, "Add a card in your wallet" leads to the wallet.
   - **Google Pay (Android only)** runs in Google's TEST environment (`WalletConstants.ENVIRONMENT_TEST`) with the `example` gateway, so a test token comes back and **nothing is ever charged**. No merchant account is needed. The button shows only when Google Pay says it's ready. The Google Pay sheet needs a device or emulator with Play services that is signed in to a Google account.
+  - **A Google Pay donation never fails.** Whatever Google Pay returns counts as a successful demo payment: a completed sheet, an error, a closed sheet, and a device without a Google account (Google shows "Google Pay requires a Google account" and then reports a cancel, which the app can't tell apart from closing the sheet). The donation is recorded as paid with Google Pay, and a Toast says "Demo payment: nothing was taken from your account." instead of the snackbar.
   - **Apple Pay isn't available.** It needs a Merchant ID entitlement, which needs a paid Apple developer account, so iOS offers saved cards only.
   - **Store rules**, for reference: Apple lets only approved nonprofits take donations in-app (and they must offer Apple Pay), and Google Play doesn't allow Play Billing for tax-exempt donations. Neither applies here, because nothing is real.
 - **The donation history** is kept on the device in Room (the `donation` table): charity, amount, how it was paid and when. No card number is ever stored.
@@ -87,7 +89,7 @@ DogApp is a demo playground for learning how payments and security work on each 
   - **How:** both platforms read the chain the system has already validated, so it ends at the trusted root. Android: an OkHttp network interceptor (`PinReportingInterceptor`) reads the handshake's certificates. iOS: the Ktor Darwin engine's `handleChallenge` (`pinReportingChallengeHandler`) evaluates the server trust and reads `SecTrustCopyCertificateChain`, then lets the system handle the challenge as usual. The pin of each certificate comes from its DER in shared code (`spkiPin`), and `CertificatePinReporter` compares them with `PinnedHosts`.
   - **A mismatch never fails a request.** It's logged once per host per app run as a warning under the `CertificatePins` tag, with the chain's pins and the expected ones. An enforcing app would cancel the request instead (OkHttp `CertificatePinner`, Android `<pin-set>` or iOS `NSPinnedDomains`), and would need a plan for rotating pins.
   - **To see a report:** change one host's pins in `core/data/security/PinnedHosts.kt` and run a fresh install, so the first sync calls every API. The warning appears in Logcat or the Xcode console, and the data still loads.
-- **On-device integrity checks are weak on purpose and never block.** They show what each platform can look at locally, under Feed me → Device checks:
+- **On-device integrity checks are weak on purpose and never block.** They show what each platform can look at locally, under About → Device state:
   - **Android:** root or Magisk files (`su` binaries, Magisk folders), a `test-keys` build, the app's signing certificate, an emulator (`goldfish`/`ranchu` hardware, SDK products and fingerprints), and an attached debugger.
   - **iOS:** jailbreak files (Cydia, Sileo, Substrate, rootless `/var/jb` and similar; generic Unix paths are left out because the simulator sees the Mac's disk), a write outside the sandbox, the simulator, and an attached debugger (`sysctl` `P_TRACED`).
   - **The expected signing certificate** is read at build time from the key that signs the build (today the debug keystore, so it works on every machine) and passed in as `BuildConfig.SIGNING_CERT_SHA256`. A re-signed APK shows "App signature: Warning". On a brand-new machine, the very first build runs before the debug keystore exists, so it shows the warning until the next build.

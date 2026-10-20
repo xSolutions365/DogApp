@@ -6,7 +6,7 @@ sealed interface PaymentMethod {
     ) : PaymentMethod
 
     data class GooglePay(
-        val token: String,
+        val token: String?,
         val cardDescription: String?,
     ) : PaymentMethod
 }

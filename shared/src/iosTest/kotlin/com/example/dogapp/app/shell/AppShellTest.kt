@@ -307,6 +307,36 @@ class AppShellTest {
     }
 
     @Test
+    fun seeAllFavouritesFromProfileOpensTheFullListOnTheProfileTabAndBackReturns() {
+        NavigationStyle.entries.forEach { style ->
+            runComposeUiTest {
+                favourites.records.value =
+                    listOf(
+                        FavouriteRecord("border collie", "Border Collie", addedAtEpochMillis = 1),
+                        FavouriteRecord("akita", "Akita", addedAtEpochMillis = 2),
+                        FavouriteRecord("beagle", "Beagle", addedAtEpochMillis = 3),
+                    )
+                val backInput = setShell(style)
+                onNode(tab("Profile")).performClick()
+
+                onNode(hasText("Beagle")).assertExists()
+                onNode(hasText("Border Collie")).assertDoesNotExist()
+                onNode(hasText(if (style == NavigationStyle.Material) "See all (3)" else "See All (3)")).performClick()
+                onNode(hasText("Border Collie")).performClick()
+                waitForIdle()
+                assertDetailTitle("Border Collie")
+                onNode(tab("Profile")).assertIsSelected()
+
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Favourite breeds")).assertExists()
+                onNode(hasText("Border Collie")).assertExists()
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Profile")).assertExists()
+            }
+        }
+    }
+
+    @Test
     fun supportingDogCharitiesFromProfileOpensACharityOnTheProfileTabAndBackReturns() {
         NavigationStyle.entries.forEach { style ->
             runComposeUiTest {
@@ -353,16 +383,16 @@ class AppShellTest {
     }
 
     @Test
-    fun deviceChecksFromProfileShowTheSimulatorWarningOnTheProfileTabAndBackReturns() {
+    fun deviceStateFromProfileShowTheSimulatorWarningOnTheProfileTabAndBackReturns() {
         NavigationStyle.entries.forEach { style ->
             runComposeUiTest {
                 val backInput = setShell(style)
                 onNode(tab("Profile")).performClick()
 
-                onNode(verticalList).performScrollToNode(hasText("Device checks"))
+                onNode(verticalList).performScrollToNode(hasText("Device state"))
                 onNode(hasText("1 warning")).assertExists()
-                onNode(hasText("Device checks")).performClick()
-                onNode(screenTitle("Device checks")).assertExists()
+                onNode(hasText("Device state")).performClick()
+                onNode(screenTitle("Device state")).assertExists()
                 onNode(hasText("Simulator") and hasText("Warning")).assertExists()
                 onNode(hasText("Jailbreak files") and hasText("Not found")).assertExists()
                 onNode(tab("Profile")).assertIsSelected()

@@ -24,7 +24,7 @@ class ProfileViewModel(
     private val removeFavourite: RemoveFavouriteUseCase,
     integrityChecker: DeviceIntegrityChecker,
 ) : ViewModel() {
-    private val deviceCheckWarnings =
+    private val deviceStateWarnings =
         flow<Int?> { emit(integrityChecker.check().warningCount) }.onStart { emit(null) }
 
     val state: StateFlow<ProfileUiState> =
@@ -32,12 +32,12 @@ class ProfileViewModel(
             observeFavouriteBreeds(),
             observeDrawHistory(),
             today.observeToday(),
-            deviceCheckWarnings,
+            deviceStateWarnings,
         ) { favourites, draws, today, warnings ->
             ProfileUiState(
                 favourites = favourites.map { it.toListItem() },
                 draws = draws.filter { it.draw.day.isoDate < today.isoDate }.map { it.toHistoryItem() },
-                deviceCheckWarnings = warnings,
+                deviceStateWarnings = warnings,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ProfileUiState())
 

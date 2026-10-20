@@ -77,11 +77,6 @@ class DonateViewModel(
                 googlePayAmount?.let { amount -> donate(amount, action.payment) }
                 googlePayAmount = null
             }
-
-            is DonateAction.GooglePayFailed -> {
-                googlePayAmount = null
-                Outcome.Failure(action.error).showError()
-            }
         }
     }
 

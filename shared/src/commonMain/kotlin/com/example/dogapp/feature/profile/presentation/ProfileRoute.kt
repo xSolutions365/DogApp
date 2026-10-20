@@ -9,12 +9,20 @@ import kotlinx.serialization.modules.polymorphic
 data object ProfileRoute : NavKey
 
 @Serializable
-data object DeviceChecksRoute : NavKey
+data object FavouritesRoute : NavKey
+
+@Serializable
+data object DrawHistoryRoute : NavKey
+
+@Serializable
+data object DeviceStateRoute : NavKey
 
 val profileNavigationSerializers =
     SerializersModule {
         polymorphic(NavKey::class) {
             subclass(ProfileRoute::class, ProfileRoute.serializer())
-            subclass(DeviceChecksRoute::class, DeviceChecksRoute.serializer())
+            subclass(FavouritesRoute::class, FavouritesRoute.serializer())
+            subclass(DrawHistoryRoute::class, DrawHistoryRoute.serializer())
+            subclass(DeviceStateRoute::class, DeviceStateRoute.serializer())
         }
     }

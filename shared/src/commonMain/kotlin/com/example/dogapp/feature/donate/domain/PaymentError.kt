@@ -12,6 +12,4 @@ sealed interface PaymentError : DomainError {
     data object CardNotFound : PaymentError
 
     data object Declined : PaymentError
-
-    data object GooglePayFailed : PaymentError
 }

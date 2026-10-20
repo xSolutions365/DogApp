@@ -1,7 +1,6 @@
 package com.example.dogapp.feature.donate.presentation
 
 import com.example.dogapp.feature.donate.domain.DonationAmount
-import com.example.dogapp.feature.donate.domain.PaymentError
 import com.example.dogapp.feature.donate.domain.PaymentMethod
 
 sealed interface DonateAction {
@@ -27,9 +26,5 @@ sealed interface DonateAction {
 
     data class DonateWithGooglePay(
         val payment: PaymentMethod.GooglePay,
-    ) : DonateAction
-
-    data class GooglePayFailed(
-        val error: PaymentError,
     ) : DonateAction
 }

@@ -32,9 +32,10 @@ import com.example.dogapp.core.presentation.components.platformDisclosureIcon
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.breed_unavailable
 import dogapp.shared.generated.resources.destination_profile
-import dogapp.shared.generated.resources.profile_device_checks
-import dogapp.shared.generated.resources.profile_device_checks_none
-import dogapp.shared.generated.resources.profile_device_checks_warnings
+import dogapp.shared.generated.resources.profile_about
+import dogapp.shared.generated.resources.profile_device_state
+import dogapp.shared.generated.resources.profile_device_state_none
+import dogapp.shared.generated.resources.profile_device_state_warnings
 import dogapp.shared.generated.resources.profile_donations
 import dogapp.shared.generated.resources.profile_draws
 import dogapp.shared.generated.resources.profile_draws_empty
@@ -43,6 +44,8 @@ import dogapp.shared.generated.resources.profile_favourite_remove_description
 import dogapp.shared.generated.resources.profile_favourites
 import dogapp.shared.generated.resources.profile_favourites_empty
 import dogapp.shared.generated.resources.profile_feed_me
+import dogapp.shared.generated.resources.profile_see_all
+import dogapp.shared.generated.resources.profile_see_all_cupertino
 import dogapp.shared.generated.resources.profile_support_charities
 import dogapp.shared.generated.resources.profile_wallet
 import org.jetbrains.compose.resources.painterResource
@@ -52,34 +55,43 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ProfileRoot(
+    layout: ProfileLayout,
     onBreedClick: (String) -> Unit,
+    onSeeAllFavouritesClick: () -> Unit,
+    onSeeAllDrawsClick: () -> Unit,
     onSupportCharitiesClick: () -> Unit,
     onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
-    onDeviceChecksClick: () -> Unit,
+    onDeviceStateClick: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ProfileScreen(
         state = state,
+        layout = layout,
         onAction = viewModel::onAction,
         onBreedClick = onBreedClick,
+        onSeeAllFavouritesClick = onSeeAllFavouritesClick,
+        onSeeAllDrawsClick = onSeeAllDrawsClick,
         onSupportCharitiesClick = onSupportCharitiesClick,
         onDonationsClick = onDonationsClick,
         onWalletClick = onWalletClick,
-        onDeviceChecksClick = onDeviceChecksClick,
+        onDeviceStateClick = onDeviceStateClick,
     )
 }
 
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
+    layout: ProfileLayout,
     onAction: (ProfileAction) -> Unit,
     onBreedClick: (String) -> Unit,
+    onSeeAllFavouritesClick: () -> Unit,
+    onSeeAllDrawsClick: () -> Unit,
     onSupportCharitiesClick: () -> Unit,
     onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
-    onDeviceChecksClick: () -> Unit,
+    onDeviceStateClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -99,24 +111,14 @@ fun ProfileScreen(
         }
         val favourites = state.favourites
         if (favourites != null && favourites.isEmpty()) {
-            item(key = "favourites-empty") {
-                Text(
-                    text = stringResource(Res.string.profile_favourites_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
+            item(key = "favourites-empty") { FavouritesEmptyText() }
         }
-        items(favourites.orEmpty(), key = { "favourite-${it.breedId}" }) { favourite ->
-            when (favourite) {
-                is FavouriteListItem.Available -> {
-                    AvailableFavouriteRow(favourite, onClick = { onBreedClick(favourite.breedId) })
-                }
-
-                is FavouriteListItem.Unavailable -> {
-                    UnavailableFavouriteRow(favourite, onRemove = { onAction(ProfileAction.RemoveFavourite(favourite.breedId)) })
-                }
+        items(favourites.orEmpty().take(PREVIEW_ROWS), key = { "favourite-${it.breedId}" }) { favourite ->
+            FavouriteItemRow(favourite = favourite, onAction = onAction, onBreedClick = onBreedClick)
+        }
+        if (favourites != null && favourites.size > PREVIEW_ROWS) {
+            item(key = "favourites-see-all") {
+                SectionLinkRow(text = seeAllText(layout, favourites.size), onClick = onSeeAllFavouritesClick)
             }
         }
         item(key = "draws-title") {
@@ -128,17 +130,15 @@ fun ProfileScreen(
         }
         val draws = state.draws
         if (draws != null && draws.isEmpty()) {
-            item(key = "draws-empty") {
-                Text(
-                    text = stringResource(Res.string.profile_draws_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
+            item(key = "draws-empty") { DrawsEmptyText() }
         }
-        items(draws.orEmpty(), key = { "draw-${it.day}" }) { draw ->
+        items(draws.orEmpty().take(PREVIEW_ROWS), key = { "draw-${it.day}" }) { draw ->
             DrawHistoryRow(draw = draw, onClick = { onBreedClick(draw.breedId) })
+        }
+        if (draws != null && draws.size > PREVIEW_ROWS) {
+            item(key = "draws-see-all") {
+                SectionLinkRow(text = seeAllText(layout, draws.size), onClick = onSeeAllDrawsClick)
+            }
         }
         item(key = "feed-me-title") {
             Text(
@@ -148,24 +148,31 @@ fun ProfileScreen(
             )
         }
         item(key = "support-charities") {
-            FeedMeRow(text = stringResource(Res.string.profile_support_charities), onClick = onSupportCharitiesClick)
+            SectionLinkRow(text = stringResource(Res.string.profile_support_charities), onClick = onSupportCharitiesClick)
         }
         item(key = "donations") {
-            FeedMeRow(text = stringResource(Res.string.profile_donations), onClick = onDonationsClick)
+            SectionLinkRow(text = stringResource(Res.string.profile_donations), onClick = onDonationsClick)
         }
         item(key = "wallet") {
-            FeedMeRow(text = stringResource(Res.string.profile_wallet), onClick = onWalletClick)
+            SectionLinkRow(text = stringResource(Res.string.profile_wallet), onClick = onWalletClick)
         }
-        item(key = "device-checks") {
-            val warnings = state.deviceCheckWarnings
-            FeedMeRow(
-                text = stringResource(Res.string.profile_device_checks),
-                onClick = onDeviceChecksClick,
+        item(key = "about-title") {
+            Text(
+                text = stringResource(Res.string.profile_about),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp).semantics { heading() },
+            )
+        }
+        item(key = "device-state") {
+            val warnings = state.deviceStateWarnings
+            SectionLinkRow(
+                text = stringResource(Res.string.profile_device_state),
+                onClick = onDeviceStateClick,
                 summary =
                     when {
                         warnings == null -> null
-                        warnings == 0 -> stringResource(Res.string.profile_device_checks_none)
-                        else -> pluralStringResource(Res.plurals.profile_device_checks_warnings, warnings, warnings)
+                        warnings == 0 -> stringResource(Res.string.profile_device_state_none)
+                        else -> pluralStringResource(Res.plurals.profile_device_state_warnings, warnings, warnings)
                     },
                 isWarning = (warnings ?: 0) > 0,
             )
@@ -173,8 +180,62 @@ fun ProfileScreen(
     }
 }
 
+private const val PREVIEW_ROWS = 2
+
 @Composable
-private fun FeedMeRow(
+private fun seeAllText(
+    layout: ProfileLayout,
+    count: Int,
+): String =
+    when (layout) {
+        ProfileLayout.Material -> stringResource(Res.string.profile_see_all, count)
+        ProfileLayout.Cupertino -> stringResource(Res.string.profile_see_all_cupertino, count)
+    }
+
+@Composable
+internal fun FavouritesEmptyText(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(Res.string.profile_favourites_empty),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
+@Composable
+internal fun DrawsEmptyText(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(Res.string.profile_draws_empty),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
+@Composable
+internal fun FavouriteItemRow(
+    favourite: FavouriteListItem,
+    onAction: (ProfileAction) -> Unit,
+    onBreedClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (favourite) {
+        is FavouriteListItem.Available -> {
+            AvailableFavouriteRow(favourite, onClick = { onBreedClick(favourite.breedId) }, modifier = modifier)
+        }
+
+        is FavouriteListItem.Unavailable -> {
+            UnavailableFavouriteRow(
+                favourite,
+                onRemove = { onAction(ProfileAction.RemoveFavourite(favourite.breedId)) },
+                modifier = modifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionLinkRow(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -212,7 +273,7 @@ private fun FeedMeRow(
 }
 
 @Composable
-private fun DrawHistoryRow(
+internal fun DrawHistoryRow(
     draw: DrawHistoryItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
-class DeviceChecksViewModel(
+class DeviceStateViewModel(
     integrityChecker: DeviceIntegrityChecker,
 ) : ViewModel() {
-    val state: StateFlow<DeviceChecksUiState> =
-        flow { emit(DeviceChecksUiState(checks = integrityChecker.check().checks)) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), DeviceChecksUiState())
+    val state: StateFlow<DeviceStateUiState> =
+        flow { emit(DeviceStateUiState(checks = integrityChecker.check().checks)) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), DeviceStateUiState())
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

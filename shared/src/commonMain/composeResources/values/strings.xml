@@ -123,6 +123,8 @@
     <string name="identify_error_model">Breed recognition isn't available right now.</string>
     <string name="profile_draws">Previous breeds of the day</string>
     <string name="profile_draws_empty">Each breed of the day you reveal will appear here the following day.</string>
+    <string name="profile_see_all">See all (%1$d)</string>
+    <string name="profile_see_all_cupertino">See All (%1$d)</string>
     <string name="profile_feed_me">Feed me</string>
     <string name="profile_support_charities">Support dog charities</string>
     <string name="donate_charities_title">Dog charities</string>
@@ -155,16 +157,17 @@
     <string name="donations_empty">No donations yet.</string>
     <string name="donations_see_charities">See dog charities</string>
     <string name="profile_donations">Donations</string>
-    <string name="profile_device_checks">Device checks</string>
-    <string name="profile_device_checks_none">No warnings</string>
-    <plurals name="profile_device_checks_warnings">
+    <string name="profile_about">About</string>
+    <string name="profile_device_state">Device state</string>
+    <string name="profile_device_state_none">No warnings</string>
+    <plurals name="profile_device_state_warnings">
         <item quantity="one">%1$d warning</item>
         <item quantity="other">%1$d warnings</item>
     </plurals>
-    <string name="device_checks_intro">These checks run on the device and are easy to bypass. They never block anything. Real apps confirm a device's integrity with a server (Play Integrity on Android, App Attest on iOS).</string>
-    <string name="device_checks_warning">Warning</string>
-    <string name="device_checks_not_found">Not found</string>
-    <string name="device_checks_not_detected">Not detected</string>
+    <string name="device_state_intro">These checks run on the device and are easy to bypass. They never block anything. Real apps confirm a device's integrity with a server (Play Integrity on Android, App Attest on iOS).</string>
+    <string name="device_state_warning">Warning</string>
+    <string name="device_state_not_found">Not found</string>
+    <string name="device_state_not_detected">Not detected</string>
     <string name="device_check_root_or_magisk">Root or Magisk</string>
     <string name="device_check_test_keys_build">Test-keys build</string>
     <string name="device_check_app_signature">App signature</string>
@@ -176,7 +179,7 @@
     <string name="device_check_simulator">Simulator</string>
     <string name="device_check_debugger">Debugger</string>
     <string name="device_check_debugger_ok">Not attached</string>
-    <string name="donate_error_google_pay">Google Pay couldn't take the payment. Try again or pay with a card.</string>
+    <string name="donate_google_pay_demo_notice">Demo payment: nothing was taken from your account.</string>
     <string name="wallet_prompt_unlock_title">Unlock your wallet</string>
     <string name="wallet_prompt_set_up_title">Set up your wallet</string>
     <string name="wallet_prompt_save_card_title">Save card to your wallet</string>

@@ -2,6 +2,7 @@ package com.example.dogapp.feature.donate.presentation
 
 import com.example.dogapp.feature.donate.domain.DonationAmount
 import com.example.dogapp.feature.donate.domain.PaymentMethod
+import com.google.android.gms.common.api.CommonStatusCodes
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -48,17 +49,33 @@ class GooglePayRequestsTest {
     }
 
     @Test
-    fun paymentDataGivesTheTokenAndCardDescriptionAndIsRejectedWithoutAToken() {
+    fun everyResultIsAPaymentKeepingWhateverTokenAndCardASuccessfulSheetGave() {
+        val success = CommonStatusCodes.SUCCESS
         assertEquals(
             PaymentMethod.GooglePay(token = "examplePaymentMethodToken", cardDescription = "Visa •••• 1111"),
-            GooglePayRequests.googlePayMethod(paymentData(token = "\"examplePaymentMethodToken\"", description = "\"Visa •••• 1111\"")),
+            GooglePayRequests.googlePayResult(
+                success,
+                paymentData(token = "\"examplePaymentMethodToken\"", description = "\"Visa •••• 1111\""),
+            ),
         )
         assertEquals(
             PaymentMethod.GooglePay(token = "examplePaymentMethodToken", cardDescription = null),
-            GooglePayRequests.googlePayMethod(paymentData(token = "\"examplePaymentMethodToken\"", description = "\"\"")),
+            GooglePayRequests.googlePayResult(success, paymentData(token = "\"examplePaymentMethodToken\"", description = "\"\"")),
         )
-        assertNull(GooglePayRequests.googlePayMethod(paymentData(token = "\"\"", description = "\"Visa •••• 1111\"")))
-        assertNull(GooglePayRequests.googlePayMethod("not json"))
+        assertEquals(
+            PaymentMethod.GooglePay(token = null, cardDescription = "Visa •••• 1111"),
+            GooglePayRequests.googlePayResult(success, paymentData(token = "\"\"", description = "\"Visa •••• 1111\"")),
+        )
+        val demoPayment = PaymentMethod.GooglePay(token = null, cardDescription = null)
+        assertEquals(demoPayment, GooglePayRequests.googlePayResult(success, "not json"))
+        assertEquals(demoPayment, GooglePayRequests.googlePayResult(success, null))
+        listOf(
+            CommonStatusCodes.CANCELED,
+            CommonStatusCodes.ERROR,
+            CommonStatusCodes.DEVELOPER_ERROR,
+            CommonStatusCodes.INTERNAL_ERROR,
+            CommonStatusCodes.NETWORK_ERROR,
+        ).forEach { status -> assertEquals(demoPayment, GooglePayRequests.googlePayResult(status, null), "status $status") }
     }
 
     private fun paymentData(

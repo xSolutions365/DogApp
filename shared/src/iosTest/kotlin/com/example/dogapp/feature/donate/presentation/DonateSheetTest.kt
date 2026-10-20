@@ -86,10 +86,6 @@ class DonateSheetTest {
             onNodeWithText("Donate £7.50").performClick()
             onNodeWithText("Google Pay").performClick()
 
-            state = state.copy(error = PaymentError.GooglePayFailed)
-            waitForIdle()
-            onNodeWithText("Google Pay couldn't take the payment. Try again or pay with a card.").assertExists()
-
             assertEquals(
                 listOf(
                     DonateAction.SelectPreset(DonationAmount(2000)),
