@@ -8,6 +8,8 @@ fun EntryProviderScope<NavKey>.profileEntries(
     onSupportCharitiesClick: () -> Unit,
     onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
+    onDeviceChecksClick: () -> Unit,
+    onBack: () -> Unit,
 ) {
     entry<ProfileRoute> {
         ProfileRoot(
@@ -15,6 +17,8 @@ fun EntryProviderScope<NavKey>.profileEntries(
             onSupportCharitiesClick = onSupportCharitiesClick,
             onDonationsClick = onDonationsClick,
             onWalletClick = onWalletClick,
+            onDeviceChecksClick = onDeviceChecksClick,
         )
     }
+    entry<DeviceChecksRoute> { DeviceChecksRoot(onBack = onBack) }
 }

@@ -11,7 +11,11 @@ import com.example.dogapp.core.domain.draw.ObserveDrawHistoryUseCase
 import com.example.dogapp.core.domain.favourite.FavouriteRecord
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteBreedsUseCase
 import com.example.dogapp.core.domain.favourite.RemoveFavouriteUseCase
+import com.example.dogapp.core.domain.security.IntegrityCheck
+import com.example.dogapp.core.domain.security.IntegrityCheckKind
+import com.example.dogapp.core.domain.security.IntegrityReport
 import com.example.dogapp.testing.FakeDailyDrawRepository
+import com.example.dogapp.testing.FakeDeviceIntegrityChecker
 import com.example.dogapp.testing.FakeFavouritesRepository
 import com.example.dogapp.testing.FakeTodayProvider
 import com.example.dogapp.testing.testBreed
@@ -55,12 +59,24 @@ class ProfileViewModelTest {
 
     private val today = FakeTodayProvider("2026-10-01")
 
+    private val integrityChecker =
+        FakeDeviceIntegrityChecker(
+            IntegrityReport(
+                listOf(
+                    IntegrityCheck(IntegrityCheckKind.Emulator, isFlagged = true),
+                    IntegrityCheck(IntegrityCheckKind.Debugger, isFlagged = true),
+                    IntegrityCheck(IntegrityCheckKind.AppSignature, isFlagged = false),
+                ),
+            ),
+        )
+
     private fun viewModel(favourites: FakeFavouritesRepository = FakeFavouritesRepository()) =
         ProfileViewModel(
             observeFavouriteBreeds = ObserveFavouriteBreedsUseCase(favourites, breedRepository),
             observeDrawHistory = ObserveDrawHistoryUseCase(draws, breedRepository),
             today = today,
             removeFavourite = RemoveFavouriteUseCase(favourites),
+            integrityChecker = integrityChecker,
         )
 
     @Test
@@ -94,13 +110,14 @@ class ProfileViewModelTest {
         }
 
     @Test
-    fun noFavouritesIsAnEmptyListOnceLoaded() =
+    fun noFavouritesIsAnEmptyListOnceLoadedAlongsideTheDeviceCheckWarningCount() =
         runTest {
             val viewModel = viewModel(FakeFavouritesRepository())
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
             assertEquals(emptyList(), viewModel.state.value.favourites)
             assertEquals(emptyList(), viewModel.state.value.draws)
+            assertEquals(2, viewModel.state.value.deviceCheckWarnings)
         }
 
     @Test

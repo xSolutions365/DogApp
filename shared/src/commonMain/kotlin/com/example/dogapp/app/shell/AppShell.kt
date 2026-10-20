@@ -36,6 +36,7 @@ import com.example.dogapp.feature.home.presentation.HomeLayout
 import com.example.dogapp.feature.home.presentation.homeEntries
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.identify.presentation.identifyEntries
+import com.example.dogapp.feature.profile.presentation.DeviceChecksRoute
 import com.example.dogapp.feature.profile.presentation.profileEntries
 import com.example.dogapp.feature.wallet.domain.WalletAutoLock
 import com.example.dogapp.feature.wallet.presentation.AddCardRoute
@@ -94,6 +95,8 @@ fun AppShell(
                 onSupportCharitiesClick = { navigator.navigate(CharitiesRoute) },
                 onDonationsClick = { navigator.navigate(DonationsRoute) },
                 onWalletClick = { navigator.navigate(WalletRoute) },
+                onDeviceChecksClick = { navigator.navigate(DeviceChecksRoute) },
+                onBack = { navigator.goBack() },
             )
             breedDetailEntries(onBack = { navigator.goBack() })
             identifyEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) }, onBack = { navigator.goBack() })

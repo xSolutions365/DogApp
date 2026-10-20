@@ -36,6 +36,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
     - **Support dog charities** opens a list of dog charities. Each one has a detail page with a **Donate** button: pick £3, £5, £10, £20 or another amount (£1 to £500), then pay with a saved card or, on Android, Google Pay.
     - **Donations** lists your donations, newest first, with how each was paid ("Paid with Visa •••• 4242", "Paid with Google Pay (Visa •••• 1111)"). With none yet, it links to the charities.
     - **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS), where you can add and remove demo cards.
+    - **Device checks** shows how many on-device integrity warnings there are ("1 warning", "No warnings") and opens a list of every check with its result.
     - See [Mock payments and security setup](#mock-payments-and-security-setup).
 - **Images**
   - A dog placeholder sits under every photo while it loads.
@@ -86,6 +87,12 @@ DogApp is a demo playground for learning how payments and security work on each 
   - **How:** both platforms read the chain the system has already validated, so it ends at the trusted root. Android: an OkHttp network interceptor (`PinReportingInterceptor`) reads the handshake's certificates. iOS: the Ktor Darwin engine's `handleChallenge` (`pinReportingChallengeHandler`) evaluates the server trust and reads `SecTrustCopyCertificateChain`, then lets the system handle the challenge as usual. The pin of each certificate comes from its DER in shared code (`spkiPin`), and `CertificatePinReporter` compares them with `PinnedHosts`.
   - **A mismatch never fails a request.** It's logged once per host per app run as a warning under the `CertificatePins` tag, with the chain's pins and the expected ones. An enforcing app would cancel the request instead (OkHttp `CertificatePinner`, Android `<pin-set>` or iOS `NSPinnedDomains`), and would need a plan for rotating pins.
   - **To see a report:** change one host's pins in `core/data/security/PinnedHosts.kt` and run a fresh install, so the first sync calls every API. The warning appears in Logcat or the Xcode console, and the data still loads.
+- **On-device integrity checks are weak on purpose and never block.** They show what each platform can look at locally, under Feed me → Device checks:
+  - **Android:** root or Magisk files (`su` binaries, Magisk folders), a `test-keys` build, the app's signing certificate, an emulator (`goldfish`/`ranchu` hardware, SDK products and fingerprints), and an attached debugger.
+  - **iOS:** jailbreak files (Cydia, Sileo, Substrate, rootless `/var/jb` and similar; generic Unix paths are left out because the simulator sees the Mac's disk), a write outside the sandbox, the simulator, and an attached debugger (`sysctl` `P_TRACED`).
+  - **The expected signing certificate** is read at build time from the key that signs the build (today the debug keystore, so it works on every machine) and passed in as `BuildConfig.SIGNING_CERT_SHA256`. A re-signed APK shows "App signature: Warning". On a brand-new machine, the very first build runs before the debug keystore exists, so it shows the warning until the next build.
+  - **Why it stays a warning:** anything that runs on the device can be patched or hidden (Frida, Magisk's hiding, a modified binary). Real integrity needs a server: Play Integrity tokens are decoded with Google's service credentials, and App Attest needs a paid Apple account plus a server to verify the attestation. DogApp has neither, so the results are only shown, labelled easy to bypass.
+  - **Expected results:** on the Android emulator, "Emulator: Warning"; on the iOS simulator, "Simulator: Warning"; plus "Debugger: Warning" while a debugger is attached.
 - **Testing on devices:** Android emulator: set a screen lock and add a fingerprint in Settings, using `adb -e emu finger touch 1` to touch the sensor (another id fails). iOS simulator: Features → Face ID → Enrolled, then Matching / Non-matching Face. Untick and tick Enrolled again to simulate a new enrolment.
 
 ## Data sources
@@ -173,7 +180,7 @@ app/                 composition root: may depend on everything
   image/             Coil ImageLoader
 core/
   domain/            pure Kotlin: models, repository interfaces, use cases, Outcome, errors
-    breed/  favourite/  draw/
+    breed/  favourite/  draw/  security/
   data/              Ktor client, DataStore, Room database, report-only certificate pinning
     breed/{thedogapi,apininjas,dogceo,local}/  favourite/  draw/  donation/  security/
   presentation/      theme, shared components, shared-element helpers, error text
@@ -230,6 +237,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate, wall
 | Dates | kotlinx-datetime | 0.8.0 |
 | On-device ML | LiteRT `CompiledModel` (Android) / Core ML + Vision (iOS) | 2.3.0 / system |
 | Google Pay (Android) | play-services-wallet + Compose pay button | 20.0.0 / 1.2.0 |
+| Android core | androidx.core (`PackageInfoCompat` for the signing certificate) | 1.19.1 |
 | Biometrics | androidx.biometric + androidx.fragment (Android) / LocalAuthentication + Keychain (iOS) | 1.1.0 / 1.9.1 / system |
 | Coroutines | kotlinx-coroutines (+ test) | 1.11.0 |
 | Build secrets | BuildKonfig | 0.23.0 |

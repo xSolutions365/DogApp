@@ -8,8 +8,10 @@ import com.example.dogapp.core.data.database.DATABASE_FILE_NAME
 import com.example.dogapp.core.data.database.DogAppDatabase
 import com.example.dogapp.core.data.datastore.createPreferencesDataStore
 import com.example.dogapp.core.data.datastore.preferencesDataStorePath
+import com.example.dogapp.core.data.security.IosDeviceIntegrityChecker
 import com.example.dogapp.core.data.security.pinReportingChallengeHandler
 import com.example.dogapp.core.data.storage.documentsDirectoryPath
+import com.example.dogapp.core.domain.security.DeviceIntegrityChecker
 import com.example.dogapp.feature.identify.data.CoreMlImageLabeler
 import com.example.dogapp.feature.identify.data.ImageLabeler
 import com.example.dogapp.feature.wallet.data.KeychainWalletVault
@@ -27,5 +29,6 @@ actual val platformModule: Module =
             Room.databaseBuilder<DogAppDatabase>(name = documentsDirectoryPath() + "/" + DATABASE_FILE_NAME)
         }
         single<ImageLabeler> { CoreMlImageLabeler() }
+        single<DeviceIntegrityChecker> { IosDeviceIntegrityChecker() }
         single<WalletVault> { KeychainWalletVault(get()) }
     }

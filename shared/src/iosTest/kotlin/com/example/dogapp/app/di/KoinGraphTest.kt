@@ -17,6 +17,7 @@ import com.example.dogapp.core.domain.draw.TodayProvider
 import com.example.dogapp.core.domain.favourite.FavouritesRepository
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteBreedsUseCase
 import com.example.dogapp.core.domain.favourite.ToggleFavouriteUseCase
+import com.example.dogapp.core.domain.security.DeviceIntegrityChecker
 import com.example.dogapp.feature.donate.domain.CharityRepository
 import com.example.dogapp.feature.donate.domain.DonateUseCase
 import com.example.dogapp.feature.donate.domain.PaymentCards
@@ -67,6 +68,7 @@ class KoinGraphTest : KoinTest {
         assertNotNull(get<WalletCoordinator>())
         assertNotNull(get<WalletAutoLock>())
         assertNotNull(get<PaymentCards>())
+        assertNotNull(get<DeviceIntegrityChecker>())
         assertNotNull(get<DonateUseCase>())
         assertNotNull(get<ObserveTodaysDrawUseCase>())
         assertNotNull(get<ObserveDrawHistoryUseCase>())

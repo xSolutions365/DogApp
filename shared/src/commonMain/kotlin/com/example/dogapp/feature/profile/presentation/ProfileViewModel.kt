@@ -8,9 +8,12 @@ import com.example.dogapp.core.domain.draw.TodayProvider
 import com.example.dogapp.core.domain.favourite.FavouriteBreed
 import com.example.dogapp.core.domain.favourite.ObserveFavouriteBreedsUseCase
 import com.example.dogapp.core.domain.favourite.RemoveFavouriteUseCase
+import com.example.dogapp.core.domain.security.DeviceIntegrityChecker
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -19,12 +22,22 @@ class ProfileViewModel(
     observeDrawHistory: ObserveDrawHistoryUseCase,
     today: TodayProvider,
     private val removeFavourite: RemoveFavouriteUseCase,
+    integrityChecker: DeviceIntegrityChecker,
 ) : ViewModel() {
+    private val deviceCheckWarnings =
+        flow<Int?> { emit(integrityChecker.check().warningCount) }.onStart { emit(null) }
+
     val state: StateFlow<ProfileUiState> =
-        combine(observeFavouriteBreeds(), observeDrawHistory(), today.observeToday()) { favourites, draws, today ->
+        combine(
+            observeFavouriteBreeds(),
+            observeDrawHistory(),
+            today.observeToday(),
+            deviceCheckWarnings,
+        ) { favourites, draws, today, warnings ->
             ProfileUiState(
                 favourites = favourites.map { it.toListItem() },
                 draws = draws.filter { it.draw.day.isoDate < today.isoDate }.map { it.toHistoryItem() },
+                deviceCheckWarnings = warnings,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ProfileUiState())
 

@@ -8,7 +8,10 @@ import com.example.dogapp.core.data.database.DATABASE_FILE_NAME
 import com.example.dogapp.core.data.database.DogAppDatabase
 import com.example.dogapp.core.data.datastore.PREFERENCES_FILE_NAME
 import com.example.dogapp.core.data.datastore.createPreferencesDataStore
+import com.example.dogapp.core.data.security.AndroidDeviceIntegrityChecker
 import com.example.dogapp.core.data.security.PinReportingInterceptor
+import com.example.dogapp.core.data.security.SIGNING_CERT_SHA256_PROPERTY
+import com.example.dogapp.core.domain.security.DeviceIntegrityChecker
 import com.example.dogapp.feature.identify.data.ImageLabeler
 import com.example.dogapp.feature.identify.data.LiteRtImageLabeler
 import com.example.dogapp.feature.wallet.data.BiometricPromptHost
@@ -35,6 +38,9 @@ actual val platformModule: Module =
             )
         }
         single<ImageLabeler> { LiteRtImageLabeler(androidContext()) }
+        single<DeviceIntegrityChecker> {
+            AndroidDeviceIntegrityChecker(androidContext(), getProperty(SIGNING_CERT_SHA256_PROPERTY, ""))
+        }
         single<WalletVault>(createdAtStart = true) {
             KeystoreWalletVault(androidContext(), get(), BiometricPromptHost(androidContext()))
         }

@@ -60,6 +60,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.biometric)
+            implementation(libs.androidx.core)
             implementation(libs.androidx.fragment)
             implementation(libs.litert)
             implementation(libs.play.services.wallet)

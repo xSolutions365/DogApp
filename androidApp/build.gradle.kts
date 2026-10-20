@@ -1,4 +1,7 @@
+import com.android.build.api.dsl.ApkSigningConfig
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.security.KeyStore
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -54,7 +57,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            buildConfigField("String", "SIGNING_CERT_SHA256", "\"${signingCertSha256(signingConfig)}\"")
+        }
         release {
+            buildConfigField("String", "SIGNING_CERT_SHA256", "\"${signingCertSha256(signingConfig)}\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -82,4 +89,12 @@ ktlint {
     filter {
         exclude { element -> element.file.path.contains("${File.separator}build${File.separator}") }
     }
+}
+
+fun signingCertSha256(config: ApkSigningConfig?): String {
+    val storeFile = config?.storeFile?.takeIf { it.exists() } ?: return ""
+    val keyStore = KeyStore.getInstance(config.storeType ?: KeyStore.getDefaultType())
+    storeFile.inputStream().use { keyStore.load(it, config.storePassword?.toCharArray()) }
+    val certificate = keyStore.getCertificate(config.keyAlias) ?: return ""
+    return MessageDigest.getInstance("SHA-256").digest(certificate.encoded).joinToString("") { "%02X".format(it) }
 }

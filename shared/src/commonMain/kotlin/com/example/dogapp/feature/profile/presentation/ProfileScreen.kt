@@ -32,6 +32,9 @@ import com.example.dogapp.core.presentation.components.platformDisclosureIcon
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.breed_unavailable
 import dogapp.shared.generated.resources.destination_profile
+import dogapp.shared.generated.resources.profile_device_checks
+import dogapp.shared.generated.resources.profile_device_checks_none
+import dogapp.shared.generated.resources.profile_device_checks_warnings
 import dogapp.shared.generated.resources.profile_donations
 import dogapp.shared.generated.resources.profile_draws
 import dogapp.shared.generated.resources.profile_draws_empty
@@ -43,6 +46,7 @@ import dogapp.shared.generated.resources.profile_feed_me
 import dogapp.shared.generated.resources.profile_support_charities
 import dogapp.shared.generated.resources.profile_wallet
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -52,6 +56,7 @@ fun ProfileRoot(
     onSupportCharitiesClick: () -> Unit,
     onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
+    onDeviceChecksClick: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -62,6 +67,7 @@ fun ProfileRoot(
         onSupportCharitiesClick = onSupportCharitiesClick,
         onDonationsClick = onDonationsClick,
         onWalletClick = onWalletClick,
+        onDeviceChecksClick = onDeviceChecksClick,
     )
 }
 
@@ -73,6 +79,7 @@ fun ProfileScreen(
     onSupportCharitiesClick: () -> Unit,
     onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
+    onDeviceChecksClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -149,6 +156,20 @@ fun ProfileScreen(
         item(key = "wallet") {
             FeedMeRow(text = stringResource(Res.string.profile_wallet), onClick = onWalletClick)
         }
+        item(key = "device-checks") {
+            val warnings = state.deviceCheckWarnings
+            FeedMeRow(
+                text = stringResource(Res.string.profile_device_checks),
+                onClick = onDeviceChecksClick,
+                summary =
+                    when {
+                        warnings == null -> null
+                        warnings == 0 -> stringResource(Res.string.profile_device_checks_none)
+                        else -> pluralStringResource(Res.plurals.profile_device_checks_warnings, warnings, warnings)
+                    },
+                isWarning = (warnings ?: 0) > 0,
+            )
+        }
     }
 }
 
@@ -157,6 +178,8 @@ private fun FeedMeRow(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    summary: String? = null,
+    isWarning: Boolean = false,
 ) {
     Row(
         modifier =
@@ -171,6 +194,14 @@ private fun FeedMeRow(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f),
         )
+        summary?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+        }
         Icon(
             painter = painterResource(platformDisclosureIcon),
             contentDescription = null,

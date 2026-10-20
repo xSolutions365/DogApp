@@ -155,6 +155,27 @@
     <string name="donations_empty">No donations yet.</string>
     <string name="donations_see_charities">See dog charities</string>
     <string name="profile_donations">Donations</string>
+    <string name="profile_device_checks">Device checks</string>
+    <string name="profile_device_checks_none">No warnings</string>
+    <plurals name="profile_device_checks_warnings">
+        <item quantity="one">%1$d warning</item>
+        <item quantity="other">%1$d warnings</item>
+    </plurals>
+    <string name="device_checks_intro">These checks run on the device and are easy to bypass. They never block anything. Real apps confirm a device's integrity with a server (Play Integrity on Android, App Attest on iOS).</string>
+    <string name="device_checks_warning">Warning</string>
+    <string name="device_checks_not_found">Not found</string>
+    <string name="device_checks_not_detected">Not detected</string>
+    <string name="device_check_root_or_magisk">Root or Magisk</string>
+    <string name="device_check_test_keys_build">Test-keys build</string>
+    <string name="device_check_app_signature">App signature</string>
+    <string name="device_check_app_signature_ok">Matches</string>
+    <string name="device_check_emulator">Emulator</string>
+    <string name="device_check_jailbreak_files">Jailbreak files</string>
+    <string name="device_check_sandbox_write">Write outside the sandbox</string>
+    <string name="device_check_sandbox_write_ok">Blocked</string>
+    <string name="device_check_simulator">Simulator</string>
+    <string name="device_check_debugger">Debugger</string>
+    <string name="device_check_debugger_ok">Not attached</string>
     <string name="donate_error_google_pay">Google Pay couldn't take the payment. Try again or pay with a card.</string>
     <string name="wallet_prompt_unlock_title">Unlock your wallet</string>
     <string name="wallet_prompt_set_up_title">Set up your wallet</string>

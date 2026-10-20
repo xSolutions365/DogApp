@@ -29,6 +29,7 @@ import com.example.dogapp.app.di.drawModule
 import com.example.dogapp.app.di.favouriteModule
 import com.example.dogapp.app.di.paymentModule
 import com.example.dogapp.app.navigation.NavigationStyle
+import com.example.dogapp.core.data.security.IosDeviceIntegrityChecker
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
@@ -38,6 +39,7 @@ import com.example.dogapp.core.domain.draw.DrawDay
 import com.example.dogapp.core.domain.draw.TodayProvider
 import com.example.dogapp.core.domain.favourite.FavouriteRecord
 import com.example.dogapp.core.domain.favourite.FavouritesRepository
+import com.example.dogapp.core.domain.security.DeviceIntegrityChecker
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.donate.di.donateModule
@@ -150,6 +152,7 @@ class AppShellTest {
                                 single<TodayProvider> { today }
                                 single<WalletVault> { FakeWalletVault() }
                                 single<DonationRepository> { FakeDonationRepository() }
+                                single<DeviceIntegrityChecker> { IosDeviceIntegrityChecker() }
                                 single<ImageLabeler> {
                                     object : ImageLabeler {
                                         override suspend fun label(photo: ByteArray) = Outcome.Success(emptyMap<String, Float>())
@@ -343,6 +346,27 @@ class AppShellTest {
 
                 performPredictiveBack(backInput)
                 onNode(screenTitle("Donations")).assertExists()
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Profile")).assertExists()
+            }
+        }
+    }
+
+    @Test
+    fun deviceChecksFromProfileShowTheSimulatorWarningOnTheProfileTabAndBackReturns() {
+        NavigationStyle.entries.forEach { style ->
+            runComposeUiTest {
+                val backInput = setShell(style)
+                onNode(tab("Profile")).performClick()
+
+                onNode(verticalList).performScrollToNode(hasText("Device checks"))
+                onNode(hasText("1 warning")).assertExists()
+                onNode(hasText("Device checks")).performClick()
+                onNode(screenTitle("Device checks")).assertExists()
+                onNode(hasText("Simulator") and hasText("Warning")).assertExists()
+                onNode(hasText("Jailbreak files") and hasText("Not found")).assertExists()
+                onNode(tab("Profile")).assertIsSelected()
+
                 performPredictiveBack(backInput)
                 onNode(screenTitle("Profile")).assertExists()
             }

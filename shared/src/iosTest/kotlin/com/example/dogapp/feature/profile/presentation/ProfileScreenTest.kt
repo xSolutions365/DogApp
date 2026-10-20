@@ -1,5 +1,8 @@
 package com.example.dogapp.feature.profile.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -25,6 +28,7 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
+                        onDeviceChecksClick = {},
                     )
                 }
             }
@@ -54,6 +58,7 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
+                        onDeviceChecksClick = {},
                     )
                 }
             }
@@ -102,6 +107,7 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
+                        onDeviceChecksClick = {},
                     )
                 }
             }
@@ -127,6 +133,7 @@ class ProfileScreenTest {
                         onSupportCharitiesClick = {},
                         onDonationsClick = {},
                         onWalletClick = {},
+                        onDeviceChecksClick = {},
                     )
                 }
             }
@@ -135,20 +142,23 @@ class ProfileScreenTest {
         }
 
     @Test
-    fun feedMeSectionAtTheBottomOpensTheDogCharitiesTheDonationsAndTheWallet() =
+    fun feedMeSectionAtTheBottomOpensTheDogCharitiesTheDonationsTheWalletAndTheDeviceChecks() =
         runComposeUiTest {
             var charitiesOpened = 0
             var donationsOpened = 0
             var walletOpened = 0
+            var deviceChecksOpened = 0
+            var state by mutableStateOf(ProfileUiState(favourites = emptyList(), draws = emptyList(), deviceCheckWarnings = 2))
             setContent {
                 DogAppTheme {
                     ProfileScreen(
-                        state = ProfileUiState(favourites = emptyList(), draws = emptyList()),
+                        state = state,
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = { charitiesOpened++ },
                         onDonationsClick = { donationsOpened++ },
                         onWalletClick = { walletOpened++ },
+                        onDeviceChecksClick = { deviceChecksOpened++ },
                     )
                 }
             }
@@ -157,16 +167,27 @@ class ProfileScreenTest {
             onNodeWithText("Support dog charities").performClick()
             onNodeWithText("Donations").performClick()
             onNodeWithText("Wallet").performClick()
+            onNodeWithText("2 warnings").assertExists()
+            onNodeWithText("Device checks").performClick()
             val rowTops =
                 listOf(
                     "Support dog charities",
                     "Donations",
                     "Wallet",
+                    "Device checks",
                 ).map { onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top }
             assertEquals(rowTops.sorted(), rowTops)
+
+            state = state.copy(deviceCheckWarnings = 1)
+            waitForIdle()
+            onNodeWithText("1 warning").assertExists()
+            state = state.copy(deviceCheckWarnings = 0)
+            waitForIdle()
+            onNodeWithText("No warnings").assertExists()
 
             assertEquals(1, charitiesOpened)
             assertEquals(1, donationsOpened)
             assertEquals(1, walletOpened)
+            assertEquals(1, deviceChecksOpened)
         }
 }

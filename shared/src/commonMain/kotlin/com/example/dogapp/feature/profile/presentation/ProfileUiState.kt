@@ -3,6 +3,7 @@ package com.example.dogapp.feature.profile.presentation
 data class ProfileUiState(
     val favourites: List<FavouriteListItem>? = null,
     val draws: List<DrawHistoryItem>? = null,
+    val deviceCheckWarnings: Int? = null,
 )
 
 sealed interface FavouriteListItem {
