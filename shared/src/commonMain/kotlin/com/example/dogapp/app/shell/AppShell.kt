@@ -2,6 +2,8 @@ package com.example.dogapp.app.shell
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -27,6 +29,7 @@ import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
 import com.example.dogapp.feature.breeddetail.presentation.breedDetailEntries
 import com.example.dogapp.feature.donate.presentation.CharitiesRoute
 import com.example.dogapp.feature.donate.presentation.CharityRoute
+import com.example.dogapp.feature.donate.presentation.DonationsRoute
 import com.example.dogapp.feature.donate.presentation.donateEntries
 import com.example.dogapp.feature.explore.presentation.exploreEntries
 import com.example.dogapp.feature.home.presentation.HomeLayout
@@ -60,6 +63,14 @@ fun AppShell(
             onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
         )
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val launchDonate =
+        rememberDonateLauncher(
+            navigationStyle = navigationStyle,
+            snackbarHostState = snackbarHostState,
+            onOpenWallet = { navigator.navigate(WalletRoute) },
+        )
+
     val launchAddCard =
         rememberAddCardLauncher(
             navigationStyle = navigationStyle,
@@ -81,11 +92,17 @@ fun AppShell(
             profileEntries(
                 onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) },
                 onSupportCharitiesClick = { navigator.navigate(CharitiesRoute) },
+                onDonationsClick = { navigator.navigate(DonationsRoute) },
                 onWalletClick = { navigator.navigate(WalletRoute) },
             )
             breedDetailEntries(onBack = { navigator.goBack() })
             identifyEntries(onBreedClick = { breedId -> navigator.navigate(BreedDetailRoute(breedId)) }, onBack = { navigator.goBack() })
-            donateEntries(onCharityClick = { charityId -> navigator.navigate(CharityRoute(charityId)) }, onBack = { navigator.goBack() })
+            donateEntries(
+                onCharityClick = { charityId -> navigator.navigate(CharityRoute(charityId)) },
+                onDonateClick = launchDonate,
+                onSeeCharitiesClick = { navigator.navigate(CharitiesRoute) },
+                onBack = { navigator.goBack() },
+            )
             walletEntries(
                 layout =
                     when (navigationStyle) {
@@ -118,6 +135,7 @@ fun AppShell(
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             when (navigationStyle) {
                 NavigationStyle.Material -> {

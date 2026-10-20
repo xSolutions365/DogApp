@@ -2,6 +2,7 @@ package com.example.dogapp.testing
 
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.feature.wallet.data.WalletVault
+import com.example.dogapp.feature.wallet.domain.WalletAccess
 import com.example.dogapp.feature.wallet.domain.WalletChange
 import com.example.dogapp.feature.wallet.domain.WalletError
 
@@ -11,10 +12,15 @@ class FakeWalletVault : WalletVault {
     var authentications = 0
         private set
     val writes = mutableListOf<WalletChange>()
+    val reads = mutableListOf<WalletAccess>()
 
     override suspend fun exists(): Boolean = contents != null
 
-    override suspend fun read(): Outcome<ByteArray, WalletError> = authenticate { Outcome.Success(checkNotNull(contents)) }
+    override suspend fun read(access: WalletAccess): Outcome<ByteArray, WalletError> =
+        authenticate {
+            reads += access
+            Outcome.Success(checkNotNull(contents))
+        }
 
     override suspend fun write(
         contents: ByteArray,

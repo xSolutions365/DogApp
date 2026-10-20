@@ -9,6 +9,9 @@ import kotlinx.serialization.modules.polymorphic
 data object CharitiesRoute : NavKey
 
 @Serializable
+data object DonationsRoute : NavKey
+
+@Serializable
 data class CharityRoute(
     val charityId: String,
 ) : NavKey
@@ -18,5 +21,6 @@ val donateNavigationSerializers =
         polymorphic(NavKey::class) {
             subclass(CharitiesRoute::class, CharitiesRoute.serializer())
             subclass(CharityRoute::class, CharityRoute.serializer())
+            subclass(DonationsRoute::class, DonationsRoute.serializer())
         }
     }

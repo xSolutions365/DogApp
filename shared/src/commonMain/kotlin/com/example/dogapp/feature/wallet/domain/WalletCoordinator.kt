@@ -24,9 +24,28 @@ class WalletCoordinator(
     suspend fun unlock(): Outcome<Wallet, WalletError> =
         mutex.withLock {
             repository
-                .unlock()
+                .unlock(WalletAccess.Unlock)
                 .onSuccess { wallet -> mutableStatus.value = WalletStatus.Unlocked(wallet) }
                 .onFailure { error -> handleFailure(error) }
+        }
+
+    suspend fun confirmPayment(cardId: String): Outcome<SavedCard, WalletError> =
+        mutex.withLock {
+            if (status.value !is WalletStatus.Unlocked) return@withLock Outcome.Failure(WalletError.Locked)
+            when (val read = repository.unlock(WalletAccess.ConfirmPayment)) {
+                is Outcome.Failure -> {
+                    handleFailure(read.error)
+                    read
+                }
+
+                is Outcome.Success -> {
+                    mutableStatus.value = WalletStatus.Unlocked(read.data)
+                    read.data.cards
+                        .firstOrNull { it.id == cardId }
+                        ?.let { Outcome.Success(it) }
+                        ?: Outcome.Failure(WalletError.CardNotFound)
+                }
+            }
         }
 
     suspend fun addCard(card: CardValidation.Valid): Outcome<Wallet, WalletError> =

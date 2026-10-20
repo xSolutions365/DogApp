@@ -10,4 +10,5 @@ val databaseModule =
         single { get<DogAppDatabase>().sourcedBreedDao() }
         single { get<DogAppDatabase>().favouriteBreedDao() }
         single { get<DogAppDatabase>().dailyDrawDao() }
+        single { get<DogAppDatabase>().donationDao() }
     }

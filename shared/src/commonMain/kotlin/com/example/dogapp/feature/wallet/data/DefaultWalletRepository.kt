@@ -6,6 +6,7 @@ import com.example.dogapp.feature.wallet.domain.CardBrand
 import com.example.dogapp.feature.wallet.domain.CardExpiry
 import com.example.dogapp.feature.wallet.domain.SavedCard
 import com.example.dogapp.feature.wallet.domain.Wallet
+import com.example.dogapp.feature.wallet.domain.WalletAccess
 import com.example.dogapp.feature.wallet.domain.WalletChange
 import com.example.dogapp.feature.wallet.domain.WalletError
 import com.example.dogapp.feature.wallet.domain.WalletRepository
@@ -33,12 +34,12 @@ class DefaultWalletRepository(
         val expiryYear: Int,
     )
 
-    override suspend fun unlock(): Outcome<Wallet, WalletError> {
+    override suspend fun unlock(access: WalletAccess): Outcome<Wallet, WalletError> {
         if (!vault.exists()) {
             val wallet = Wallet(createdAt = Instant.fromEpochMilliseconds(clock.now().toEpochMilliseconds()))
             return vault.write(encode(wallet), WalletChange.SetUp).map { wallet }
         }
-        return vault.read().map(::decode)
+        return vault.read(access).map(::decode)
     }
 
     override suspend fun save(

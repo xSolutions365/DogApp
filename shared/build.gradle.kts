@@ -62,6 +62,8 @@ kotlin {
             implementation(libs.androidx.biometric)
             implementation(libs.androidx.fragment)
             implementation(libs.litert)
+            implementation(libs.play.services.wallet)
+            implementation(libs.compose.pay.button)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

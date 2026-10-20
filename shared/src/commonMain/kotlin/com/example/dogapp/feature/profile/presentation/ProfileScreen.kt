@@ -32,6 +32,7 @@ import com.example.dogapp.core.presentation.components.platformDisclosureIcon
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.breed_unavailable
 import dogapp.shared.generated.resources.destination_profile
+import dogapp.shared.generated.resources.profile_donations
 import dogapp.shared.generated.resources.profile_draws
 import dogapp.shared.generated.resources.profile_draws_empty
 import dogapp.shared.generated.resources.profile_favourite_remove
@@ -49,6 +50,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ProfileRoot(
     onBreedClick: (String) -> Unit,
     onSupportCharitiesClick: () -> Unit,
+    onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
@@ -58,6 +60,7 @@ fun ProfileRoot(
         onAction = viewModel::onAction,
         onBreedClick = onBreedClick,
         onSupportCharitiesClick = onSupportCharitiesClick,
+        onDonationsClick = onDonationsClick,
         onWalletClick = onWalletClick,
     )
 }
@@ -68,6 +71,7 @@ fun ProfileScreen(
     onAction: (ProfileAction) -> Unit,
     onBreedClick: (String) -> Unit,
     onSupportCharitiesClick: () -> Unit,
+    onDonationsClick: () -> Unit,
     onWalletClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -138,6 +142,9 @@ fun ProfileScreen(
         }
         item(key = "support-charities") {
             FeedMeRow(text = stringResource(Res.string.profile_support_charities), onClick = onSupportCharitiesClick)
+        }
+        item(key = "donations") {
+            FeedMeRow(text = stringResource(Res.string.profile_donations), onClick = onDonationsClick)
         }
         item(key = "wallet") {
             FeedMeRow(text = stringResource(Res.string.profile_wallet), onClick = onWalletClick)

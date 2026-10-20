@@ -28,6 +28,7 @@ val appModules: List<Module> =
         identifyModule,
         donateModule,
         walletModule,
+        paymentModule,
     )
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) =

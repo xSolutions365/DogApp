@@ -12,4 +12,6 @@ sealed interface WalletError : DomainError {
     data object KeyInvalidated : WalletError
 
     data object Locked : WalletError
+
+    data object CardNotFound : WalletError
 }

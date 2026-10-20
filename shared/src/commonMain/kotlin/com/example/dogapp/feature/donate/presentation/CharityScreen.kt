@@ -3,9 +3,11 @@ package com.example.dogapp.feature.donate.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dogapp.core.presentation.components.BackTopBar
 import dogapp.shared.generated.resources.Res
+import dogapp.shared.generated.resources.donate_action
 import dogapp.shared.generated.resources.donate_charities_title
 import dogapp.shared.generated.resources.donate_charity_about
 import dogapp.shared.generated.resources.donate_charity_not_found
@@ -27,16 +30,18 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun CharityRoot(
     charityId: String,
+    onDonateClick: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: CharityViewModel = koinViewModel { parametersOf(charityId) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    CharityScreen(state = state, onBack = onBack)
+    CharityScreen(state = state, onDonateClick = { onDonateClick(charityId) }, onBack = onBack)
 }
 
 @Composable
 fun CharityScreen(
     state: CharityUiState,
+    onDonateClick: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -64,6 +69,9 @@ fun CharityScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+                Button(onClick = onDonateClick, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(stringResource(Res.string.donate_action))
                 }
                 Text(
                     text = stringResource(Res.string.donate_charity_about),

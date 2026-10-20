@@ -149,4 +149,28 @@ class WalletCoordinatorTest {
 
             assertEquals(Outcome.Success(Wallet(firstSetUp)), coordinator().unlock())
         }
+
+    @Test
+    fun confirmingAPaymentAsksForTheBiometricAgainAndReturnsTheCard() =
+        runTest {
+            val coordinator = coordinator()
+            assertEquals(Outcome.Failure(WalletError.Locked), coordinator.confirmPayment("card-1"))
+            assertEquals(0, vault.authentications)
+
+            coordinator.unlock()
+            coordinator.addCard(visa)
+            val saved = SavedCard(id = "card-1", brand = CardBrand.Visa, last4 = "4242", expiry = CardExpiry(month = 12, year = 2028))
+
+            assertEquals(Outcome.Success(saved), coordinator.confirmPayment("card-1"))
+            assertEquals(listOf(WalletAccess.ConfirmPayment), vault.reads)
+            assertEquals(Outcome.Failure(WalletError.CardNotFound), coordinator.confirmPayment("card-9"))
+
+            vault.nextFailure = WalletError.AuthenticationCancelled
+            assertEquals(Outcome.Failure(WalletError.AuthenticationCancelled), coordinator.confirmPayment("card-1"))
+            assertEquals(WalletStatus.Unlocked(Wallet(firstSetUp, listOf(saved))), coordinator.status.value)
+
+            vault.nextFailure = WalletError.KeyInvalidated
+            assertEquals(Outcome.Failure(WalletError.KeyInvalidated), coordinator.confirmPayment("card-1"))
+            assertEquals(WalletStatus.KeyInvalidated, coordinator.status.value)
+        }
 }

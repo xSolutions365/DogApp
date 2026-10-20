@@ -5,11 +5,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import com.example.dogapp.core.domain.Outcome
+import com.example.dogapp.feature.wallet.domain.WalletAccess
 import com.example.dogapp.feature.wallet.domain.WalletChange
 import com.example.dogapp.feature.wallet.domain.WalletError
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.wallet_prompt_cancel
-import dogapp.shared.generated.resources.wallet_prompt_unlock_title
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -75,10 +75,10 @@ class KeychainWalletVault(
 ) : WalletVault {
     override suspend fun exists(): Boolean = dataStore.data.first()[STORED] == true
 
-    override suspend fun read(): Outcome<ByteArray, WalletError> {
+    override suspend fun read(access: WalletAccess): Outcome<ByteArray, WalletError> {
         val context = authenticationContext()
         biometricAvailability(context)?.let { return Outcome.Failure(it) }
-        context.localizedReason = getString(Res.string.wallet_prompt_unlock_title)
+        context.localizedReason = getString(access.promptTitle)
         return withContext(Dispatchers.IO) {
             memScoped {
                 val result = alloc<CFTypeRefVar>()

@@ -23,6 +23,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = {},
+                        onDonationsClick = {},
                         onWalletClick = {},
                     )
                 }
@@ -51,6 +52,7 @@ class ProfileScreenTest {
                         onAction = { actions += it },
                         onBreedClick = { opened += it },
                         onSupportCharitiesClick = {},
+                        onDonationsClick = {},
                         onWalletClick = {},
                     )
                 }
@@ -98,6 +100,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = { opened += it },
                         onSupportCharitiesClick = {},
+                        onDonationsClick = {},
                         onWalletClick = {},
                     )
                 }
@@ -122,6 +125,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = {},
+                        onDonationsClick = {},
                         onWalletClick = {},
                     )
                 }
@@ -131,9 +135,10 @@ class ProfileScreenTest {
         }
 
     @Test
-    fun feedMeSectionAtTheBottomOpensTheDogCharitiesAndTheWallet() =
+    fun feedMeSectionAtTheBottomOpensTheDogCharitiesTheDonationsAndTheWallet() =
         runComposeUiTest {
             var charitiesOpened = 0
+            var donationsOpened = 0
             var walletOpened = 0
             setContent {
                 DogAppTheme {
@@ -142,6 +147,7 @@ class ProfileScreenTest {
                         onAction = {},
                         onBreedClick = {},
                         onSupportCharitiesClick = { charitiesOpened++ },
+                        onDonationsClick = { donationsOpened++ },
                         onWalletClick = { walletOpened++ },
                     )
                 }
@@ -149,10 +155,18 @@ class ProfileScreenTest {
 
             onNode(isHeading() and hasText("Feed me")).assertExists()
             onNodeWithText("Support dog charities").performClick()
-
+            onNodeWithText("Donations").performClick()
             onNodeWithText("Wallet").performClick()
+            val rowTops =
+                listOf(
+                    "Support dog charities",
+                    "Donations",
+                    "Wallet",
+                ).map { onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top }
+            assertEquals(rowTops.sorted(), rowTops)
 
             assertEquals(1, charitiesOpened)
+            assertEquals(1, donationsOpened)
             assertEquals(1, walletOpened)
         }
 }

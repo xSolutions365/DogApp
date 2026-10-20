@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import com.example.dogapp.feature.breeddetail.presentation.BreedDetailRoute
 import com.example.dogapp.feature.donate.presentation.CharitiesRoute
 import com.example.dogapp.feature.donate.presentation.CharityRoute
+import com.example.dogapp.feature.donate.presentation.DonationsRoute
 import com.example.dogapp.feature.identify.presentation.IdentifyRoute
 import com.example.dogapp.feature.wallet.presentation.AddCardRoute
 import com.example.dogapp.feature.wallet.presentation.CardDetailRoute
@@ -33,6 +34,7 @@ class NavigationSerializationTest {
             IdentifyRoute,
             CharitiesRoute,
             CharityRoute("fetch-club"),
+            DonationsRoute,
             WalletRoute,
             AddCardRoute,
             CardDetailRoute("card-1"),

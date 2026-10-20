@@ -32,7 +32,11 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
 - **Profile**
   - **Favourite breeds.** If a favourite later disappears from the APIs, it's kept, shown by its saved name as "No longer available", and can be removed.
   - **Previous breeds of the day**, newest first. Today's draw joins the list once the day is over.
-  - **Feed me** (at the bottom): **Support dog charities** opens a list of dog charities, and each one has a detail page. **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS), where you can add and remove demo cards. See [Mock payments and security setup](#mock-payments-and-security-setup).
+  - **Feed me** (at the bottom):
+    - **Support dog charities** opens a list of dog charities. Each one has a detail page with a **Donate** button: pick £3, £5, £10, £20 or another amount (£1 to £500), then pay with a saved card or, on Android, Google Pay.
+    - **Donations** lists your donations, newest first, with how each was paid ("Paid with Visa •••• 4242", "Paid with Google Pay (Visa •••• 1111)"). With none yet, it links to the charities.
+    - **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS), where you can add and remove demo cards.
+    - See [Mock payments and security setup](#mock-payments-and-security-setup).
 - **Images**
   - A dog placeholder sits under every photo while it loads.
   - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
@@ -64,7 +68,18 @@ DogApp is a demo playground for learning how payments and security work on each 
     - **Adding:** Android: an "Add card" extended FAB opens a full-screen form with "Save card". iOS: an "Add Card" bar button opens a native page sheet with Cancel / Add.
     - **Removing:** Android: tap a card for its detail, then "Remove card". iOS: swipe a row left to "Remove" (also a VoiceOver action).
     - **Every change re-encrypts the wallet**, so saving or removing a card asks for the biometric ("Save card to your wallet" / "Remove card from your wallet"). A cancel changes nothing.
-  - **Testing on devices:** Android emulator: set a screen lock and add a fingerprint in Settings, using `adb -e emu finger touch 1` to touch the sensor (another id fails). iOS simulator: Features → Face ID → Enrolled, then Matching / Non-matching Face. Untick and tick Enrolled again to simulate a new enrolment.
+- **Donations are confirmed locally.** `DemoPaymentProcessor` stands in for a payment provider and approves every donation, except:
+  - amounts outside £1 to £500
+  - the test card ending `0002` (for example 4000 0000 0000 0002), which is declined so the error can be tried
+- **Donating:**
+  - **Android:** "Donate" opens a Material bottom sheet with amount chips, the saved cards and the Google Pay button, and a success closes it with a "Thank you" snackbar.
+  - **iOS:** "Donate" opens a native page sheet with checkmark rows, which thanks you inside the sheet with Done.
+  - **With a saved card:** a locked wallet first shows "Unlock wallet to pay with a card". "Donate £5" then asks for the biometric again ("Confirm your donation") as the payment confirmation, and reads the card fresh from the wallet. With no cards, "Add a card in your wallet" leads to the wallet.
+  - **Google Pay (Android only)** runs in Google's TEST environment (`WalletConstants.ENVIRONMENT_TEST`) with the `example` gateway, so a test token comes back and **nothing is ever charged**. No merchant account is needed. The button shows only when Google Pay says it's ready. The Google Pay sheet needs a device or emulator with Play services that is signed in to a Google account.
+  - **Apple Pay isn't available.** It needs a Merchant ID entitlement, which needs a paid Apple developer account, so iOS offers saved cards only.
+  - **Store rules**, for reference: Apple lets only approved nonprofits take donations in-app (and they must offer Apple Pay), and Google Play doesn't allow Play Billing for tax-exempt donations. Neither applies here, because nothing is real.
+- **The donation history** is kept on the device in Room (the `donation` table): charity, amount, how it was paid and when. No card number is ever stored.
+- **Testing on devices:** Android emulator: set a screen lock and add a fingerprint in Settings, using `adb -e emu finger touch 1` to touch the sensor (another id fails). iOS simulator: Features → Face ID → Enrolled, then Matching / Non-matching Face. Untick and tick Enrolled again to simulate a new enrolment.
 
 ## Data sources
 
@@ -179,15 +194,17 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate, wall
   - Features expose `EntryProviderScope<NavKey>.xEntries(...)`.
   - Navigation is passed in as lambdas from `app`.
   - Every route is `@Serializable` and registered in that feature's serializers module.
-- **Platform variants** come from `NavigationStyle` (Material on Android, Cupertino on iOS), passed down from `AppShell`. Features expose their variants as plain parameters (`HomeLayout`, `IdentifyPresentation`, `WalletLayout`), and `app` maps the style onto them, so iOS UI tests render both. Truly native pieces sit behind `expect`/`actual` in `app`: `rememberIdentifyLauncher` pushes the identify screen on Android and presents a `UISheetPresentationController` hosting a `ComposeUIViewController` on iOS.
+- **Platform variants** come from `NavigationStyle` (Material on Android, Cupertino on iOS), passed down from `AppShell`. Features expose their variants as plain parameters (`HomeLayout`, `IdentifyPresentation`, `WalletLayout`, `DonatePresentation`), and `app` maps the style onto them, so iOS UI tests render both. Truly native pieces sit behind `expect`/`actual` in `app`: `rememberIdentifyLauncher` pushes the identify screen on Android and presents a `UISheetPresentationController` hosting a `ComposeUIViewController` on iOS, and `rememberDonateLauncher` shows a Material bottom sheet (Android, and the Material style on iOS) or a UIKit page sheet (iOS). Google Pay is `rememberGooglePayLauncher` in `feature/donate`: a real launcher on Android and `null` on iOS.
+- **Features talk through ports.** The donate flow needs the wallet's cards, but no feature may import another. So `feature/donate` declares the `PaymentCards` port (list the saved cards, unlock, confirm one with a biometric), and `app/di/WalletPaymentCards` implements it over the wallet's `WalletCoordinator`.
 - **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows. Sources that need a key are bound only when their key is set.
 - **The first breed sync** is owned by the app-wide `BreedSyncCoordinator`. It starts at launch, Home and Explore share it, and it syncs only when the database is empty.
 
 **Storage:**
-- **Room** (`DogAppDatabase`, version 4, with auto-migrations; schemas in `shared/schemas/`). Tables:
+- **Room** (`DogAppDatabase`, version 5, with auto-migrations; schemas in `shared/schemas/`). Tables:
   - `sourced_breed`: each source's breed data, which the sync replaces
   - `favourite_breed`: owned by the user, never touched by sync
   - `daily_draw`: one row per day; the first draw of a day is the one kept
+  - `donation`: the donation history, owned by the user (charity, amount in pence, how it was paid, when)
 - **DataStore Preferences** (`dogapp.preferences_pb`) holds small key-value data. So far that's the wallet: the encrypted wallet on Android, and the "wallet exists" flag on iOS.
 
 ## Tools and libraries
@@ -205,6 +222,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate, wall
 | Logging | Kermit (also routes Koin and Ktor logs) | 2.2.0 |
 | Dates | kotlinx-datetime | 0.8.0 |
 | On-device ML | LiteRT `CompiledModel` (Android) / Core ML + Vision (iOS) | 2.3.0 / system |
+| Google Pay (Android) | play-services-wallet + Compose pay button | 20.0.0 / 1.2.0 |
 | Biometrics | androidx.biometric + androidx.fragment (Android) / LocalAuthentication + Keychain (iOS) | 1.1.0 / 1.9.1 / system |
 | Coroutines | kotlinx-coroutines (+ test) | 1.11.0 |
 | Build secrets | BuildKonfig | 0.23.0 |
@@ -225,4 +243,5 @@ All versions are in `gradle/libs.versions.toml`.
 - **Koin `verify()`** doesn't see `get()` calls inside definition lambdas. That's why `KoinGraphTest` on iOS also resolves the whole graph against the real platform module.
 - **Breed recognition model:** MobileNetV2 trained on ImageNet (Apache 2.0, from the TensorFlow models). Android ships the float TFLite model and its 1,001 labels in `androidApp/src/main/assets/` (stored uncompressed); iOS ships Apple's FP16 Core ML conversion as `iosApp/iosApp/MobileNetV2.mlmodel`, which Xcode compiles into the app. The two builds of the model give slightly different scores for the same photo. Core ML labels list synonyms after a comma (`"Maltese dog, Maltese terrier, Maltese"`), so only the first name is used. The 118 dog labels are matched to breeds by normalised name, plus an alias table (`imageNetBreedAliases`).
 - **LiteRT manifest entries:** LiteRT 2.3.0 brings Play services and WorkManager (with their `WAKE_LOCK`, `ACCESS_NETWORK_STATE` and `RECEIVE_BOOT_COMPLETED` permissions), and declares two foreground-service permissions for downloading models. The app bundles its model, so `AndroidManifest.xml` removes the two foreground-service permissions.
+- **Google Pay button:** the Compose pay button (`com.google.pay.button:compose-pay-button`, on Maven Central) brings the Compose Material 2 library at runtime, and its Play services view logs `ThemeUtils: … is an AppCompat widget that can only be used with a Theme.AppCompat theme` because the app theme isn't AppCompat. The button still renders correctly.
 - **Day boundary:** "today" is the device's local calendar date. Changing the device clock can reveal an extra breed, which is acceptable for this feature.

@@ -46,15 +46,19 @@ class CharityScreensTest {
     fun charityDetailShowsItsStoryOrSaysItIsUnavailable() =
         runComposeUiTest {
             var state: CharityUiState by mutableStateOf(CharityUiState.Loaded(testCharity("fetch-club", "Fetch Club")))
-            setContent { DogAppTheme { CharityScreen(state = state, onBack = {}) } }
+            var donateClicks = 0
+            setContent { DogAppTheme { CharityScreen(state = state, onDonateClick = { donateClicks++ }, onBack = {}) } }
 
             onNodeWithText("Fetch Club").assertExists()
             onNodeWithText("Tagline of Fetch Club").assertExists()
             onNodeWithText("About Fetch Club").assertExists()
+            onNodeWithText("Donate").performClick()
+            assertEquals(1, donateClicks)
 
             state = CharityUiState.NotFound
             waitForIdle()
 
             onNodeWithText("This charity isn't available.").assertExists()
+            onNodeWithText("Donate").assertDoesNotExist()
         }
 }

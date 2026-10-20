@@ -27,6 +27,7 @@ import com.example.dogapp.app.di.applicationScopeModule
 import com.example.dogapp.app.di.breedModule
 import com.example.dogapp.app.di.drawModule
 import com.example.dogapp.app.di.favouriteModule
+import com.example.dogapp.app.di.paymentModule
 import com.example.dogapp.app.navigation.NavigationStyle
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
@@ -40,6 +41,7 @@ import com.example.dogapp.core.domain.favourite.FavouritesRepository
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.breeddetail.di.breedDetailModule
 import com.example.dogapp.feature.donate.di.donateModule
+import com.example.dogapp.feature.donate.domain.DonationRepository
 import com.example.dogapp.feature.explore.di.exploreModule
 import com.example.dogapp.feature.home.di.homeModule
 import com.example.dogapp.feature.identify.data.ImageLabeler
@@ -48,6 +50,7 @@ import com.example.dogapp.feature.profile.di.profileModule
 import com.example.dogapp.feature.wallet.data.WalletVault
 import com.example.dogapp.feature.wallet.di.walletModule
 import com.example.dogapp.testing.FakeDailyDrawRepository
+import com.example.dogapp.testing.FakeDonationRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
 import com.example.dogapp.testing.FakeTodayProvider
 import com.example.dogapp.testing.FakeWalletVault
@@ -139,12 +142,14 @@ class AppShellTest {
                             identifyModule,
                             donateModule,
                             walletModule,
+                            paymentModule,
                             module {
                                 single<BreedRepository> { emptyBreedRepository }
                                 single<FavouritesRepository> { favourites }
                                 single<DailyDrawRepository> { draws }
                                 single<TodayProvider> { today }
                                 single<WalletVault> { FakeWalletVault() }
+                                single<DonationRepository> { FakeDonationRepository() }
                                 single<ImageLabeler> {
                                     object : ImageLabeler {
                                         override suspend fun label(photo: ByteArray) = Outcome.Success(emptyMap<String, Float>())
@@ -322,6 +327,29 @@ class AppShellTest {
     }
 
     @Test
+    fun donationsFromProfileShowTheEmptyHistoryWhichLeadsToTheCharitiesAndBackReturns() {
+        NavigationStyle.entries.forEach { style ->
+            runComposeUiTest {
+                val backInput = setShell(style)
+                onNode(tab("Profile")).performClick()
+
+                onNode(verticalList).performScrollToNode(hasText("Donations"))
+                onNode(hasText("Donations")).performClick()
+                onNode(screenTitle("Donations")).assertExists()
+                onNode(hasText("No donations yet.")).assertExists()
+                onNode(hasText("See dog charities")).performClick()
+                onNode(screenTitle("Dog charities")).assertExists()
+                onNode(tab("Profile")).assertIsSelected()
+
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Donations")).assertExists()
+                performPredictiveBack(backInput)
+                onNode(screenTitle("Profile")).assertExists()
+            }
+        }
+    }
+
+    @Test
     fun walletFromProfileUnlocksOnOpenOnTheProfileTabAndBackReturns() {
         NavigationStyle.entries.forEach { style ->
             runComposeUiTest {
@@ -364,6 +392,27 @@ class AppShellTest {
             onNode(hasText("Remove card") and hasClickAction()).performClick()
             waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("No cards yet")).fetchSemanticsNodes().isNotEmpty() }
             onNode(screenTitle("Wallet")).assertExists()
+        }
+    }
+
+    @Test
+    fun donatingOnMaterialOpensTheSheetUnlocksTheWalletAndLeadsToAddingACard() {
+        runComposeUiTest {
+            setShell(NavigationStyle.Material)
+            onNode(tab("Profile")).performClick()
+            onNode(verticalList).performScrollToNode(hasText("Support dog charities"))
+            onNode(hasText("Support dog charities")).performClick()
+            onNode(verticalList).performScrollToNode(hasText("Fetch Club"))
+            onNode(hasText("Fetch Club")).performClick()
+
+            onNode(hasText("Donate") and hasClickAction()).performClick()
+            onNode(screenTitle("Donate to Fetch Club")).assertExists()
+            onNode(hasText("Unlock wallet to pay with a card")).performClick()
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("Add a card in your wallet")).fetchSemanticsNodes().isNotEmpty() }
+            onNode(hasText("Add a card in your wallet")).performClick()
+
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(screenTitle("Wallet")).fetchSemanticsNodes().isNotEmpty() }
+            onNode(hasText("No cards yet")).assertExists()
         }
     }
 }

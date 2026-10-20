@@ -15,11 +15,11 @@ import androidx.datastore.preferences.core.byteArrayPreferencesKey
 import androidx.datastore.preferences.core.edit
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.map
+import com.example.dogapp.feature.wallet.domain.WalletAccess
 import com.example.dogapp.feature.wallet.domain.WalletChange
 import com.example.dogapp.feature.wallet.domain.WalletError
 import dogapp.shared.generated.resources.Res
 import dogapp.shared.generated.resources.wallet_prompt_cancel
-import dogapp.shared.generated.resources.wallet_prompt_unlock_title
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -38,7 +38,7 @@ class KeystoreWalletVault(
 ) : WalletVault {
     override suspend fun exists(): Boolean = dataStore.data.first().contains(CIPHERTEXT)
 
-    override suspend fun read(): Outcome<ByteArray, WalletError> {
+    override suspend fun read(access: WalletAccess): Outcome<ByteArray, WalletError> {
         val stored = dataStore.data.first()
         val iv = checkNotNull(stored[IV])
         val ciphertext = checkNotNull(stored[CIPHERTEXT])
@@ -46,7 +46,7 @@ class KeystoreWalletVault(
         val cipher =
             initialisedCipher { init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, iv)) }
                 ?: return Outcome.Failure(WalletError.KeyInvalidated)
-        return authenticate(Res.string.wallet_prompt_unlock_title, cipher).map { it.doFinal(ciphertext) }
+        return authenticate(access.promptTitle, cipher).map { it.doFinal(ciphertext) }
     }
 
     override suspend fun write(
