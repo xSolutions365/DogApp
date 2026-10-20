@@ -6,12 +6,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
 import com.example.dogapp.core.presentation.theme.DogAppTheme
 import com.example.dogapp.feature.wallet.domain.CardBrand
 import com.example.dogapp.feature.wallet.domain.CardExpiry
@@ -134,6 +138,9 @@ class WalletScreenTest {
             onNodeWithText("Add Card").performClick()
             onNodeWithContentDescription("Add card").assertDoesNotExist()
             onNodeWithText("Visa •••• 4242").performClick()
+            onNodeWithText("Visa •••• 4242").performTouchInput { swipeLeft() }
+            waitForIdle()
+            onNodeWithText("Visa •••• 4242").assertLeftPositionInRootIsEqualTo(16.dp)
             val remove =
                 onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions))
                     .fetchSemanticsNode()
@@ -141,7 +148,10 @@ class WalletScreenTest {
                     .single { it.label == "Remove" }
             runOnIdle { remove.action() }
 
-            assertEquals(listOf(WalletAction.Unlock, WalletAction.SetUpAgain, WalletAction.RemoveCard("card-1")), actions)
+            assertEquals(
+                listOf(WalletAction.Unlock, WalletAction.SetUpAgain, WalletAction.RemoveCard("card-1"), WalletAction.RemoveCard("card-1")),
+                actions,
+            )
             assertEquals(1, addCardClicks)
             assertEquals(emptyList(), openedCards)
         }

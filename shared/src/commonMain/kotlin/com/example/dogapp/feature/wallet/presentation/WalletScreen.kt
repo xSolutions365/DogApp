@@ -23,6 +23,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -59,6 +62,7 @@ import dogapp.shared.generated.resources.wallet_unavailable_message
 import dogapp.shared.generated.resources.wallet_unavailable_message_ios
 import dogapp.shared.generated.resources.wallet_unlock
 import dogapp.shared.generated.resources.wallet_unlock_ios
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -241,16 +245,20 @@ private fun SwipeToRemoveCardRow(
     modifier: Modifier = Modifier,
 ) {
     val removeLabel = stringResource(Res.string.wallet_remove)
-    val swipeState =
-        rememberSwipeToDismissBoxState(
-            confirmValueChange = { value ->
-                if (value == SwipeToDismissBoxValue.EndToStart) onRemove()
-                false
-            },
-        )
+    val swipeState = rememberSwipeToDismissBoxState()
+    val scope = rememberCoroutineScope()
+    val currentOnRemove by rememberUpdatedState(onRemove)
+    val onSwipeDismiss: (SwipeToDismissBoxValue) -> Unit =
+        remember(swipeState, scope) {
+            { value ->
+                if (value == SwipeToDismissBoxValue.EndToStart) currentOnRemove()
+                scope.launch { swipeState.reset() }
+            }
+        }
     SwipeToDismissBox(
         state = swipeState,
         enableDismissFromStartToEnd = false,
+        onDismiss = onSwipeDismiss,
         backgroundContent = {
             Box(
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.error).padding(horizontal = 20.dp),
