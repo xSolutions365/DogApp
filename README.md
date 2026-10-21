@@ -254,6 +254,8 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate, wall
 
 All versions are in `gradle/libs.versions.toml`.
 
+Material 3 is the only pre-release library, by choice. No stable `material3` exists for Compose Multiplatform after 1.9, so it stays on the version JetBrains pairs with our Compose Multiplatform release (listed in that release's changelog).
+
 ## Useful notes
 
 - **Logging:** debug builds log to Logcat or OSLog under the `DogApp` tag (Koin under `Koin`, HTTP under `HttpClient`, certificate pin reports under `CertificatePins`). Release builds log nothing.
