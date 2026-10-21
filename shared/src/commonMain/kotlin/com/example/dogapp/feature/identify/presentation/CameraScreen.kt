@@ -45,6 +45,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun CameraScreen(
     access: CameraAccess?,
+    isStarting: Boolean,
     isCapturing: Boolean,
     onShutterClick: () -> Unit,
     onAllowAccess: () -> Unit,
@@ -63,6 +64,7 @@ fun CameraScreen(
             CameraAccess.Granted -> {
                 viewfinder()
                 Shutter(
+                    isStarting = isStarting,
                     isCapturing = isCapturing,
                     onClick = onShutterClick,
                     modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding().padding(bottom = 32.dp),
@@ -87,6 +89,7 @@ fun CameraScreen(
 
 @Composable
 private fun Shutter(
+    isStarting: Boolean,
     isCapturing: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -94,7 +97,7 @@ private fun Shutter(
     val label = stringResource(Res.string.camera_shutter)
     FilledIconButton(
         onClick = onClick,
-        enabled = !isCapturing,
+        enabled = !isStarting && !isCapturing,
         shape = CircleShape,
         colors =
             IconButtonDefaults.filledIconButtonColors(

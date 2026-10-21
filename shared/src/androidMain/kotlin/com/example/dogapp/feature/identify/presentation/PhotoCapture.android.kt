@@ -13,6 +13,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraState
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -20,7 +21,9 @@ import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,20 +33,28 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import co.touchlab.kermit.Logger
+import dogapp.shared.generated.resources.Res
+import dogapp.shared.generated.resources.camera_starting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.jetbrains.compose.resources.stringResource
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
@@ -87,6 +98,7 @@ private fun AndroidCamera(
     val scope = rememberCoroutineScope()
     var hasAsked by rememberSaveable { mutableStateOf(false) }
     var access by remember { mutableStateOf<CameraAccess?>(null) }
+    var isStarting by remember { mutableStateOf(true) }
     var isCapturing by remember { mutableStateOf(false) }
     val imageCapture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build() }
     val permissionLauncher =
@@ -101,6 +113,7 @@ private fun AndroidCamera(
     }
     CameraScreen(
         access = access,
+        isStarting = isStarting,
         isCapturing = isCapturing,
         onShutterClick = {
             isCapturing = true
@@ -117,7 +130,17 @@ private fun AndroidCamera(
         onChoosePhoto = onChoosePhoto,
         onClose = onClose,
     ) {
-        CameraViewfinder(imageCapture = imageCapture, modifier = Modifier.fillMaxSize())
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            CameraViewfinder(
+                imageCapture = imageCapture,
+                onOpenChange = { isOpen -> isStarting = !isOpen },
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (isStarting) {
+                val startingLabel = stringResource(Res.string.camera_starting)
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.semantics { contentDescription = startingLabel })
+            }
+        }
     }
 }
 
@@ -137,8 +160,10 @@ private fun cameraAccess(
 @Composable
 private fun CameraViewfinder(
     imageCapture: ImageCapture,
+    onOpenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currentOnOpenChange by rememberUpdatedState(onOpenChange)
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
@@ -155,10 +180,13 @@ private fun CameraViewfinder(
             } else {
                 CameraSelector.DEFAULT_FRONT_CAMERA
             }
-        provider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
+        val cameraState = provider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture).cameraInfo.cameraState
+        val stateObserver = Observer<CameraState> { state -> currentOnOpenChange(state.type == CameraState.Type.OPEN) }
+        cameraState.observe(lifecycleOwner, stateObserver)
         try {
             awaitCancellation()
         } finally {
+            cameraState.removeObserver(stateObserver)
             provider.unbind(preview, imageCapture)
         }
     }

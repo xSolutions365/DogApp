@@ -122,6 +122,7 @@
     <string name="home_choose_photo_cupertino">Choose from Library</string>
     <string name="camera_shutter">Take photo</string>
     <string name="camera_close">Close camera</string>
+    <string name="camera_starting">Starting camera</string>
     <string name="camera_access_off">Camera access is off</string>
     <string name="camera_access_off_body">DogApp needs the camera to take a photo of a dog. You can still choose a photo.</string>
     <string name="camera_allow">Allow camera</string>

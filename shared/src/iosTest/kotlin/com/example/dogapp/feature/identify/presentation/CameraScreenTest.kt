@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -22,15 +23,17 @@ import kotlin.test.assertEquals
 @OptIn(ExperimentalTestApi::class)
 class CameraScreenTest {
     @Test
-    fun theCameraShowsTheViewfinderWhenAllowedAndOtherwiseExplainsWithAWayForward() =
+    fun theCameraShowsTheViewfinderWhenAllowedOffersTheShutterOnceStartedAndOtherwiseExplainsWithAWayForward() =
         runComposeUiTest {
             val clicks = mutableListOf<String>()
             var access by mutableStateOf<CameraAccess?>(null)
+            var isStarting by mutableStateOf(true)
             var isCapturing by mutableStateOf(false)
             setContent {
                 DogAppTheme {
                     CameraScreen(
                         access = access,
+                        isStarting = isStarting,
                         isCapturing = isCapturing,
                         onShutterClick = { clicks += "shutter" },
                         onAllowAccess = { clicks += "allow" },
@@ -50,7 +53,10 @@ class CameraScreenTest {
             access = CameraAccess.Granted
             waitForIdle()
             onNodeWithTag("viewfinder").assertExists()
-            onNodeWithContentDescription("Take photo").performClick()
+            onNodeWithContentDescription("Take photo").assertIsNotEnabled().performClick()
+            isStarting = false
+            waitForIdle()
+            onNodeWithContentDescription("Take photo").assertIsEnabled().performClick()
             isCapturing = true
             waitForIdle()
             onNodeWithContentDescription("Take photo").assertIsNotEnabled()

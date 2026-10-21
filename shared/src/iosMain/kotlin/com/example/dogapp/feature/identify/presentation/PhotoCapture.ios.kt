@@ -43,6 +43,8 @@ import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.QuartzCore.CATransaction
+import platform.UIKit.UIActivityIndicatorView
+import platform.UIKit.UIActivityIndicatorViewStyleLarge
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 import platform.UIKit.UIColor
@@ -104,6 +106,7 @@ private fun IosCamera(
 ) {
     val device = remember { AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo) }
     var access by remember { mutableStateOf(if (device == null) CameraAccess.Unavailable else currentAccess()) }
+    var isStarting by remember { mutableStateOf(true) }
     var isCapturing by remember { mutableStateOf(false) }
     val camera = remember(device) { device?.let(::CameraSession) }
     DisposableEffect(Unit) {
@@ -116,6 +119,7 @@ private fun IosCamera(
     }
     CameraScreen(
         access = access,
+        isStarting = isStarting,
         isCapturing = isCapturing,
         onShutterClick = {
             isCapturing = true
@@ -135,7 +139,7 @@ private fun IosCamera(
     ) {
         camera?.let { session ->
             UIKitView(
-                factory = { session.start() },
+                factory = { session.start(onRunning = { isStarting = false }) },
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -165,9 +169,21 @@ private class CameraSession(
         if (session.canAddOutput(photoOutput)) session.addOutput(photoOutput)
     }
 
-    fun start(): UIView {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) { session.startRunning() }
-        return PreviewView(AVCaptureVideoPreviewLayer(session = session))
+    fun start(onRunning: () -> Unit): UIView {
+        val preview = PreviewView(AVCaptureVideoPreviewLayer(session = session))
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
+            session.startRunning()
+            val isRunning = session.running
+            dispatch_async(dispatch_get_main_queue()) {
+                if (isRunning) {
+                    preview.showRunning()
+                    onRunning()
+                } else {
+                    Logger.w { "Camera session didn't start" }
+                }
+            }
+        }
+        return preview
     }
 
     fun stop() {
@@ -190,10 +206,23 @@ private class CameraSession(
 private class PreviewView(
     private val previewLayer: AVCaptureVideoPreviewLayer,
 ) : UIView(frame = CGRectZero.readValue()) {
+    private val startingIndicator = UIActivityIndicatorView(activityIndicatorStyle = UIActivityIndicatorViewStyleLarge)
+
     init {
         backgroundColor = UIColor.blackColor
         previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
         layer.addSublayer(previewLayer)
+        startingIndicator.color = UIColor.whiteColor
+        startingIndicator.hidesWhenStopped = true
+        startingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(startingIndicator)
+        startingIndicator.centerXAnchor.constraintEqualToAnchor(centerXAnchor).active = true
+        startingIndicator.centerYAnchor.constraintEqualToAnchor(centerYAnchor).active = true
+        startingIndicator.startAnimating()
+    }
+
+    fun showRunning() {
+        startingIndicator.stopAnimating()
     }
 
     override fun layoutSubviews() {
