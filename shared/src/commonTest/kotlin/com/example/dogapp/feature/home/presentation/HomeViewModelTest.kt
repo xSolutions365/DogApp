@@ -1,6 +1,7 @@
 package com.example.dogapp.feature.home.presentation
 
 import com.example.dogapp.core.domain.DataError
+import com.example.dogapp.core.domain.breed.BreedSourceFailure
 import com.example.dogapp.core.domain.breed.BreedSourceId
 import com.example.dogapp.core.domain.breed.BreedSyncCoordinator
 import com.example.dogapp.core.domain.breed.BreedSyncResult
@@ -13,6 +14,7 @@ import com.example.dogapp.core.domain.draw.ObserveTodaysDrawUseCase
 import com.example.dogapp.core.presentation.error.toStringResource
 import com.example.dogapp.testing.FakeBreedRepository
 import com.example.dogapp.testing.FakeDailyDrawRepository
+import com.example.dogapp.testing.FakeLastBreedSyncStore
 import com.example.dogapp.testing.FakeTodayProvider
 import com.example.dogapp.testing.testBreed
 import kotlinx.coroutines.CompletableDeferred
@@ -55,7 +57,7 @@ class HomeViewModelTest {
             observeBreeds = ObserveBreedsUseCase(breeds),
             observeTodaysDraw = ObserveTodaysDrawUseCase(draws, breeds, today),
             drawBreedOfTheDay = DrawBreedOfTheDayUseCase(draws, breeds, today),
-            breedSync = BreedSyncCoordinator(breeds, SyncBreedsUseCase(breeds), syncScope),
+            breedSync = BreedSyncCoordinator(breeds, SyncBreedsUseCase(breeds), FakeLastBreedSyncStore(), syncScope),
         )
 
     @Test
@@ -68,7 +70,7 @@ class HomeViewModelTest {
             assertEquals(HomeContent.Loading, viewModel.state.value.content)
 
             breeds.breeds.value = listOf(akita)
-            sync.complete(BreedSyncResult(succeededSources = setOf(source), failures = emptyMap()))
+            sync.complete(BreedSyncResult(succeededSources = setOf(source), failures = emptyList()))
 
             assertEquals(HomeContent.NotRevealed(isDrawing = false), viewModel.state.value.content)
         }
@@ -78,14 +80,17 @@ class HomeViewModelTest {
         runTest {
             breeds.syncResults +=
                 CompletableDeferred(
-                    BreedSyncResult(succeededSources = emptySet(), failures = mapOf(source to DataError.Remote.NoConnection)),
+                    BreedSyncResult(
+                        succeededSources = emptySet(),
+                        failures = listOf(BreedSourceFailure(source, "Test", DataError.Remote.NoConnection)),
+                    ),
                 )
             val viewModel = viewModel()
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
             assertEquals(HomeContent.Error(DataError.Remote.NoConnection.toStringResource()), viewModel.state.value.content)
 
-            breeds.syncResults += CompletableDeferred(BreedSyncResult(succeededSources = setOf(source), failures = emptyMap()))
+            breeds.syncResults += CompletableDeferred(BreedSyncResult(succeededSources = setOf(source), failures = emptyList()))
             viewModel.onAction(HomeAction.Retry)
 
             assertEquals(HomeContent.NoBreeds, viewModel.state.value.content)

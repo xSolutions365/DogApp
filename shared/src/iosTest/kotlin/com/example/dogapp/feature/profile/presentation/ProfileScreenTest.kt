@@ -200,18 +200,26 @@ class ProfileScreenTest {
         }
 
     @Test
-    fun feedMeOpensTheDogCharitiesTheDonationsAndTheWalletAndAboutAtTheBottomOpensTheDeviceState() =
+    fun feedMeOpensTheDogCharitiesTheDonationsAndTheWalletAndAboutAtTheBottomOpensTheDeviceStateAndSyncsData() =
         runComposeUiTest {
             var charitiesOpened = 0
             var donationsOpened = 0
             var walletOpened = 0
             var deviceStateOpened = 0
-            var state by mutableStateOf(ProfileUiState(favourites = emptyList(), draws = emptyList(), deviceStateWarnings = 2))
+            val actions = mutableListOf<ProfileAction>()
+            var state by mutableStateOf(
+                ProfileUiState(
+                    favourites = emptyList(),
+                    draws = emptyList(),
+                    deviceStateWarnings = 2,
+                    syncData = SyncDataStatus.Idle(lastSynced = "21 Oct 2026, 09:42"),
+                ),
+            )
             setContent {
                 DogAppTheme {
                     ProfileScreen(
                         state = state,
-                        onAction = {},
+                        onAction = { actions += it },
                         onBreedClick = {},
                         onSupportCharitiesClick = { charitiesOpened++ },
                         onDonationsClick = { donationsOpened++ },
@@ -239,6 +247,7 @@ class ProfileScreenTest {
                     "Wallet",
                     "About",
                     "Device state",
+                    "Sync data",
                 ).map { onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top }
             assertEquals(rowTops.sorted(), rowTops)
 
@@ -248,6 +257,26 @@ class ProfileScreenTest {
             state = state.copy(deviceStateWarnings = 0)
             waitForIdle()
             onNodeWithText("No warnings").assertExists()
+
+            onNodeWithText("Last synced 21 Oct 2026, 09:42").assertExists()
+            onNodeWithText("Sync data").performClick()
+            assertEquals(listOf<ProfileAction>(ProfileAction.SyncData), actions)
+            state = state.copy(syncData = SyncDataStatus.Syncing)
+            waitForIdle()
+            onNodeWithText("Syncing…").assertExists()
+            onNodeWithText("Sync data").performClick()
+            assertEquals(1, actions.size)
+            state = state.copy(syncData = SyncDataStatus.PartlySynced(listOf("TheDogAPI", "API Ninjas")))
+            waitForIdle()
+            onNodeWithText("Synced, but TheDogAPI and API Ninjas didn't respond").assertExists()
+            state = state.copy(syncData = SyncDataStatus.Failed)
+            waitForIdle()
+            onNodeWithText("Couldn't sync. Tap to try again").assertExists()
+            onNodeWithText("Sync data").performClick()
+            assertEquals(2, actions.size)
+            state = state.copy(syncData = SyncDataStatus.Idle(lastSynced = null))
+            waitForIdle()
+            onNodeWithText("Last synced", substring = true).assertDoesNotExist()
 
             assertEquals(1, charitiesOpened)
             assertEquals(1, donationsOpened)

@@ -5,6 +5,7 @@ import com.example.dogapp.core.data.database.DogAppDatabase
 import com.example.dogapp.core.data.database.buildDogAppDatabase
 import com.example.dogapp.core.domain.DataError
 import com.example.dogapp.core.domain.Outcome
+import com.example.dogapp.core.domain.breed.BreedSourceFailure
 import com.example.dogapp.core.domain.breed.BreedSourceId
 import com.example.dogapp.core.domain.breed.MeasureRange
 import com.example.dogapp.core.domain.breed.SourcedBreed
@@ -61,7 +62,7 @@ class DefaultBreedRepositoryTest {
             val breeds = repository.observeBreeds().first()
 
             assertEquals(setOf(primary, secondary), result.succeededSources)
-            assertEquals(emptyMap(), result.failures)
+            assertEquals(emptyList(), result.failures)
             assertEquals(listOf("Beagle", "Border Collie"), breeds.map { it.name })
             val borderCollie = breeds.single { it.id == "border collie" }
             assertEquals(MeasureRange(14.0, 25.0), borderCollie.weightKg)
@@ -82,7 +83,7 @@ class DefaultBreedRepositoryTest {
             secondarySource.outcome = { Outcome.Failure(DataError.Remote.NoConnection) }
             val result = repository.syncBreeds()
 
-            assertEquals(mapOf(secondary to DataError.Remote.NoConnection), result.failures)
+            assertEquals(listOf(BreedSourceFailure(secondary, secondary.value, DataError.Remote.NoConnection)), result.failures)
             assertEquals(listOf("Beagle", "Boxer"), repository.observeBreeds().first().map { it.name })
         }
 

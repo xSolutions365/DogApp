@@ -37,7 +37,7 @@ class HomeViewModel(
     fun onAction(action: HomeAction) {
         when (action) {
             HomeAction.Reveal -> reveal()
-            HomeAction.Retry -> breedSync.retry()
+            HomeAction.Retry -> breedSync.syncNow()
         }
     }
 
@@ -60,7 +60,7 @@ class HomeViewModel(
         if (breeds.isNotEmpty()) return HomeContent.NotRevealed(isDrawing = isDrawing)
         return when (syncStatus) {
             BreedSyncStatus.NotStarted, BreedSyncStatus.Syncing -> HomeContent.Loading
-            BreedSyncStatus.Done -> HomeContent.NoBreeds
+            is BreedSyncStatus.Done -> HomeContent.NoBreeds
             is BreedSyncStatus.Failed -> HomeContent.Error(syncStatus.error.toStringResource())
         }
     }

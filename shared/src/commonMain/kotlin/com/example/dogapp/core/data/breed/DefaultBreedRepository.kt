@@ -7,6 +7,7 @@ import com.example.dogapp.core.domain.DataError
 import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
+import com.example.dogapp.core.domain.breed.BreedSourceFailure
 import com.example.dogapp.core.domain.breed.BreedSyncResult
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -21,10 +22,11 @@ class DefaultBreedRepository(
     private val imageSources: List<BreedImageSource>,
     private val dao: SourcedBreedDao,
 ) : BreedRepository {
+    private val sourceNames = sources.associate { it.id to it.displayName }
     private val consolidator =
         BreedConsolidator(
             precedence = sources.sortedBy { it.precedence }.map { it.id },
-            sourceNames = sources.associate { it.id to it.displayName },
+            sourceNames = sourceNames,
         )
 
     override suspend fun syncBreeds(): BreedSyncResult {
@@ -36,7 +38,10 @@ class DefaultBreedRepository(
         backfillMissingThumbnails()
         return BreedSyncResult(
             succeededSources = outcomes.filter { (_, outcome) -> outcome is Outcome.Success }.map { (id, _) -> id }.toSet(),
-            failures = outcomes.mapNotNull { (id, outcome) -> (outcome as? Outcome.Failure)?.let { id to it.error } }.toMap(),
+            failures =
+                outcomes.mapNotNull { (id, outcome) ->
+                    (outcome as? Outcome.Failure)?.let { BreedSourceFailure(id, sourceNames.getValue(id), it.error) }
+                },
         )
     }
 

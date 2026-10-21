@@ -179,6 +179,12 @@
         <item quantity="one">%1$d warning</item>
         <item quantity="other">%1$d warnings</item>
     </plurals>
+    <string name="profile_sync_data">Sync data</string>
+    <string name="profile_sync_last">Last synced %1$s</string>
+    <string name="profile_sync_syncing">Syncing…</string>
+    <string name="profile_sync_failed">Couldn't sync. Tap to try again</string>
+    <string name="profile_sync_partial">Synced, but %1$s didn't respond</string>
+    <string name="profile_sync_partial_separator"> and </string>
     <string name="device_state_intro">These checks run on the device and are easy to bypass. They never block anything. Real apps confirm a device's integrity with a server (Play Integrity on Android, App Attest on iOS).</string>
     <string name="device_state_warning">Warning</string>
     <string name="device_state_not_found">Not found</string>

@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class ExploreViewModel(
     private val observeBreeds: ObserveBreedsUseCase,
@@ -49,18 +48,13 @@ class ExploreViewModel(
 
     init {
         breedSync.ensureLoaded()
-        viewModelScope.launch {
-            breedSync.status.collect { status ->
-                if (status == BreedSyncStatus.Syncing) filters.value = BreedFilters()
-            }
-        }
     }
 
     fun onAction(action: ExploreAction) {
         when (action) {
             is ExploreAction.QueryChange -> query.value = action.query
             is ExploreAction.FiltersChange -> filters.value = action.filters
-            ExploreAction.Retry -> breedSync.retry()
+            ExploreAction.Retry -> breedSync.syncNow()
         }
     }
 
@@ -71,11 +65,10 @@ class ExploreViewModel(
         syncStatus: BreedSyncStatus,
         favouriteIds: Set<String>,
     ): ExploreContent {
-        if (syncStatus == BreedSyncStatus.Syncing) return ExploreContent.Loading
         if (breeds.isEmpty()) {
             return when (syncStatus) {
                 BreedSyncStatus.NotStarted, BreedSyncStatus.Syncing -> ExploreContent.Loading
-                BreedSyncStatus.Done -> ExploreContent.Results(emptyList())
+                is BreedSyncStatus.Done -> ExploreContent.Results(emptyList())
                 is BreedSyncStatus.Failed -> ExploreContent.Error(syncStatus.error.toStringResource())
             }
         }

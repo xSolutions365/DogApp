@@ -32,7 +32,7 @@ class BreedDetailViewModelTest {
         val gallery = CompletableDeferred<Outcome<List<String>, DataError.Remote>>()
         val galleryRequests = mutableListOf<String>()
 
-        override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
+        override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyList())
 
         override fun observeBreeds() = breeds
 

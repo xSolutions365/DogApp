@@ -25,18 +25,18 @@ class SyncBreedsUseCaseTest {
             val partial =
                 BreedSyncResult(
                     succeededSources = setOf(BreedSourceId("a")),
-                    failures = mapOf(BreedSourceId("b") to DataError.Remote.NoConnection),
+                    failures = listOf(BreedSourceFailure(BreedSourceId("b"), "B", DataError.Remote.NoConnection)),
                 )
             val allFailed =
                 BreedSyncResult(
                     succeededSources = emptySet(),
                     failures =
-                        mapOf(
-                            BreedSourceId("a") to DataError.Remote.Unauthorized,
-                            BreedSourceId("b") to DataError.Remote.NoConnection,
+                        listOf(
+                            BreedSourceFailure(BreedSourceId("a"), "A", DataError.Remote.Unauthorized),
+                            BreedSourceFailure(BreedSourceId("b"), "B", DataError.Remote.NoConnection),
                         ),
                 )
-            val noSources = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
+            val noSources = BreedSyncResult(succeededSources = emptySet(), failures = emptyList())
 
             assertEquals(Outcome.Success(partial), SyncBreedsUseCase(FakeRepository(partial))())
             assertEquals(Outcome.Failure(DataError.Remote.Unauthorized), SyncBreedsUseCase(FakeRepository(allFailed))())

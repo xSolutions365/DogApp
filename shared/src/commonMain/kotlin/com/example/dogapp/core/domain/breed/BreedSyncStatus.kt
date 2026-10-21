@@ -7,7 +7,9 @@ sealed interface BreedSyncStatus {
 
     data object Syncing : BreedSyncStatus
 
-    data object Done : BreedSyncStatus
+    data class Done(
+        val unavailableSources: List<String>,
+    ) : BreedSyncStatus
 
     data class Failed(
         val error: DataError.Remote,

@@ -36,6 +36,7 @@ import com.example.dogapp.core.domain.Outcome
 import com.example.dogapp.core.domain.breed.Breed
 import com.example.dogapp.core.domain.breed.BreedRepository
 import com.example.dogapp.core.domain.breed.BreedSyncResult
+import com.example.dogapp.core.domain.breed.LastBreedSyncStore
 import com.example.dogapp.core.domain.draw.DailyDrawRepository
 import com.example.dogapp.core.domain.draw.DrawDay
 import com.example.dogapp.core.domain.draw.TodayProvider
@@ -56,6 +57,7 @@ import com.example.dogapp.feature.wallet.di.walletModule
 import com.example.dogapp.testing.FakeDailyDrawRepository
 import com.example.dogapp.testing.FakeDonationRepository
 import com.example.dogapp.testing.FakeFavouritesRepository
+import com.example.dogapp.testing.FakeLastBreedSyncStore
 import com.example.dogapp.testing.FakeTodayProvider
 import com.example.dogapp.testing.FakeWalletVault
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -113,7 +115,7 @@ class AppShellTest {
 
     private val emptyBreedRepository =
         object : BreedRepository {
-            override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
+            override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyList())
 
             override fun observeBreeds() = MutableStateFlow(listOf(borderCollie))
 
@@ -149,6 +151,7 @@ class AppShellTest {
                             paymentModule,
                             module {
                                 single<BreedRepository> { emptyBreedRepository }
+                                single<LastBreedSyncStore> { FakeLastBreedSyncStore() }
                                 single<FavouritesRepository> { favourites }
                                 single<DailyDrawRepository> { draws }
                                 single<TodayProvider> { today }

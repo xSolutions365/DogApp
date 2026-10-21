@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -48,6 +50,12 @@ import dogapp.shared.generated.resources.profile_feed_me
 import dogapp.shared.generated.resources.profile_see_all
 import dogapp.shared.generated.resources.profile_see_all_cupertino
 import dogapp.shared.generated.resources.profile_support_charities
+import dogapp.shared.generated.resources.profile_sync_data
+import dogapp.shared.generated.resources.profile_sync_failed
+import dogapp.shared.generated.resources.profile_sync_last
+import dogapp.shared.generated.resources.profile_sync_partial
+import dogapp.shared.generated.resources.profile_sync_partial_separator
+import dogapp.shared.generated.resources.profile_sync_syncing
 import dogapp.shared.generated.resources.profile_wallet
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -181,6 +189,64 @@ fun ProfileScreen(
                 isWarning = (warnings ?: 0) > 0,
             )
         }
+        item(key = "sync-data") {
+            SyncDataRow(status = state.syncData, onClick = { onAction(ProfileAction.SyncData) })
+        }
+    }
+}
+
+@Composable
+private fun SyncDataRow(
+    status: SyncDataStatus,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isSyncing = status == SyncDataStatus.Syncing
+    val summary =
+        when (status) {
+            is SyncDataStatus.Idle -> {
+                status.lastSynced?.let { stringResource(Res.string.profile_sync_last, it) }
+            }
+
+            SyncDataStatus.Syncing -> {
+                stringResource(Res.string.profile_sync_syncing)
+            }
+
+            is SyncDataStatus.PartlySynced -> {
+                val separator = stringResource(Res.string.profile_sync_partial_separator)
+                stringResource(Res.string.profile_sync_partial, status.unavailableSources.joinToString(separator))
+            }
+
+            SyncDataStatus.Failed -> {
+                stringResource(Res.string.profile_sync_failed)
+            }
+        }
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(enabled = !isSyncing, role = Role.Button, onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = stringResource(Res.string.profile_sync_data), style = MaterialTheme.typography.titleMedium)
+            summary?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color =
+                        if (status ==
+                            SyncDataStatus.Failed
+                        ) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                )
+            }
+        }
+        if (isSyncing) CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
     }
 }
 

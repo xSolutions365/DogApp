@@ -10,7 +10,7 @@ class SyncBreedsUseCase(
         val result = repository.syncBreeds()
         val everySourceFailed = result.succeededSources.isEmpty() && result.failures.isNotEmpty()
         return if (everySourceFailed) {
-            Outcome.Failure(result.failures.values.first())
+            Outcome.Failure(result.failures.first().error)
         } else {
             Outcome.Success(result)
         }

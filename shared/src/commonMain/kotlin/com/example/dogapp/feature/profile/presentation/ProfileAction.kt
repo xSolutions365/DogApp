@@ -4,4 +4,6 @@ sealed interface ProfileAction {
     data class RemoveFavourite(
         val breedId: String,
     ) : ProfileAction
+
+    data object SyncData : ProfileAction
 }

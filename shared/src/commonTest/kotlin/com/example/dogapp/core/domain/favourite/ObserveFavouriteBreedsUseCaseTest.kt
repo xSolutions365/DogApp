@@ -19,7 +19,7 @@ class ObserveFavouriteBreedsUseCaseTest {
     ) : BreedRepository {
         val breeds = MutableStateFlow(breeds)
 
-        override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyMap())
+        override suspend fun syncBreeds() = BreedSyncResult(succeededSources = emptySet(), failures = emptyList())
 
         override fun observeBreeds() = breeds
 

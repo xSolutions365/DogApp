@@ -26,7 +26,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
   - Search matches the start of any word in a breed name across all merged breeds.
   - Filter chips under the search field: **Size** (Toy under 5 kg, Small 5–11, Medium 11–25, Large 25–45, Giant over 45, from the middle of the weight range), **Life span** (under 10, 10–12, 13+ years, from the middle of the range), **Group**, **Energy** (low, medium, high), **Traits** (good with children, low shedding, easy to train) and **Favourites**. Options within a filter can be combined; search and every active filter must all match. **Clear all** resets them.
   - The filter chips appear once the breeds have loaded. A filter's chip only shows when at least one breed has the info it needs, so filters with no data never appear. **Favourites** is always shown.
-  - Whenever a breed sync runs, Explore shows the full loading screen again and clears the filters.
+  - A breed sync with breeds already stored (Profile → About → **Sync data**) keeps the list and the filters on screen and updates them in place.
   - Breeds missing the info an active filter needs are hidden, and the list says how many and why (for example "22 breeds hidden: no size listed"). Energy and trait filters use the API Ninjas ratings, so they only cover breeds with ratings.
   - Each row shows a small favourite mark.
   - On first launch, a loading screen is shown and search stays disabled (and the filters hidden) until the breed database is filled.
@@ -43,7 +43,7 @@ UI, logic and storage are shared in one `shared` module. The platform apps are t
     - **Donations** lists your donations, newest first, with how each was paid ("Paid with Visa •••• 4242", "Paid with Google Pay (Visa •••• 1111)"). With none yet, it links to the charities.
     - **Wallet** opens a wallet that only a biometric can unlock (fingerprint on Android, Face ID or Touch ID on iOS), where you can add and remove demo cards.
     - See [Mock payments and security setup](#mock-payments-and-security-setup).
-  - **About** (at the bottom): **Device state** shows how many on-device integrity warnings there are ("1 warning", "No warnings") and opens a list of every check with its result.
+  - **About** (at the bottom): **Device state** shows how many on-device integrity warnings there are ("1 warning", "No warnings") and opens a list of every check with its result. **Sync data** fetches every breed source again and shows the result under its title: "Last synced <date, time>" (stored, so it survives restarts), "Syncing…" with a spinner while it runs, "Synced, but <source> didn't respond" when only some sources failed, or "Couldn't sync. Tap to try again". Profile data (favourites, breed of the day history) isn't synced to an account yet; that's planned.
 - **Images**
   - A dog placeholder sits under every photo while it loads.
   - Every photo is shown whole, scaled to fit its frame, over a soft, dimmed backdrop of the same photo that fills the rest of the frame. The backdrop is a tiny decode from the cache (no second download), blurred on iOS and Android 12+.
@@ -161,7 +161,7 @@ At build time, BuildKonfig generates them into `com.example.dogapp.core.data.con
 - **Android:** use the `androidApp` run configuration, or `./gradlew :androidApp:assembleDebug` and install the APK.
 - **iOS:** open `iosApp/iosApp.xcodeproj` in Xcode and run the `iosApp` scheme. The `Shared` framework is built automatically.
 
-On first launch the app syncs every source that's turned on; that takes a few seconds. After that, breeds come from the local database.
+On first launch the app syncs every source that's turned on; that takes a few seconds. After that, breeds come from the local database until you tap Profile → About → **Sync data**. There's no scheduled background sync yet.
 
 ## Checks
 
@@ -218,7 +218,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate, wall
 - **Platform variants** come from `NavigationStyle` (Material on Android, Cupertino on iOS), passed down from `AppShell`. Features expose their variants as plain parameters (`HomeLayout`, `IdentifyPresentation`, `WalletLayout`, `DonatePresentation`), and `app` maps the style onto them, so iOS UI tests render both. Truly native pieces sit behind `expect`/`actual` in `app`: `rememberIdentifyLauncher` pushes the identify screen on Android and presents a `UISheetPresentationController` hosting a `ComposeUIViewController` on iOS (both take a `PhotoSource`, Camera or Library, which Identify opens first), and `rememberDonateLauncher` shows a Material bottom sheet (Android, and the Material style on iOS) or a UIKit page sheet (iOS). Google Pay is `rememberGooglePayLauncher` in `feature/donate`: a real launcher on Android and `null` on iOS.
 - **Features talk through ports.** The donate flow needs the wallet's cards, but no feature may import another. So `feature/donate` declares the `PaymentCards` port (list the saved cards, unlock, confirm one with a biometric), and `app/di/WalletPaymentCards` implements it over the wallet's `WalletCoordinator`.
 - **Breed sources are plug and play.** Each API is a `BreedSource` (optionally also a `BreedImageSource`) bound with one line in `app/di/BreedModule.kt`. Removing that line removes the source and its stored rows. Sources that need a key are bound only when their key is set.
-- **The first breed sync** is owned by the app-wide `BreedSyncCoordinator`. It starts at launch, Home and Explore share it, and it syncs only when the database is empty.
+- **Breed syncs** are owned by the app-wide `BreedSyncCoordinator`. The first one starts at launch, Home and Explore share it, and it syncs only when the database is empty. `syncNow()` forces a sync (Retry on Home and Explore, and Profile's **Sync data**). Each successful sync stores its time through `LastBreedSyncStore`.
 
 **Storage:**
 - **Room** (`DogAppDatabase`, version 5, with auto-migrations; schemas in `shared/schemas/`). Tables:
@@ -226,7 +226,7 @@ feature/<name>/      home, explore, breeddetail, profile, identify, donate, wall
   - `favourite_breed`: owned by the user, never touched by sync
   - `daily_draw`: one row per day; the first draw of a day is the one kept
   - `donation`: the donation history, owned by the user (charity, amount in pence, how it was paid, when)
-- **DataStore Preferences** (`dogapp.preferences_pb`) holds small key-value data. So far that's the wallet: the encrypted wallet on Android, and the "wallet exists" flag on iOS.
+- **DataStore Preferences** (`dogapp.preferences_pb`) holds small key-value data: the wallet (the encrypted wallet on Android, and the "wallet exists" flag on iOS) and the last breed sync time (`last_breed_sync`).
 
 ## Tools and libraries
 
